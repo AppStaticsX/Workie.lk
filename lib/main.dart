@@ -50,7 +50,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     themeProvider.updateSystemTheme();
   }
 
-  // Method to update status bar based on theme
+  // Method to update status bar based on system-theme
   void _updateStatusBar(bool isDarkMode) {
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
