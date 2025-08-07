@@ -21,6 +21,7 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
   final ImagePicker _picker = ImagePicker();
   final List<File> _selectedImages = [];
   List<String> selectedHashtags = [];
+  bool _isPosting = false;
 
   @override
   void dispose() {
@@ -28,10 +29,12 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
     super.dispose();
   }
 
-  void _handlePost() {
+  Future<void> _handlePost() async {
+    await Future.delayed(Duration(seconds: 3));
     _textController.clear();
     setState(() {
       _selectedImages.clear(); // Add this line
+      _isPosting = false;
     });
 
     if (widget.onPostSuccess != null) {
@@ -66,33 +69,19 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.secondary.withValues(alpha: 0),
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.close,
+        leading: const Icon(
+            Iconsax.card_edit_copy,
             color: Colors.white,
             size: 28,
           ),
-          onPressed: () => _textController.clear()
-        ),
         title: Row(
           children: [
-            CircleAvatar(
-              radius: 20,
-              backgroundColor: Colors.grey[700],
-              child: const Icon(
-                Icons.person,
-                color: Colors.white,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 12),
             Row(
               children: [
                 const Text(
-                  'MyName',
+                  'New Post',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 18,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -102,9 +91,12 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
         ),
         actions: [
           Container(
-            margin: const EdgeInsets.only(right: 16, top: 0, bottom: 8),
+            margin: const EdgeInsets.only(right: 4, top: 0, bottom: 0),
             child: ElevatedButton(
               onPressed: () {
+                setState(() {
+                  _isPosting = true;
+                });
                 _handlePost();
               },
               style: ElevatedButton.styleFrom(
@@ -115,15 +107,37 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               ),
-              child: const Text(
-                'Post',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (_isPosting)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 4,
+                          color: Colors.white,
+                          strokeCap: StrokeCap.square,
+                        ),
+                      ),
+                    ),
+                  const Text(
+                    'Post',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
+          IconButton(
+              onPressed: () => _textController.clear(),
+              icon: Icon(Iconsax.trash_copy)
+          )
         ],
       ),
       body: Column(
