@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 
 class AddHashtagsDialog extends StatefulWidget {
   final List<String> selectedHashtags;
@@ -113,18 +114,27 @@ class _AddHashtagsDialogState extends State<AddHashtagsDialog> {
               child: TextField(
                 controller: _textController,
                 onSubmitted: (_) => _addCustomHashtag(),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: 'Type a hashtag...',
-                  hintStyle: TextStyle(
+                  hintStyle: const TextStyle(
                     color: Colors.grey,
                   ),
-                  prefixIcon: Icon(
+                  prefixIcon: const Icon(
                     Icons.tag,
                     color: Colors.grey,
                     size: 18,
                   ),
+                  suffixIcon: IconButton(
+                      onPressed: (){
+                        String userHashTags = _textController.text.trim().toString();
+                        setState(() {
+                          _popularHashtags.add(userHashTags);
+                        });
+                      },
+                      icon: const Icon(Iconsax.add_copy)
+                  ),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(
+                  contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
                   ),

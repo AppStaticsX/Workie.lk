@@ -10,8 +10,6 @@ import 'generated/app_localizations.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  // Remove the static status bar setting from here
-  // We'll set it dynamically based on theme
 
   runApp(
       MultiProvider(

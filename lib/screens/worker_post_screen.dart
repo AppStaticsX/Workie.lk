@@ -154,6 +154,55 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
               ),
             ),
           ),
+          if (selectedHashtags.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
+              height: 64, // Increased to accommodate padding + chip height
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: selectedHashtags.length,
+                itemBuilder: (context, index) {
+                  return Container(
+                    height: 40,
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.tertiary,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '#${selectedHashtags[index]}',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.inverseSurface,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          InkWell(
+                            onTap: () {
+                              setState(() {
+                                selectedHashtags.removeAt(index);
+                              });
+                            },
+                            customBorder: const CircleBorder(),
+                            child: Icon(
+                              Icons.close,
+                              size: 16,
+                              color: Colors.grey,
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            )
+          ],
           // Add this after the TextField in the body Column
           if (_selectedImages.isNotEmpty) ...[
             Container(
@@ -240,7 +289,7 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
                     icon: Icon(
                       Iconsax.hashtag_copy,
                       color: Colors.grey[400],
-                      size: 24,
+                      size: 26,
                     ),
                     onPressed: () {
                       showDialog(
