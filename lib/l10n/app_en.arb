@@ -1,0 +1,123 @@
+{
+  "@@locale": "en",
+  "appName": "MealMate",
+  "@appName": {
+    "description": "The name of the application"
+  },
+  "workieSubtitle": "EMPOWERING PEOPLE",
+  "@workieSubtitle": {
+    "description": "Application subtitle/tagline"
+  },
+  "welcomeBack": "Welcome Back,",
+  "@welcomeBack": {
+    "description": "Welcome message on login screen"
+  },
+  "loginGuide": "Let’s get you back in! Enter your login details to access your account.",
+  "@loginGuide": {
+    "description": "Guide text displayed on the login screen"
+  },
+  "emailAddress": "Email Address",
+  "@emailAddress": {
+    "description": "Label for email input field"
+  },
+  "enterAddress": "Enter Address",
+  "@enterAddress": {
+    "description": "Placeholder text for email input field"
+  },
+  "password": "Password",
+  "@password": {
+    "description": "Label for password input field"
+  },
+  "passwordHint": "Password",
+  "@passwordHint": {
+    "description": "Placeholder text for password input field"
+  },
+  "emailRequired": "Email is required",
+  "@emailRequired": {
+    "description": "Error message when email field is empty"
+  },
+  "emailInvalid": "Please enter a valid email address",
+  "@emailInvalid": {
+    "description": "Error message when email format is invalid"
+  },
+  "passwordRequired": "Password is required",
+  "@passwordRequired": {
+    "description": "Error message when password field is empty"
+  },
+  "passwordTooShort": "Password must be at least 6 characters",
+  "@passwordTooShort": {
+    "description": "Error message when password is too short"
+  },
+  "termsAgreement": "I confirm that I have read, consent and agree to WORKIE's ",
+  "@termsAgreement": {
+    "description": "Terms agreement checkbox text"
+  },
+  "termsOfUse": "Terms of Use",
+  "@termsOfUse": {
+    "description": "Terms of Use link text"
+  },
+  "and": " and ",
+  "@and": {
+    "description": "Conjunction word between Terms of Use and Privacy Policy"
+  },
+  "privacyPolicy": "Privacy Policy.",
+  "@privacyPolicy": {
+    "description": "Privacy Policy link text"
+  },
+  "termsAgreementFull": "null",
+    "@termsAgreementFull": {
+      "description": "End part of terms agreement text"
+    },
+  "logIn": "Log in",
+  "@logIn": {
+    "description": "Login button text"
+  },
+  "contactUs": "Contact Us",
+  "@contactUs": {
+    "description": "Contact us button text"
+  },
+  "forgotPassword": "Forgot Password?",
+  "@forgotPassword": {
+    "description": "Forgot password link text"
+  },
+  "orContinueWith": "Or",
+  "@orContinueWith": {
+    "description": "Text separator for social login options"
+  },
+  "continueWithGoogle": "Log in with Google",
+  "@continueWithGoogle": {
+    "description": "Google sign-in button text"
+  },
+  "notAMember": "Not a member?",
+  "@notAMember": {
+    "description": "Sign-up prompt text"
+  },
+  "signupNow": "Sign up",
+  "@signupNow": {
+    "description": "Sign-up link text"
+  },
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button text in dialogs"
+  },
+  "agree": "Agree",
+  "@agree": {
+    "description": "Agree button text in agreement dialog"
+  },
+  "signupGuide": "Ready to work?\nJoin with our family to build your future",
+  "@signupGuide": {
+    "description": "Guide text displayed on the signup screen"
+  },
+  "emailVerificationGuide": "We have just send email verification link on your\nemail. Please check email and click on that link\nto verify your Email address.\n\nIf not auto redirected after verification, click on the\nContinue button.",
+  "@emailVerificationGuide": {
+    "description": "Guide text displayed on the email verification screen"
+  },
+  "onBoardSubtitle1": "Whether you're looking for work or hiring talent, we match you with the right opportunities and professionals in seconds.",
+  "@onBoardSubtitle1": {
+    "description": "Subtitle text for the first onboarding screen"
+  },
+  "orSigninWith": "Or Sign in with",
+  "@orSigninWith": {
+    "description": "Text separator for social login options"
+  }
+}

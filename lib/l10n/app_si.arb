@@ -1,0 +1,127 @@
+{
+  "@@locale": "si",
+  "appName": "MealMate",
+  "@appName": {
+    "description": "The name of the application"
+  },
+  "workieTitle": "වර්කී",
+  "@workieTitle": {
+    "description": "Main application title"
+  },
+  "workieSubtitle": "මිනිසුන් බලගන්වමින්",
+  "@workieSubtitle": {
+    "description": "Application subtitle/tagline"
+  },
+  "welcomeBack": "ආයුබෝවන්,",
+  "@welcomeBack": {
+    "description": "Welcome message on login screen"
+  },
+  "loginGuide": "අපේ වැඩසටහනට ඔබව සාදරයෙන් පිළිගන්නවා.",
+  "@loginGuide": {
+    "description": "Guide text displayed on the login screen"
+  },
+  "emailAddress": "ඊමේල් ලිපිනය",
+  "@emailAddress": {
+    "description": "Label for email input field"
+  },
+  "enterAddress": "ලිපිනය ඇතුල් කරන්න",
+  "@enterAddress": {
+    "description": "Placeholder text for email input field"
+  },
+  "password": "මුරපදය",
+  "@password": {
+    "description": "Label for password input field"
+  },
+  "passwordHint": "මුරපදය",
+  "@passwordHint": {
+    "description": "Placeholder text for password input field"
+  },
+  "emailRequired": "ඊමේල් ලිපිනය අවශ්‍යයි",
+  "@emailRequired": {
+    "description": "Error message when email field is empty"
+  },
+  "emailInvalid": "කරුණාකර වලංගු ඊමේල් ලිපිනයක් ඇතුල් කරන්න",
+  "@emailInvalid": {
+    "description": "Error message when email format is invalid"
+  },
+  "passwordRequired": "මුරපදය අවශ්‍යයි",
+  "@passwordRequired": {
+    "description": "Error message when password field is empty"
+  },
+  "passwordTooShort": "මුරපදය අවම වශයෙන් අක්ෂර 6 ක් විය යුතුයි",
+  "@passwordTooShort": {
+    "description": "Error message when password is too short"
+  },
+  "termsAgreement": "මම WORKIE හි ",
+  "@termsAgreement": {
+    "description": "Terms agreement checkbox text"
+  },
+  "termsOfUse": "භාවිත නියමයන්",
+  "@termsOfUse": {
+    "description": "Terms of Use link text"
+  },
+  "and": " සහ ",
+  "@and": {
+    "description": "Conjunction word between Terms of Use and Privacy Policy"
+  },
+  "privacyPolicy": "පෞද්ගලිකත්ව ප්‍රතිපත්තිය",
+  "@privacyPolicy": {
+    "description": "Privacy Policy link text"
+  },
+  "termsAgreementFull": " කියවා, එකඟ වන බව සහතික කරමි.",
+  "@termsAgreementFull": {
+    "description": "End part of terms agreement text"
+  },
+  "logIn": "ලොග් වන්න",
+  "@logIn": {
+    "description": "Login button text"
+  },
+  "contactUs": "අප හා සම්බන්ධ වන්න",
+  "@contactUs": {
+    "description": "Contact us button text"
+  },
+  "forgotPassword": "මුරපදය අමතකද?",
+  "@forgotPassword": {
+    "description": "Forgot password link text"
+  },
+  "orContinueWith": "නැතහොත් මේ සමඟ ඉදිරියට යන්න",
+  "@orContinueWith": {
+    "description": "Text separator for social login options"
+  },
+  "continueWithGoogle": "ගූගල් සමඟ ඉදිරියට යන්න",
+  "@continueWithGoogle": {
+    "description": "Google sign-in button text"
+  },
+  "notAMember": "සාමාජිකයෙක් නොවේද?",
+  "@notAMember": {
+    "description": "Sign-up prompt text"
+  },
+  "signupNow": "දැන් ලියාපදිංචි වන්න",
+  "@signupNow": {
+    "description": "Sign-up link text"
+  },
+  "cancel": "අවලංගු කරන්න",
+  "@cancel": {
+    "description": "Cancel button text in dialogs"
+  },
+  "agree": "එකඟයි",
+  "@agree": {
+    "description": "Agree button text in agreement dialog"
+  },
+  "signupGuide": "වැඩට සූදානම්ද?\nඔබේ අනාගතය ගොඩනැගීමට අපේ පවුලට එකතු වන්න",
+  "@signupGuide": {
+    "description": "Guide text displayed on the signup screen"
+  },
+  "emailVerificationGuide": "අපි ඔබේ ඊමේල් ලිපිනයට සත්‍යාපන සබැඳිය යැවුවෙමු.\nකරුණාකර ඊමේල් පරීක්ෂා කර එම සබැඳිය ක්ලික් කර\nඔබේ ඊමේල් ලිපිනය සත්‍යාපනය කරන්න.\n\nසත්‍යාපනයෙන් පසු ස්වයංක්‍රීයව හරවා නොගත්තොත්,\nඉදිරියට යන්න බොත්තම ක්ලික් කරන්න.",
+  "@emailVerificationGuide": {
+    "description": "Guide text displayed on the email verification screen"
+  },
+  "onBoardSubtitle1": "ඔබ රැකියාවක් සොයන්නේද නැතහොත් දක්ෂ අය බඳවා ගන්නේද, අපි ඔබට සුදුසු අවස්ථා සහ වෘත්තිකයන් තත්පරවලින් සපයන්නෙමු.",
+  "@onBoardSubtitle1": {
+    "description": "Subtitle text for the first onboarding screen"
+  },
+  "orSigninWith": "Or Sign in with",
+  "@orSigninWith": {
+    "description": "Text separator for social login options"
+  }
+}
