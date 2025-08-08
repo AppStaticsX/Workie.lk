@@ -231,6 +231,12 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
     setState(() {
       _isLoading = false;
     });
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _lastNameController.dispose();
+    _firstNameController.dispose();
+    _lottieController.dispose();
   }
 
   void _dismissKeyboard() {

@@ -189,18 +189,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
     });
   }
 
-  /*void _showCustomDialog(BuildContext context) {
-    LottieDialog.show(
-      context: context,
-      padding: const EdgeInsets.all(20),
-      lottieAsset: 'assets/animation/loading_circle.json',
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      borderRadius: BorderRadius.circular(20),
-      repeat: true,
-      barrierDismissible: false,
-    );
-  }*/
-
   @override
   Widget build(BuildContext context) {
     CustomToastSuccess.init(context);
@@ -541,7 +529,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
           ),
           TextButton(
             onPressed: () {
-              Navigator.of(context).push(
+              Navigator.of(context).pushReplacement(
                 PageRouteBuilder(
                   pageBuilder: (context, animation, secondaryAnimation) => const ResetPasswordPage(),
                   transitionsBuilder: (context, animation, secondaryAnimation, child) {
