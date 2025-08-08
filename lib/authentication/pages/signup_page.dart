@@ -15,9 +15,7 @@ import '../../values/color.dart';
 import '../../values/dimension.dart';
 import '../../values/string.dart';
 import '../../widgets/agreement_dialog.dart';
-import '../../widgets/loading_widget.dart';
 import '../../widgets/simple_textfeild.dart';
-import '../../widgets/square_tile.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -32,6 +30,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
 
   bool _obscureText = true;
   bool _isChecked = false;
+  bool _isLoading = false;
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -169,8 +168,13 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
       return;
     }
 
+    if (_isChecked && !_hasErrors) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
+
     _navigateToVerification();
-    _showCustomDialog(context);
   }
 
   void _showAgreement() {
@@ -224,18 +228,9 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
         ),
       );
     }
-  }
-
-  void _showCustomDialog(BuildContext context) {
-    LottieDialog.show(
-      context: context,
-      padding: const EdgeInsets.all(20),
-      lottieAsset: 'assets/animation/loading_circle.json',
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      borderRadius: BorderRadius.circular(20),
-      repeat: true,
-      barrierDismissible: false,
-    );
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   void _dismissKeyboard() {
@@ -574,62 +569,34 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
             backgroundColor: const Color(0xFF4E6BF5),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           ),
-          child: Text(
-            'Sign up',
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-              letterSpacing: 1.5,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDivider() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: Divider(thickness: 1.5, color: Theme.of(context).colorScheme.primary),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0),
-            child: Text(
-              AppLocalizations.of(context)!.orSigninWith,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.primary,
-                fontSize: Localizations.localeOf(context).languageCode == 'si' ||
-                    Localizations.localeOf(context).languageCode == 'ta' ? 12 : 15,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (_isLoading)
+                Transform.scale(
+                  scale: 0.45, // Makes it half the size
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 4.0),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 9,
+                      color: Colors.white,
+                      strokeCap: StrokeCap.square,
+                    ),
+                  ),
+                ),
+              Text(
+                'Sign up',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  letterSpacing: 1.5,
+                ),
               ),
-            ),
-          ),
-          Expanded(
-            child: Divider(thickness: 1.5, color: Theme.of(context).colorScheme.primary),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSocialSignup() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        GestureDetector(
-          onTap: () {
-            if (!_isChecked) _showAgreement();
-          },
-          child: SquareTile(
-            imagePath: 'assets/icon/google-color-svgrepo-com.svg',
-            provider: AppLocalizations.of(context)!.continueWithGoogle,
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 

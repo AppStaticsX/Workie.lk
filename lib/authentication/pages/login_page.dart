@@ -501,7 +501,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
                     child: CircularProgressIndicator(
                       strokeWidth: 9,
                       color: Colors.white,
-                      strokeCap: StrokeCap.round,
+                      strokeCap: StrokeCap.square,
                     ),
                   ),
                 ),
