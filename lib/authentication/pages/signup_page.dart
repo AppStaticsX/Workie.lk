@@ -42,7 +42,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
   String? _passwordError;
   String? _lastNameError;
   String? _firstNameError;
-  String? _confirmPassowrdError;
+  String? _confirmPassowordError;
 
   @override
   void initState() {
@@ -110,8 +110,8 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
       error = AppLocalizations.of(context)!.passwordTooShort;
     }
 
-    if (_confirmPassowrdError != error) {
-      setState(() => _confirmPassowrdError = error);
+    if (_confirmPassowordError != error) {
+      setState(() => _confirmPassowordError = error);
     }
   }
 
@@ -154,7 +154,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
     _validateLastName(_lastNameController.text.trim());
   }
 
-  bool get _hasErrors => _emailError != null || _passwordError != null || _confirmPassowrdError != null ||_lastNameError != null || _firstNameError != null;
+  bool get _hasErrors => _emailError != null || _passwordError != null || _confirmPassowordError != null ||_lastNameError != null || _firstNameError != null;
 
   void _handleSignup() {
     _validateAllFields();
@@ -475,7 +475,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
           onPressed: () => setState(() => _obscureText = !_obscureText),
         ),
         obscureText: _obscureText,
-        errorText: _confirmPassowrdError,
+        errorText: _confirmPassowordError,
       ),
     );
   }
