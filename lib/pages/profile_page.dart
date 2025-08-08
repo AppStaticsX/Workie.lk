@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 
 class ProfileTabPage extends StatelessWidget {
@@ -35,7 +36,7 @@ class ProfileTabPage extends StatelessWidget {
                     // Edit button for background
                     Positioned(
                       top: 8,
-                      right: 8,
+                      right: 16,
                       child: Container(
                         width: 36,
                         height: 36,
@@ -71,6 +72,34 @@ class ProfileTabPage extends StatelessWidget {
                           backgroundImage: NetworkImage(
                             'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/President_Dr_Muizzu_meets_Sri_Lankan_President_Ranil_Wickremesinghe_%28cropped%29.jpg/500px-President_Dr_Muizzu_meets_Sri_Lankan_President_Ranil_Wickremesinghe_%28cropped%29.jpg',
                           ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      right: 16,
+                      top: 125, // Position to overlap background
+                      child: InkWell(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF4E6BF5),
+                            shape: BoxShape.rectangle,
+                            borderRadius: BorderRadius.all(Radius.circular(5)),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                            child: Row(
+                              children: [
+                                Icon(Iconsax.user_edit_copy, size: 18),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Edit Profile',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold
+                                  ),
+                                )
+                              ],
+                            ),
+                          )
                         ),
                       ),
                     ),
@@ -126,9 +155,10 @@ class ProfileTabPage extends StatelessWidget {
                     Text(
                       'Master Carpenter & Welder',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Colors.grey[600],
+                        color: Theme.of(context).colorScheme.inverseSurface,
                       ),
                     ),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         const Icon(
@@ -140,7 +170,8 @@ class ProfileTabPage extends StatelessWidget {
                         Text(
                           'Maradana, Colombo 3',
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[600],
+                            color: Colors.grey,
+                            fontWeight: FontWeight.bold
                           ),
                         ),
                       ],
