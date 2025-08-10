@@ -395,7 +395,7 @@ class _ContinueButton extends StatelessWidget {
                     child: CircularProgressIndicator(
                       strokeWidth: 9,
                       color: Colors.white,
-                      strokeCap: StrokeCap.round,
+                      strokeCap: StrokeCap.square,
                     ),
                   ),
                 ),

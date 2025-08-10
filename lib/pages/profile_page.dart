@@ -9,6 +9,25 @@ class ProfileTabPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Icon(Iconsax.user_copy, size: 26),
+        title: Text(
+          'My Profile',
+          style: TextStyle(
+            fontWeight: FontWeight.bold
+          ),
+        ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              // Navigate to settings
+            },
+            icon: const Icon(Iconsax.setting),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -24,7 +43,7 @@ class ProfileTabPage extends StatelessWidget {
                       height: 105,
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Colors.blue,
+                        borderRadius: BorderRadius.only(bottomRight: Radius.circular(15), bottomLeft: Radius.circular(15)),
                         image: DecorationImage(
                           image: NetworkImage(
                             'https://media.licdn.com/dms/image/v2/D4D16AQHrBrDSwm9uUA/profile-displaybackgroundimage-shrink_350_1400/B4DZdYDluIGUAg-/0/1749529055481?e=1757548800&v=beta&t=VMqdwj6S_Hd7ZVakDwCwL7sslXcX92VDaSXmJYAGTjU',
@@ -89,12 +108,13 @@ class ProfileTabPage extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                             child: Row(
                               children: [
-                                Icon(Iconsax.user_edit_copy, size: 18),
+                                Icon(Iconsax.user_edit_copy, size: 18, color: Colors.white),
                                 const SizedBox(width: 8),
                                 const Text(
                                   'Edit Profile',
                                   style: TextStyle(
-                                    fontWeight: FontWeight.bold
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white
                                   ),
                                 )
                               ],
@@ -153,29 +173,45 @@ class ProfileTabPage extends StatelessWidget {
                       ],
                     ),
                     Text(
-                      'Master Carpenter & Welder',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      'Professional Carpenter Specializing in Custom Furniture and Woodcraft',
+                      style: TextStyle(
                         color: Theme.of(context).colorScheme.inverseSurface,
-                      ),
+                        fontSize: 15,
+                        height: 1.3
+                      )
                     ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(
-                            Iconsax.location,
-                          size: 14,
-                          color: Colors.grey,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Maradana, Colombo 3',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey,
-                            fontWeight: FontWeight.bold
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.tertiary,
+                            borderRadius: BorderRadius.all(Radius.circular(5))
+                          ),
+                          child: Text(
+                            '23 Works'
                           ),
                         ),
+                        const SizedBox(width: 12),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.tertiary,
+                              borderRadius: BorderRadius.all(Radius.circular(5))
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.star, size: 18),
+                              const SizedBox(width: 4),
+                              Text(
+                                  '4.8 (23 Reviews)'
+                              ),
+                            ],
+                          ),
+                        )
                       ],
-                    ),
+                    )
                   ],
                 ),
               ),
