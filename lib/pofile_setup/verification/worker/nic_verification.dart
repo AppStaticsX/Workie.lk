@@ -6,14 +6,14 @@ import 'dart:io';
 
 import '../../../widgets/imagesource_dialog.dart';
 
-class PortraitPicker extends StatefulWidget {
-  const PortraitPicker({super.key});
+class NICVerification extends StatefulWidget {
+  const NICVerification({super.key});
 
   @override
-  State<PortraitPicker>createState() => _PortraitPickerState();
+  State<NICVerification>createState() => _NICVerificationState();
 }
 
-class _PortraitPickerState extends State<PortraitPicker>
+class _NICVerificationState extends State<NICVerification>
     with TickerProviderStateMixin {
   File? selectedFile;
   String? fileName;
@@ -134,7 +134,7 @@ class _PortraitPickerState extends State<PortraitPicker>
       children: [
         // Fixed progress bar at the top
         LinearProgressIndicator(
-          value: 1/3,
+          value: 2/3,
           backgroundColor: Theme.of(context).colorScheme.tertiary,
           valueColor: AlwaysStoppedAnimation<Color>(const Color(0xFF4E6BF5)),
         ),
@@ -147,7 +147,7 @@ class _PortraitPickerState extends State<PortraitPicker>
                 const SizedBox(height: 44),
                 Text(
                   textAlign: TextAlign.center,
-                  'A Portrait Photo of Your\nTaken Recently',
+                  'Verify with Your NIC or\nDriver License',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold
                   ),
@@ -158,7 +158,7 @@ class _PortraitPickerState extends State<PortraitPicker>
                   builder: (context, child) {
                     return SizedBox(
                       width: 300,
-                      height: 380,
+                      height: 200,
                       child: Material(
                         elevation: _elevationAnimation.value,
                         borderRadius: BorderRadius.circular(12),
@@ -191,7 +191,59 @@ class _PortraitPickerState extends State<PortraitPicker>
                                   width: double.infinity,
                                   height: double.infinity,
                                   child: selectedFile == null
-                                      ? _buildUploadContent()
+                                      ? _buildUploadContent(Iconsax.personalcard_copy, 'Front-View')
+                                      : _buildFileContent(),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                _buildImageLimit(),
+                const SizedBox(height: 24),
+                AnimatedBuilder(
+                  animation: Listenable.merge([_hoverController, _dragController]),
+                  builder: (context, child) {
+                    return SizedBox(
+                      width: 300,
+                      height: 200,
+                      child: Material(
+                        elevation: _elevationAnimation.value,
+                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.transparent,
+                        child: MouseRegion(
+                          onEnter: (_) => _onHover(true),
+                          onExit: (_) => _onHover(false),
+                          child: GestureDetector(
+                            onTap: selectedFile == null ? _pickFile : null,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.tertiary,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: _borderColorAnimation.value ?? Color(0xFF666666),
+                                  width: 2,
+                                  style: selectedFile == null ? BorderStyle.none : BorderStyle.solid,
+                                ),
+                              ),
+                              child: CustomPaint(
+                                painter: selectedFile == null
+                                    ? DashedBorderPainter(
+                                  color: _borderColorAnimation.value ?? Color(0xFF666666),
+                                  strokeWidth: 2,
+                                  dashLength: 8,
+                                  dashSpace: 4,
+                                )
+                                    : null,
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  child: selectedFile == null
+                                      ? _buildUploadContent(Iconsax.card_copy, 'Back-View')
                                       : _buildFileContent(),
                                 ),
                               ),
@@ -216,74 +268,74 @@ class _PortraitPickerState extends State<PortraitPicker>
 
   Text _buildImageLimit() {
     return Text(
-          '250x250 Min / 5 MB Max',
-          style: TextStyle(
-            fontSize: 16,
-            color: Colors.grey
-          ),
-        );
+      '360x480 Min / 5 MB Max',
+      style: TextStyle(
+          fontSize: 16,
+          color: Colors.grey
+      ),
+    );
   }
 
   Padding _buildAlertText(BuildContext context) {
     return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: RichText(
-            textAlign: TextAlign.center,
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: 'Must be an actual photo of you.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
-                ),
-                TextSpan(
-                  text: '\nLogos, clip-art, group photos, and digitally-altered images',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Theme.of(context).colorScheme.inverseSurface,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                TextSpan(
-                  text: ' are not allowed. It will cause account ',
-                  style: TextStyle(
-                    fontSize: 16,
-                      color: Colors.grey,
-                  ),
-                ),
-                TextSpan(
-                  text: 'Rejection',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                TextSpan(
-                  text: ' or ',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Theme.of(context).colorScheme.inverseSurface,
-                    fontWeight: FontWeight.normal,
-                  ),
-                ),
-                TextSpan(
-                  text: 'Termination.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      child: RichText(
+        textAlign: TextAlign.center,
+        text: TextSpan(
+          children: [
+            TextSpan(
+              text: 'Must be an actual photo of you.',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+              ),
             ),
-          ),
-        );
+            TextSpan(
+              text: '\nLogos, clip-art, group photos, and digitally-altered images',
+              style: TextStyle(
+                fontSize: 16,
+                color: Theme.of(context).colorScheme.inverseSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            TextSpan(
+              text: ' are not allowed. It will cause account ',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+              ),
+            ),
+            TextSpan(
+              text: 'Rejection',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            TextSpan(
+              text: ' or ',
+              style: TextStyle(
+                fontSize: 16,
+                color: Theme.of(context).colorScheme.inverseSurface,
+                fontWeight: FontWeight.normal,
+              ),
+            ),
+            TextSpan(
+              text: 'Termination.',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
-  Widget _buildUploadContent() {
+  Widget _buildUploadContent(IconData icon, String viewOfID) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -295,12 +347,12 @@ class _PortraitPickerState extends State<PortraitPicker>
             shape: BoxShape.circle,
           ),
           child: Icon(
-            Iconsax.user_edit_copy,
+            icon,
             color: Colors.white,
             size: 30,
           ),
         ),
-        SizedBox(height: 20),
+        SizedBox(height: 12),
         RichText(
           textAlign: TextAlign.center,
           text: TextSpan(
@@ -322,6 +374,9 @@ class _PortraitPickerState extends State<PortraitPicker>
               TextSpan(text: ' or take\nimage here'),
             ],
           ),
+        ),
+        Text(
+            '( $viewOfID of NIC or Driver Licence. )'
         ),
       ],
     );

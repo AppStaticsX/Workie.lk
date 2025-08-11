@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:workie/pofile_setup/bottom_navigation.dart';
-import 'package:workie/pofile_setup/verification/worker/nic_picker.dart';
-import 'package:workie/pofile_setup/verification/worker/portrait_picker.dart';
+import 'package:workie/pofile_setup/verification/worker/nic_verification.dart';
+import 'package:workie/pofile_setup/verification/worker/portrait_verification.dart';
 
 class ProfileSetup extends StatefulWidget {
   const ProfileSetup({super.key});
@@ -31,8 +31,8 @@ class _ProfileSetupState extends State<ProfileSetup> {
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          const PortraitPicker(),
-          const NICPicker()
+          const PortraitVerification(),
+          const NICVerification()
         ],
       ),
       bottomNavigationBar: IndexedStack(

@@ -6,14 +6,14 @@ import 'dart:io';
 
 import '../../../widgets/imagesource_dialog.dart';
 
-class NICPicker extends StatefulWidget {
-  const NICPicker({super.key});
+class PortraitVerification extends StatefulWidget {
+  const PortraitVerification({super.key});
 
   @override
-  State<NICPicker>createState() => _NICPickerState();
+  State<PortraitVerification>createState() => _PortraitVerificationState();
 }
 
-class _NICPickerState extends State<NICPicker>
+class _PortraitVerificationState extends State<PortraitVerification>
     with TickerProviderStateMixin {
   File? selectedFile;
   String? fileName;
@@ -147,7 +147,7 @@ class _NICPickerState extends State<NICPicker>
                 const SizedBox(height: 44),
                 Text(
                   textAlign: TextAlign.center,
-                  'Verify with Your NIC or\nDriver License',
+                  'A Portrait Photo of Your\nTaken Recently',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold
                   ),
@@ -158,7 +158,7 @@ class _NICPickerState extends State<NICPicker>
                   builder: (context, child) {
                     return SizedBox(
                       width: 300,
-                      height: 200,
+                      height: 380,
                       child: Material(
                         elevation: _elevationAnimation.value,
                         borderRadius: BorderRadius.circular(12),
@@ -191,56 +191,7 @@ class _NICPickerState extends State<NICPicker>
                                   width: double.infinity,
                                   height: double.infinity,
                                   child: selectedFile == null
-                                      ? _buildUploadContent(Iconsax.personalcard_copy)
-                                      : _buildFileContent(),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                AnimatedBuilder(
-                  animation: Listenable.merge([_hoverController, _dragController]),
-                  builder: (context, child) {
-                    return SizedBox(
-                      width: 300,
-                      height: 200,
-                      child: Material(
-                        elevation: _elevationAnimation.value,
-                        borderRadius: BorderRadius.circular(12),
-                        color: Colors.transparent,
-                        child: MouseRegion(
-                          onEnter: (_) => _onHover(true),
-                          onExit: (_) => _onHover(false),
-                          child: GestureDetector(
-                            onTap: selectedFile == null ? _pickFile : null,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.tertiary,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: _borderColorAnimation.value ?? Color(0xFF666666),
-                                  width: 2,
-                                  style: selectedFile == null ? BorderStyle.none : BorderStyle.solid,
-                                ),
-                              ),
-                              child: CustomPaint(
-                                painter: selectedFile == null
-                                    ? DashedBorderPainter(
-                                  color: _borderColorAnimation.value ?? Color(0xFF666666),
-                                  strokeWidth: 2,
-                                  dashLength: 8,
-                                  dashSpace: 4,
-                                )
-                                    : null,
-                                child: SizedBox(
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                  child: selectedFile == null
-                                      ? _buildUploadContent(Iconsax.personalcard_copy)
+                                      ? _buildUploadContent()
                                       : _buildFileContent(),
                                 ),
                               ),
@@ -265,74 +216,74 @@ class _NICPickerState extends State<NICPicker>
 
   Text _buildImageLimit() {
     return Text(
-      '250x250 Min / 5 MB Max',
-      style: TextStyle(
-          fontSize: 16,
-          color: Colors.grey
-      ),
-    );
+          '250x250 Min / 5 MB Max',
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.grey
+          ),
+        );
   }
 
   Padding _buildAlertText(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: RichText(
-        textAlign: TextAlign.center,
-        text: TextSpan(
-          children: [
-            TextSpan(
-              text: 'Must be an actual photo of you.',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: 'Must be an actual photo of you.',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                  ),
+                ),
+                TextSpan(
+                  text: '\nLogos, clip-art, group photos, and digitally-altered images',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Theme.of(context).colorScheme.inverseSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                TextSpan(
+                  text: ' are not allowed. It will cause account ',
+                  style: TextStyle(
+                    fontSize: 16,
+                      color: Colors.grey,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Rejection',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                TextSpan(
+                  text: ' or ',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Theme.of(context).colorScheme.inverseSurface,
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Termination.',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
-            TextSpan(
-              text: '\nLogos, clip-art, group photos, and digitally-altered images',
-              style: TextStyle(
-                fontSize: 16,
-                color: Theme.of(context).colorScheme.inverseSurface,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            TextSpan(
-              text: ' are not allowed. It will cause account ',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
-            ),
-            TextSpan(
-              text: 'Rejection',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            TextSpan(
-              text: ' or ',
-              style: TextStyle(
-                fontSize: 16,
-                color: Theme.of(context).colorScheme.inverseSurface,
-                fontWeight: FontWeight.normal,
-              ),
-            ),
-            TextSpan(
-              text: 'Termination.',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+          ),
+        );
   }
 
-  Widget _buildUploadContent(IconData icon) {
+  Widget _buildUploadContent() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -344,7 +295,7 @@ class _NICPickerState extends State<NICPicker>
             shape: BoxShape.circle,
           ),
           child: Icon(
-            icon,
+            Iconsax.user_edit_copy,
             color: Colors.white,
             size: 30,
           ),
