@@ -1,0 +1,102 @@
+import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:workie/pofile_setup/bottom_navigation.dart';
+import 'package:workie/pofile_setup/verification/worker/verification_start_page_worker.dart';
+import '../../pages/activity_page.dart';
+import '../../pages/post_page.dart';
+import 'worker/start_page.dart';
+
+class ProfileSetup extends StatefulWidget {
+  const ProfileSetup({super.key});
+
+  @override
+  State<ProfileSetup> createState() => _ProfileSetupState();
+}
+
+class _ProfileSetupState extends State<ProfileSetup> {
+  int _selectedIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
+        surfaceTintColor: Colors.transparent,
+        leading: const Icon(
+          Iconsax.user_copy,
+          size: 26,
+        ),
+        title: const Text(
+          'Create Your Profile'
+        ),
+      ),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: [
+          const StartPage(),
+          const WorkerVerificationStartPage(),
+          const PostTabPage(),
+          const ActivityTabPage(),
+        ],
+      ),
+      bottomNavigationBar: IndexedStack(
+        index: _selectedIndex,
+        children: [
+          BottomNavigation(
+            actionName: 'test',
+            onTapAction: () {
+              setState(() {
+                _selectedIndex = _selectedIndex + 1;
+              });
+            },
+            onBackAction: () {
+              setState(() {
+                return;
+              });
+            },
+          ),
+          BottomNavigation(
+            actionName: 'test',
+            onTapAction: () {
+              setState(() {
+                _selectedIndex = _selectedIndex + 1;
+              });
+            },
+            onBackAction: () {
+              setState(() {
+                _selectedIndex = _selectedIndex - 1;
+              });
+            },
+          ),
+          BottomNavigation(
+            actionName: 'test',
+            onTapAction: () {
+              setState(() {
+                _selectedIndex = _selectedIndex + 1;
+              });
+            },
+            onBackAction: () {
+              setState(() {
+                _selectedIndex = _selectedIndex - 1;
+              });
+            },
+          ),
+          BottomNavigation(
+            actionName: 'test',
+            onTapAction: () {
+              setState(() {
+                _selectedIndex = _selectedIndex + 1;
+              });
+            },
+            onBackAction: () {
+              setState(() {
+                _selectedIndex = _selectedIndex - 1;
+              });
+            },
+          )
+        ],
+      ),
+    );
+  }
+}

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workie/pofile_setup/verification/worker/verification_start_page_worker.dart';
 import 'package:workie/screens/main_screen.dart';
 import 'package:workie/values/color.dart';
 import '../values/dimension.dart';
@@ -21,7 +22,7 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
     await Future.delayed(const Duration(seconds: 3));
     if (mounted) {
       Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => const MainScreen())
+          MaterialPageRoute(builder: (context) => const WorkerVerificationStartPage())
       );
     }
     setState(() {
