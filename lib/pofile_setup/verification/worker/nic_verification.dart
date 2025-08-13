@@ -13,76 +13,11 @@ class NICVerification extends StatefulWidget {
   State<NICVerification>createState() => _NICVerificationState();
 }
 
-class _NICVerificationState extends State<NICVerification>
-    with TickerProviderStateMixin {
+class _NICVerificationState extends State<NICVerification> {
   File? selectedFile;
   String? fileName;
   String? fileSize;
   bool isHovered = false;
-  bool isDragOver = false;
-
-  late AnimationController _hoverController;
-  late AnimationController _dragController;
-  late Animation<double> _elevationAnimation;
-  late Animation<Color?> _borderColorAnimation;
-  late Animation<Color?> _backgroundColorAnimation;
-  late Animation<Color?> _iconColorAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _hoverController = AnimationController(
-      duration: Duration(milliseconds: 300),
-      vsync: this,
-    );
-
-    _dragController = AnimationController(
-      duration: Duration(milliseconds: 200),
-      vsync: this,
-    );
-
-    _elevationAnimation = Tween<double>(
-      begin: 0,
-      end: 4,
-    ).animate(CurvedAnimation(
-      parent: _hoverController,
-      curve: Curves.easeInOut,
-    ));
-
-    _borderColorAnimation = ColorTween(
-      begin: Color(0xFF666666),
-      end: Color(0xFF4CAF50),
-    ).animate(_hoverController);
-
-    _backgroundColorAnimation = ColorTween(
-      begin: Color(0xFF2a2a2a),
-      end: Color(0xFF2f2f2f),
-    ).animate(_hoverController);
-
-    _iconColorAnimation = ColorTween(
-      begin: Color(0xFF666666),
-      end: Color(0xFF4CAF50),
-    ).animate(_hoverController);
-  }
-
-  @override
-  void dispose() {
-    _hoverController.dispose();
-    _dragController.dispose();
-    super.dispose();
-  }
-
-  void _onHover(bool hover) {
-    setState(() {
-      isHovered = hover;
-    });
-    if (hover) {
-      _hoverController.forward();
-    } else {
-      _hoverController.reverse();
-    }
-  }
 
   final ImagePicker _picker = ImagePicker();
 
@@ -128,6 +63,12 @@ class _NICVerificationState extends State<NICVerification>
     return '${(bytes / (1 << (i * 10))).toStringAsFixed(2)} ${suffixes[i]}';
   }
 
+  void _onHover(bool hover) {
+    setState(() {
+      isHovered = hover;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -153,106 +94,84 @@ class _NICVerificationState extends State<NICVerification>
                   ),
                 ),
                 const SizedBox(height: 24),
-                AnimatedBuilder(
-                  animation: Listenable.merge([_hoverController, _dragController]),
-                  builder: (context, child) {
-                    return SizedBox(
-                      width: 300,
-                      height: 200,
-                      child: Material(
-                        elevation: _elevationAnimation.value,
-                        borderRadius: BorderRadius.circular(12),
-                        color: Colors.transparent,
-                        child: MouseRegion(
-                          onEnter: (_) => _onHover(true),
-                          onExit: (_) => _onHover(false),
-                          child: GestureDetector(
-                            onTap: selectedFile == null ? _pickFile : null,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.tertiary,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: _borderColorAnimation.value ?? Color(0xFF666666),
-                                  width: 2,
-                                  style: selectedFile == null ? BorderStyle.none : BorderStyle.solid,
-                                ),
-                              ),
-                              child: CustomPaint(
-                                painter: selectedFile == null
-                                    ? DashedBorderPainter(
-                                  color: _borderColorAnimation.value ?? Color(0xFF666666),
-                                  strokeWidth: 2,
-                                  dashLength: 8,
-                                  dashSpace: 4,
-                                )
-                                    : null,
-                                child: SizedBox(
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                  child: selectedFile == null
-                                      ? _buildUploadContent(Iconsax.personalcard_copy, 'Front-View')
-                                      : _buildFileContent(),
-                                ),
-                              ),
-                            ),
+                SizedBox(
+                  width: 300,
+                  height: 200,
+                  child: MouseRegion(
+                    onEnter: (_) => _onHover(true),
+                    onExit: (_) => _onHover(false),
+                    child: GestureDetector(
+                      onTap: selectedFile == null ? _pickFile : null,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.tertiary,
+                          borderRadius: BorderRadius.circular(12),
+                          border: selectedFile != null ? Border.all(
+                            color: isHovered ? Color(0xFF4CAF50) : Color(0xFF666666),
+                            width: 2,
+                          ) : null,
+                        ),
+                        child: CustomPaint(
+                          painter: selectedFile == null
+                              ? DashedBorderPainter(
+                            color: isHovered ? Color(0xFF4CAF50) : Color(0xFF666666),
+                            strokeWidth: 2,
+                            dashLength: 8,
+                            dashSpace: 4,
+                          )
+                              : null,
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: double.infinity,
+                            child: selectedFile == null
+                                ? _buildUploadContent(Iconsax.personalcard_copy, 'Front-View')
+                                : _buildFileContent(),
                           ),
                         ),
                       ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 _buildImageLimit(),
                 const SizedBox(height: 24),
-                AnimatedBuilder(
-                  animation: Listenable.merge([_hoverController, _dragController]),
-                  builder: (context, child) {
-                    return SizedBox(
-                      width: 300,
-                      height: 200,
-                      child: Material(
-                        elevation: _elevationAnimation.value,
-                        borderRadius: BorderRadius.circular(12),
-                        color: Colors.transparent,
-                        child: MouseRegion(
-                          onEnter: (_) => _onHover(true),
-                          onExit: (_) => _onHover(false),
-                          child: GestureDetector(
-                            onTap: selectedFile == null ? _pickFile : null,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.tertiary,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: _borderColorAnimation.value ?? Color(0xFF666666),
-                                  width: 2,
-                                  style: selectedFile == null ? BorderStyle.none : BorderStyle.solid,
-                                ),
-                              ),
-                              child: CustomPaint(
-                                painter: selectedFile == null
-                                    ? DashedBorderPainter(
-                                  color: _borderColorAnimation.value ?? Color(0xFF666666),
-                                  strokeWidth: 2,
-                                  dashLength: 8,
-                                  dashSpace: 4,
-                                )
-                                    : null,
-                                child: SizedBox(
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                  child: selectedFile == null
-                                      ? _buildUploadContent(Iconsax.card_copy, 'Back-View')
-                                      : _buildFileContent(),
-                                ),
-                              ),
-                            ),
+                SizedBox(
+                  width: 300,
+                  height: 200,
+                  child: MouseRegion(
+                    onEnter: (_) => _onHover(true),
+                    onExit: (_) => _onHover(false),
+                    child: GestureDetector(
+                      onTap: selectedFile == null ? _pickFile : null,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.tertiary,
+                          borderRadius: BorderRadius.circular(12),
+                          border: selectedFile != null ? Border.all(
+                            color: isHovered ? Color(0xFF4CAF50) : Color(0xFF666666),
+                            width: 2,
+                          ) : null,
+                        ),
+                        child: CustomPaint(
+                          painter: selectedFile == null
+                              ? DashedBorderPainter(
+                            color: isHovered ? Color(0xFF4CAF50) : Color(0xFF666666),
+                            strokeWidth: 2,
+                            dashLength: 8,
+                            dashSpace: 4,
+                          )
+                              : null,
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: double.infinity,
+                            child: selectedFile == null
+                                ? _buildUploadContent(Iconsax.card_copy, 'Back-View')
+                                : _buildFileContent(),
                           ),
                         ),
                       ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 _buildImageLimit(),
@@ -343,7 +262,7 @@ class _NICVerificationState extends State<NICVerification>
           width: 60,
           height: 60,
           decoration: BoxDecoration(
-            color: _iconColorAnimation.value,
+            color: isHovered ? Color(0xFF4CAF50) : Color(0xFF666666),
             shape: BoxShape.circle,
           ),
           child: Icon(

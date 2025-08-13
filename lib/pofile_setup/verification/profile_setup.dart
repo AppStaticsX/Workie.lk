@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:workie/pofile_setup/bottom_navigation.dart';
+import 'package:workie/widgets/bottom_navigation.dart';
+import 'package:workie/pofile_setup/verification/worker/mobile_verification.dart';
 import 'package:workie/pofile_setup/verification/worker/nic_verification.dart';
 import 'package:workie/pofile_setup/verification/worker/portrait_verification.dart';
 
@@ -32,7 +33,8 @@ class _ProfileSetupState extends State<ProfileSetup> {
         index: _selectedIndex,
         children: [
           const PortraitVerification(),
-          const NICVerification()
+          const NICVerification(),
+          const MobileVerification()
         ],
       ),
       bottomNavigationBar: IndexedStack(
@@ -52,7 +54,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
             },
           ),
           BottomNavigation(
-            actionName: 'test',
+            actionName: 'Next Step',
             onTapAction: () {
               setState(() {
                 _selectedIndex = _selectedIndex + 1;

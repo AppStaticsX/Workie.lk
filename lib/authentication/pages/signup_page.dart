@@ -1,9 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:http/http.dart' as http;
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:lottie/lottie.dart';
 import 'package:workie/authentication/pages/email_verification_page.dart';
@@ -11,6 +14,8 @@ import 'package:workie/authentication/pages/login_page.dart';
 import 'package:workie/generated/app_localizations.dart';
 import 'package:workie/screens/splash_screen.dart';
 import 'package:workie/widgets/custom_textfield.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workie/widgets/error_dialog.dart';
 import '../../values/color.dart';
 import '../../values/dimension.dart';
 import '../../values/string.dart';
@@ -32,11 +37,14 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
   bool _isChecked = false;
   bool _isLoading = false;
 
+  static const String baseUrl = 'https://workie-lk-backend.onrender.com/api/auth';
+
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
+  final _phoneController = TextEditingController();
 
   String? _emailError;
   String? _passwordError;
@@ -52,11 +60,21 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
   }
 
   void _setupLiveValidation() {
-    _emailController.addListener(() => _validateEmail(_emailController.text.trim()));
-    _passwordController.addListener(() => _validatePassword(_passwordController.text.trim()));
-    _confirmPasswordController.addListener(() => _validateConfirmPassword(_confirmPasswordController.text.trim()));
-    _firstNameController.addListener(() => _validateFirstName(_firstNameController.text.trim()));
-    _lastNameController.addListener(() => _validateLastName(_lastNameController.text.trim()));
+    _emailController.addListener(
+      () => _validateEmail(_emailController.text.trim()),
+    );
+    _passwordController.addListener(
+      () => _validatePassword(_passwordController.text.trim()),
+    );
+    _confirmPasswordController.addListener(
+      () => _validateConfirmPassword(_confirmPasswordController.text.trim()),
+    );
+    _firstNameController.addListener(
+      () => _validateFirstName(_firstNameController.text.trim()),
+    );
+    _lastNameController.addListener(
+      () => _validateLastName(_lastNameController.text.trim()),
+    );
   }
 
   @override
@@ -89,11 +107,17 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
       error = AppLocalizations.of(context)!.passwordRequired;
     } else if (password.length < 8) {
       error = AppLocalizations.of(context)!.passwordTooShort;
-    } else if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]').hasMatch(password)) {
-      error = "Password must contain uppercase, lowercase, number & special character";
+    } else if (!RegExp(
+      r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]',
+    ).hasMatch(password)) {
+      error =
+          "Password must contain uppercase, lowercase, number & special character";
     } else if (RegExp(r'(.)\1{2,}').hasMatch(password)) {
       error = "Password cannot have repeated characters";
-    } else if (RegExp(r'(012|123|234|345|456|567|678|789|890|abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz)', caseSensitive: false).hasMatch(password)) {
+    } else if (RegExp(
+      r'(012|123|234|345|456|567|678|789|890|abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz)',
+      caseSensitive: false,
+    ).hasMatch(password)) {
       error = "Password cannot contain sequential characters";
     }
 
@@ -154,9 +178,15 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
     _validateLastName(_lastNameController.text.trim());
   }
 
-  bool get _hasErrors => _emailError != null || _passwordError != null || _confirmPassowordError != null ||_lastNameError != null || _firstNameError != null;
+  bool get _hasErrors =>
+      _emailError != null ||
+      _passwordError != null ||
+      _confirmPassowordError != null ||
+      _lastNameError != null ||
+      _firstNameError != null;
 
-  void _handleSignup() {
+  Future<void> _handleSignup() async {
+    // Validate all fields first
     _validateAllFields();
 
     if (_hasErrors) {
@@ -168,43 +198,166 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
       return;
     }
 
-    if (_isChecked && !_hasErrors) {
-      setState(() {
-        _isLoading = true;
-      });
-    }
+    // Set loading state before API call
+    setState(() {
+      _isLoading = true;
+    });
 
-    _navigateToVerification();
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/register'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'firstName': _firstNameController.text.trim(),
+          'lastName': _lastNameController.text.trim(),
+          'email': _emailController.text.trim(),
+          'password': _passwordController.text,
+          'userType': 'worker',
+          'phone': _phoneController.text.trim() ?? "",
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        final responseData = jsonDecode(response.body);
+
+        if (responseData['success'] == true) {
+          if (responseData['data']?['token'] != null) {
+            await _storeToken(responseData['data']['token']);
+          }
+
+          setState(() {
+            _isLoading = false;
+          });
+
+          _navigateToVerification();
+        } else {
+          setState(() {
+            _isLoading = false;
+          });
+          _showCustomToast(responseData['message'] ?? 'Registration failed', Iconsax.warning_2);
+        }
+      } else {
+        final responseData = jsonDecode(response.body);
+        setState(() {
+          _isLoading = false;
+        });
+
+        String errorMessage = 'Registration failed';
+        if (response.statusCode == 400) {
+          //errorMessage = responseData['message'] ?? 'User already exists or invalid data';
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return ErrorDialog(
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text(
+                        'Use Different Email',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        setState(() => _isChecked = true);
+                        _dismissKeyboard();
+                      },
+                      child: const Text(
+                        'Log In',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                  title: 'Account Already Exists',
+                  contentText: 'Account with this email address (',
+                contentText2: _emailController.text,
+                contentText3: ') already exists. Would you like to login instead?',
+              );
+            },
+          );
+        } else if (response.statusCode == 500) {
+          errorMessage = 'Server error. Please try again later.';
+        } else {
+          errorMessage = responseData['message'] ?? 'Unknown error occurred';
+        }
+
+        _showCustomToast(errorMessage, Iconsax.close_circle);
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (e is SocketException) {
+        _showCustomToast('No internet connection. Please check your network.', Iconsax.warning_2);
+      } else if (e is TimeoutException) {
+        _showCustomToast('Request timed out. Please try again.', Iconsax.warning_2);
+      } else if (e is FormatException) {
+        _showCustomToast('Invalid server response. Please try again.', Iconsax.warning_2);
+      } else {
+        _showCustomToast('An unexpected error occurred: ${e.toString()}', Iconsax.close_circle);
+      }
+    }
+  }
+
+  Future<void> _storeToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_token', token);
+  }
+
+  void _showCustomToast(String message, IconData icon,
+      {int durationInSeconds = 3}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+        content: Row(
+          children: [
+            Icon(icon, color: Theme.of(context).colorScheme.inversePrimary),
+            const SizedBox(width: 10),
+            Expanded(
+                child: Text(
+                  message,
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.inversePrimary
+                  ),
+              )
+            ),
+          ],
+        ),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        duration: Duration(seconds: durationInSeconds),
+      ),
+    );
   }
 
   void _showAgreement() {
-    showCustomAlertDialog(
-      context,
-      [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text(
-            'Cancel',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+    showCustomAlertDialog(context, [
+      TextButton(
+        onPressed: () => Navigator.of(context).pop(),
+        child: const Text(
+          'Cancel',
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-            setState(() => _isChecked = true);
-            _dismissKeyboard();
-          },
-          child: const Text(
-            'Agree',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+      ),
+      TextButton(
+        onPressed: () {
+          Navigator.of(context).pop();
+          setState(() => _isChecked = true);
+          _dismissKeyboard();
+        },
+        child: const Text(
+          'Agree',
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
-      ],
-    );
+      ),
+    ]);
   }
 
   Future<void> _navigateToVerification() async {
@@ -212,13 +365,18 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
     if (mounted) {
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => const EmailVerificationPage(),
+          pageBuilder:
+              (context, animation, secondaryAnimation) =>
+                  const EmailVerificationPage(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             const begin = Offset(0.0, 1.0);
             const end = Offset.zero;
             const curve = Curves.ease;
 
-            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+            var tween = Tween(
+              begin: begin,
+              end: end,
+            ).chain(CurveTween(curve: curve));
 
             return SlideTransition(
               position: animation.drive(tween),
@@ -254,11 +412,12 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
           Positioned(
             child: Transform(
               alignment: Alignment.center,
-              transform: Matrix4.identity()..scale(-1.0, 1.0), // Flip horizontally
+              transform:
+                  Matrix4.identity()..scale(-1.0, 1.0), // Flip horizontally
               child: Lottie.asset(
                 Theme.of(context).brightness == Brightness.dark
-                ? 'assets/animation/circles-dark.json'
-                : 'assets/animation/circles-light.json',
+                    ? 'assets/animation/circles-dark.json'
+                    : 'assets/animation/circles-light.json',
                 controller: _lottieController,
                 frameRate: FrameRate(120),
                 fit: BoxFit.cover,
@@ -281,7 +440,9 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
           // Optional overlay to control animation opacity
           Positioned.fill(
             child: Container(
-              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.6), // Adjust opacity as needed
+              color: Theme.of(context).colorScheme.surface.withValues(
+                alpha: 0.6,
+              ), // Adjust opacity as needed
             ),
           ),
           // Main content
@@ -344,9 +505,9 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
                 fontSize: 10,
                 color: Theme.of(context).colorScheme.primary,
               ),
-            )
+            ),
           ],
-        )
+        ),
       ],
     );
   }
@@ -364,7 +525,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
               letterSpacing: 0.5,
               fontSize: 24,
             ),
-          )
+          ),
         ],
       ),
     );
@@ -403,7 +564,10 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
               controller: _firstNameController,
               lableText: 'First Name',
               hintText: 'First Name',
-              prefixIconData: Icon(Iconsax.user_copy, color: AppColors.textSilver),
+              prefixIconData: Icon(
+                Iconsax.user_copy,
+                color: AppColors.textSilver,
+              ),
               obscureText: false,
               errorText: _firstNameError,
             ),
@@ -413,7 +577,10 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
               controller: _lastNameController,
               lableText: 'Last Name',
               hintText: 'Last Name',
-              prefixIconData: Icon(Iconsax.user_copy, color: AppColors.textSilver),
+              prefixIconData: Icon(
+                Iconsax.user_copy,
+                color: AppColors.textSilver,
+              ),
               obscureText: false,
               errorText: _lastNameError,
             ),
@@ -454,7 +621,9 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
         prefixIconData: Icon(Iconsax.lock_copy, color: AppColors.textSilver),
         suffixIconData: IconButton(
           icon: Icon(
-            _obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+            _obscureText
+                ? Icons.visibility_off_outlined
+                : Icons.visibility_outlined,
             color: AppColors.iconSilver,
           ),
           onPressed: () => setState(() => _obscureText = !_obscureText),
@@ -475,7 +644,9 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
         prefixIconData: Icon(Iconsax.lock_copy, color: AppColors.textSilver),
         suffixIconData: IconButton(
           icon: Icon(
-            _obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+            _obscureText
+                ? Icons.visibility_off_outlined
+                : Icons.visibility_outlined,
             color: AppColors.iconSilver,
           ),
           onPressed: () => setState(() => _obscureText = !_obscureText),
@@ -488,7 +659,9 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
 
   Widget _buildAgreementCheckbox() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppDimension.paddingDefault * 3.6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimension.paddingDefault * 3.6,
+      ),
       child: Row(
         children: [
           InkWell(
@@ -503,53 +676,76 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
                   width: 2,
                 ),
               ),
-              child: _isChecked ? const Icon(Iconsax.tick_circle, size: 14, color: Color(0xFF4E6BF5)) : null,
+              child:
+                  _isChecked
+                      ? const Icon(
+                        Iconsax.tick_circle,
+                        size: 14,
+                        color: Color(0xFF4E6BF5),
+                      )
+                      : null,
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: RichText(
               text: TextSpan(
-                style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 13),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontSize: 13,
+                ),
                 children: [
                   const TextSpan(
-                    text: 'I confirm that I have read, consent and agree to WORKIE\'s ',
+                    text:
+                        'I confirm that I have read, consent and agree to WORKIE\'s ',
                   ),
                   TextSpan(
                     text: 'Terms of Use',
                     style: TextStyle(
-                      decorationColor: Theme.of(context).colorScheme.inversePrimary,
+                      decorationColor:
+                          Theme.of(context).colorScheme.inversePrimary,
                       color: Theme.of(context).colorScheme.inversePrimary,
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
                     ),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (context) => const SplashScreen()),
-                        );
-                        if (kDebugMode) print('Terms of Use tapped!');
-                      },
+                    recognizer:
+                        TapGestureRecognizer()
+                          ..onTap = () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => const SplashScreen(),
+                              ),
+                            );
+                            if (kDebugMode) print('Terms of Use tapped!');
+                          },
                   ),
                   const TextSpan(
                     text: ' and ',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.normal, height: 1),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.normal,
+                      height: 1,
+                    ),
                   ),
                   TextSpan(
                     text: 'Privacy Policy.',
                     style: TextStyle(
-                      decorationColor: Theme.of(context).colorScheme.inversePrimary,
+                      decorationColor:
+                          Theme.of(context).colorScheme.inversePrimary,
                       color: Theme.of(context).colorScheme.inversePrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
                     ),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (context) => const SplashScreen()),
-                        );
-                        if (kDebugMode) print('Privacy Policy tapped!');
-                      },
+                    recognizer:
+                        TapGestureRecognizer()
+                          ..onTap = () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => const SplashScreen(),
+                              ),
+                            );
+                            if (kDebugMode) print('Privacy Policy tapped!');
+                          },
                   ),
                 ],
               ),
@@ -562,7 +758,9 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
 
   Widget _buildSignupButton() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppDimension.paddingDefault * 3.6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimension.paddingDefault * 3.6,
+      ),
       child: SizedBox(
         width: double.infinity,
         height: 50,
@@ -573,7 +771,9 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF4E6BF5),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -614,13 +814,25 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
         onTap: () {
           Navigator.of(context).pushReplacement(
             PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) => const LoginPage(),
-              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              pageBuilder:
+                  (context, animation, secondaryAnimation) => const LoginPage(),
+              transitionsBuilder: (
+                context,
+                animation,
+                secondaryAnimation,
+                child,
+              ) {
                 const begin = Offset(-1.0, 0.0);
                 const end = Offset.zero;
                 const curve = Curves.ease;
-                var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                return SlideTransition(position: animation.drive(tween), child: child);
+                var tween = Tween(
+                  begin: begin,
+                  end: end,
+                ).chain(CurveTween(curve: curve));
+                return SlideTransition(
+                  position: animation.drive(tween),
+                  child: child,
+                );
               },
             ),
           );

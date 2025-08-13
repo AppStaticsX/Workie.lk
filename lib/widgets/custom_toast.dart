@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-class CustomToastSuccess {
+class CustomToast {
   static final FToast _fToast = FToast();
 
   /// Initialize FToast with context (Call this inside `initState` or `build`)
@@ -48,4 +48,3 @@ class CustomToastSuccess {
     );
   }
 }
-

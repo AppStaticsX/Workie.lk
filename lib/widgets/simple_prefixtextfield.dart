@@ -5,10 +5,10 @@ import '../values/color.dart';
 class SimplePrefixTextfield extends StatelessWidget {
 
   final TextEditingController controller;
-  final String lableText;
-  final String hintText;
-  final String suffixText;
-  final Icon prefixIconData;
+  final String? lableText;
+  final String? hintText;
+  final String? suffixText;
+  final Icon? prefixIconData;
   final bool obscureText;
   final TextInputType keyboardType;
   final String? errorText;
@@ -17,11 +17,11 @@ class SimplePrefixTextfield extends StatelessWidget {
   const SimplePrefixTextfield({
     super.key,
     required this.controller,
-    required this.lableText,
-    required this.hintText,
-    required this.prefixIconData,
+    this.lableText,
+    this.hintText,
+    this.prefixIconData,
     required this.obscureText,
-    required this.suffixText,
+    this.suffixText,
     required this.keyboardType,
     this.errorText,
     this.validator,
@@ -36,7 +36,7 @@ class SimplePrefixTextfield extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 6),
           child: TextFormField(
             inputFormatters: [
-              LengthLimitingTextInputFormatter(9),
+              LengthLimitingTextInputFormatter(10),
             ],
             keyboardType: keyboardType,
             obscureText: obscureText,
@@ -58,7 +58,7 @@ class SimplePrefixTextfield extends StatelessWidget {
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(15),
                 borderSide: BorderSide(
-                  width: 2,
+                  width: 1,
                   color: errorText != null ? Colors.red : Colors.grey,
                 ),
               ),
@@ -66,7 +66,7 @@ class SimplePrefixTextfield extends StatelessWidget {
                 borderRadius: BorderRadius.circular(15),
                 borderSide: BorderSide(
                   color: errorText != null ? Colors.red : const Color(0xFF4E6BF5),
-                  width: 2.5,
+                  width: 1.5,
                 ),
               ),
               errorBorder: OutlineInputBorder(

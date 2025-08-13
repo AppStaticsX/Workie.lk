@@ -12,7 +12,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_localization: ^0.3.2
   flutter_svg: ^2.1.0
-  lottie: ^3.3.1
+  flame_lottie: ^0.4.2+14
   flutter_launcher_icons: ^0.14.3
   shared_preferences: ^2.5.3
   provider: ^6.1.5
@@ -24,6 +24,9 @@ dependencies:
   share_plus: ^11.0.0
   image_picker: ^1.1.2
   google_maps_flutter: ^2.12.3
+  http: ^1.5.0
+  connectivity_plus: ^6.1.5
+  internet_connection_checker_plus: ^2.7.2
 
 dev_dependencies:
   flutter_test:

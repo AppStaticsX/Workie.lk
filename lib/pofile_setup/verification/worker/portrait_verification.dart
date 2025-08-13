@@ -13,78 +13,19 @@ class PortraitVerification extends StatefulWidget {
   State<PortraitVerification>createState() => _PortraitVerificationState();
 }
 
-class _PortraitVerificationState extends State<PortraitVerification>
-    with TickerProviderStateMixin {
+class _PortraitVerificationState extends State<PortraitVerification> {
   File? selectedFile;
   String? fileName;
   String? fileSize;
   bool isHovered = false;
-  bool isDragOver = false;
 
-  late AnimationController _hoverController;
-  late AnimationController _dragController;
-  late Animation<double> _elevationAnimation;
-  late Animation<Color?> _borderColorAnimation;
-  late Animation<Color?> _backgroundColorAnimation;
-  late Animation<Color?> _iconColorAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _hoverController = AnimationController(
-      duration: Duration(milliseconds: 300),
-      vsync: this,
-    );
-
-    _dragController = AnimationController(
-      duration: Duration(milliseconds: 200),
-      vsync: this,
-    );
-
-    _elevationAnimation = Tween<double>(
-      begin: 0,
-      end: 4,
-    ).animate(CurvedAnimation(
-      parent: _hoverController,
-      curve: Curves.easeInOut,
-    ));
-
-    _borderColorAnimation = ColorTween(
-      begin: Color(0xFF666666),
-      end: Color(0xFF4CAF50),
-    ).animate(_hoverController);
-
-    _backgroundColorAnimation = ColorTween(
-      begin: Color(0xFF2a2a2a),
-      end: Color(0xFF2f2f2f),
-    ).animate(_hoverController);
-
-    _iconColorAnimation = ColorTween(
-      begin: Color(0xFF666666),
-      end: Color(0xFF4CAF50),
-    ).animate(_hoverController);
-  }
-
-  @override
-  void dispose() {
-    _hoverController.dispose();
-    _dragController.dispose();
-    super.dispose();
-  }
+  final ImagePicker _picker = ImagePicker();
 
   void _onHover(bool hover) {
     setState(() {
       isHovered = hover;
     });
-    if (hover) {
-      _hoverController.forward();
-    } else {
-      _hoverController.reverse();
-    }
   }
-
-  final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickFile() async {
     try {
@@ -153,54 +94,49 @@ class _PortraitVerificationState extends State<PortraitVerification>
                   ),
                 ),
                 const SizedBox(height: 24),
-                AnimatedBuilder(
-                  animation: Listenable.merge([_hoverController, _dragController]),
-                  builder: (context, child) {
-                    return SizedBox(
-                      width: 300,
-                      height: 380,
-                      child: Material(
-                        elevation: _elevationAnimation.value,
-                        borderRadius: BorderRadius.circular(12),
-                        color: Colors.transparent,
-                        child: MouseRegion(
-                          onEnter: (_) => _onHover(true),
-                          onExit: (_) => _onHover(false),
-                          child: GestureDetector(
-                            onTap: selectedFile == null ? _pickFile : null,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.tertiary,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: _borderColorAnimation.value ?? Color(0xFF666666),
-                                  width: 2,
-                                  style: selectedFile == null ? BorderStyle.none : BorderStyle.solid,
-                                ),
-                              ),
-                              child: CustomPaint(
-                                painter: selectedFile == null
-                                    ? DashedBorderPainter(
-                                  color: _borderColorAnimation.value ?? Color(0xFF666666),
-                                  strokeWidth: 2,
-                                  dashLength: 8,
-                                  dashSpace: 4,
-                                )
-                                    : null,
-                                child: SizedBox(
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                  child: selectedFile == null
-                                      ? _buildUploadContent()
-                                      : _buildFileContent(),
-                                ),
-                              ),
+                SizedBox(
+                  width: 300,
+                  height: 380,
+                  child: Material(
+                    elevation: isHovered ? 4 : 0,
+                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.transparent,
+                    child: MouseRegion(
+                      onEnter: (_) => _onHover(true),
+                      onExit: (_) => _onHover(false),
+                      child: GestureDetector(
+                        onTap: selectedFile == null ? _pickFile : null,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.tertiary,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isHovered ? Color(0xFF4CAF50) : Color(0xFF666666),
+                              width: 2,
+                              style: selectedFile == null ? BorderStyle.none : BorderStyle.solid,
+                            ),
+                          ),
+                          child: CustomPaint(
+                            painter: selectedFile == null
+                                ? DashedBorderPainter(
+                              color: isHovered ? Color(0xFF4CAF50) : Color(0xFF666666),
+                              strokeWidth: 2,
+                              dashLength: 8,
+                              dashSpace: 4,
+                            )
+                                : null,
+                            child: SizedBox(
+                              width: double.infinity,
+                              height: double.infinity,
+                              child: selectedFile == null
+                                  ? _buildUploadContent()
+                                  : _buildFileContent(),
                             ),
                           ),
                         ),
                       ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 _buildImageLimit(),
@@ -216,71 +152,71 @@ class _PortraitVerificationState extends State<PortraitVerification>
 
   Text _buildImageLimit() {
     return Text(
-          '250x250 Min / 5 MB Max',
-          style: TextStyle(
-            fontSize: 16,
-            color: Colors.grey
-          ),
-        );
+      '250x250 Min / 5 MB Max',
+      style: TextStyle(
+          fontSize: 16,
+          color: Colors.grey
+      ),
+    );
   }
 
   Padding _buildAlertText(BuildContext context) {
     return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: RichText(
-            textAlign: TextAlign.center,
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: 'Must be an actual photo of you.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
-                ),
-                TextSpan(
-                  text: '\nLogos, clip-art, group photos, and digitally-altered images',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Theme.of(context).colorScheme.inverseSurface,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                TextSpan(
-                  text: ' are not allowed. It will cause account ',
-                  style: TextStyle(
-                    fontSize: 16,
-                      color: Colors.grey,
-                  ),
-                ),
-                TextSpan(
-                  text: 'Rejection',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                TextSpan(
-                  text: ' or ',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Theme.of(context).colorScheme.inverseSurface,
-                    fontWeight: FontWeight.normal,
-                  ),
-                ),
-                TextSpan(
-                  text: 'Termination.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      child: RichText(
+        textAlign: TextAlign.center,
+        text: TextSpan(
+          children: [
+            TextSpan(
+              text: 'Must be an actual photo of you.',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+              ),
             ),
-          ),
-        );
+            TextSpan(
+              text: '\nLogos, clip-art, group photos, and digitally-altered images',
+              style: TextStyle(
+                fontSize: 16,
+                color: Theme.of(context).colorScheme.inverseSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            TextSpan(
+              text: ' are not allowed. It will cause account ',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+              ),
+            ),
+            TextSpan(
+              text: 'Rejection',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            TextSpan(
+              text: ' or ',
+              style: TextStyle(
+                fontSize: 16,
+                color: Theme.of(context).colorScheme.inverseSurface,
+                fontWeight: FontWeight.normal,
+              ),
+            ),
+            TextSpan(
+              text: 'Termination.',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildUploadContent() {
@@ -291,7 +227,7 @@ class _PortraitVerificationState extends State<PortraitVerification>
           width: 60,
           height: 60,
           decoration: BoxDecoration(
-            color: _iconColorAnimation.value,
+            color: isHovered ? Color(0xFF4CAF50) : Color(0xFF666666),
             shape: BoxShape.circle,
           ),
           child: Icon(

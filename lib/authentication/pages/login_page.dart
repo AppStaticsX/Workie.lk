@@ -1,11 +1,16 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:http/http.dart' as http;
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workie/authentication/pages/reset_password_page.dart';
 import 'package:workie/authentication/pages/signup_page.dart';
 import 'package:workie/generated/app_localizations.dart';
@@ -13,9 +18,11 @@ import 'package:workie/screens/select_role_screen.dart';
 import 'package:workie/screens/splash_screen.dart';
 import 'package:workie/widgets/custom_textfield.dart';
 import 'package:workie/widgets/custom_toast.dart';
+import 'package:workie/widgets/full_screen_popup_dialog.dart';
 import '../../values/color.dart';
 import '../../values/dimension.dart';
 import '../../widgets/agreement_dialog.dart';
+import '../../widgets/error_dialog.dart';
 import '../../widgets/square_tile.dart';
 
 class LoginPage extends StatefulWidget {
@@ -28,6 +35,11 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
   late AnimationController _lottieController;
   Timer? _stopTimer;
+
+  bool isConnected = true;
+  late StreamSubscription<InternetStatus> subscription;
+
+  static const String baseUrl = 'https://workie-lk-backend.onrender.com/api/auth';
 
   bool _obscureText = true;
   bool _isChecked = false;
@@ -44,6 +56,30 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
     super.initState();
     _setupLiveValidation();
     _lottieController = AnimationController(vsync: this);
+    checkConnection();
+    subscription = InternetConnection().onStatusChange.listen((status) {
+      setState(() {
+        isConnected = status == InternetStatus.connected;
+      });
+    });
+  }
+
+  void checkConnection() async {
+    bool result = await InternetConnection().hasInternetAccess;
+    setState(() {
+      isConnected = result;
+    });
+  }
+
+  void _showNoInternetDialog() {
+    if (!isConnected) {
+      showDialog(context: context, builder: (context) => FullScreenPopupDialog(
+          darkLottie: 'assets/animation/lottie_empty_state_no_internet_dark.json',
+          lightLottie: 'assets/animation/lottie_empty_state_no_internet.json',
+          title: 'Connection Lost!',
+          subTitle: 'Check your network settings and try again.'
+      ));
+    }
   }
 
   void _setupLiveValidation() {
@@ -56,6 +92,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
     _emailController.dispose();
     _passwordController.dispose();
     _lottieController.dispose();
+    subscription.cancel();
     super.dispose();
   }
 
@@ -92,7 +129,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
     _validatePassword(_passwordController.text.trim());
   }
 
-  void _handleLogin() {
+  Future<void> _handleLogin() async {
     _validateAllFields();
 
     if (_hasErrors) {
@@ -110,8 +147,113 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
       });
     }
 
-    _navigateToRoleSelection();
-    //_showCustomDialog(context);
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/login'), // Fixed: Added /auth to match backend route
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'email': _emailController.text.trim(),
+          'password': _passwordController.text,
+        }),
+      );
+
+      // Fixed: Changed from 201 to 200 to match backend login response
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+
+        if (responseData['success'] == true) {
+          if (responseData['data']?['token'] != null) {
+            await _storeToken(responseData['data']['token']);
+          }
+
+          setState(() {
+            _isLoading = false;
+          });
+
+          _navigateToRoleSelection();
+        } else {
+          setState(() {
+            _isLoading = false;
+          });
+          _showCustomToast(responseData['message'] ?? 'Login failed', Iconsax.warning_2);
+        }
+      } else {
+        final responseData = jsonDecode(response.body);
+        setState(() {
+          _isLoading = false;
+        });
+
+        String errorMessage = 'Login failed';
+
+        // Fixed: Updated error handling for login-specific responses
+        if (response.statusCode == 401) {
+          // Handle invalid credentials or deactivated account
+          errorMessage = responseData['message'] ?? 'Invalid email or password';
+          _showCustomToast(errorMessage, Iconsax.close_circle);
+        } else if (response.statusCode == 400) {
+          // Handle validation errors
+          errorMessage = responseData['message'] ?? 'Invalid login data';
+          _showCustomToast(errorMessage, Iconsax.warning_2);
+        } else if (response.statusCode == 500) {
+          errorMessage = 'Server error. Please try again later.';
+          _showCustomToast(errorMessage, Iconsax.close_circle);
+        } else {
+          errorMessage = responseData['message'] ?? 'Unknown error occurred';
+          _showCustomToast(errorMessage, Iconsax.close_circle);
+        }
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (e is SocketException) {
+        _showNoInternetDialog();
+        _showCustomToast('No internet connection. Please check your network.', Iconsax.warning_2);
+      } else if (e is TimeoutException) {
+        _showCustomToast('Request timed out. Please try again.', Iconsax.warning_2);
+      } else if (e is FormatException) {
+        _showCustomToast('Invalid server response. Please try again.', Iconsax.close_circle);
+      } else {
+        _showCustomToast('An unexpected error occurred: ${e.toString()}', Iconsax.close_circle);
+      }
+    }
+  }
+
+  Future<void> _storeToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_token', token);
+  }
+
+  void _showCustomToast(String message, IconData icon,
+      {int durationInSeconds = 3}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+        content: Row(
+          children: [
+            Icon(icon, color: Theme.of(context).colorScheme.inversePrimary),
+            const SizedBox(width: 10),
+            Expanded(
+                child: Text(
+                  message,
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.inversePrimary
+                  ),
+                )
+            ),
+          ],
+        ),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        duration: Duration(seconds: durationInSeconds),
+      ),
+    );
   }
 
   void _showAgreement() {
@@ -191,7 +333,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
 
   @override
   Widget build(BuildContext context) {
-    CustomToastSuccess.init(context);
+    CustomToast.init(context);
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: Stack(

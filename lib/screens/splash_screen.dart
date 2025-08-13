@@ -55,16 +55,15 @@ class _SplashScreenState extends State<SplashScreen> {
               width: 150,
             ),
 
-           const SizedBox(height: 30),
-
-           Text(
+           /*Text(
               'Workie'.toUpperCase(),
               style: const TextStyle(
                 fontSize: 32,
-                fontFamily: 'Anton',
+                fontFamily: 'Google Sans',
+                fontWeight: FontWeight.w900,
                 letterSpacing: 9.0,
               ),
-            ),
+            ),*/
 
             /*Text(
               'Empowering People'.toUpperCase(),

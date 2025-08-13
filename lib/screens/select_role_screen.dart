@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workie/pofile_setup/verification/worker/verification_start_page_worker.dart';
@@ -71,7 +72,7 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
         child: Center(
           child: Column(
             children: [
-              SizedBox(height: MediaQuery.of(context).size.height * 0.05),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.02),
               const _TitleSection(),
               const SizedBox(height: 48),
               _RoleSelectionSection(
@@ -131,7 +132,26 @@ class _TitleSection extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 24),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 54.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              SvgPicture.asset(
+                'assets/icon/undraw_predictive-analytics_6vi1.svg',
+                width: 120,
+                height: 120,
+              ),
+              SvgPicture.asset(
+                'assets/icon/undraw_business-deal_nx2n.svg',
+                width: 120,
+                height: 120,
+              )
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
         Text(
           textAlign: TextAlign.center,
           'Are you looking for a New Job or\nlooking for New Employee?',
