@@ -32,6 +32,7 @@ class FullScreenPopupDialog extends StatelessWidget {
                 ? darkLottie
                 : lightLottie
           ),
+          const SizedBox(height: 48),
           Text(
             textAlign: TextAlign.center,
             title,

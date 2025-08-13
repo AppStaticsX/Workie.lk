@@ -263,10 +263,10 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
           });
 
           showDialog(context: context, builder: (context) => FullScreenPopupDialog(
-              darkLottie: 'assets/animation/lottie_empty_state_no_internet_dark.json',
-              lightLottie: 'assets/animation/lottie_empty_state_no_internet.json',
-              title: 'Connection Lost!',
-              subTitle: 'Check your network settings and try again.'
+              darkLottie: 'assets/animation/lottie_feedback_happy_dark.json',
+              lightLottie: 'assets/animation/lottie_feedback_happy.json',
+              title: 'Hooooray!',
+              subTitle: 'Your account created successfully.'
           ));
 
           _navigateToVerification();
