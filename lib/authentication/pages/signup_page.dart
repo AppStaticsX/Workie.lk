@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:lottie/lottie.dart';
 import 'package:workie/authentication/pages/email_verification_page.dart';
 import 'package:workie/authentication/pages/login_page.dart';
@@ -20,6 +21,7 @@ import '../../values/color.dart';
 import '../../values/dimension.dart';
 import '../../values/string.dart';
 import '../../widgets/agreement_dialog.dart';
+import '../../widgets/full_screen_popup_dialog.dart';
 import '../../widgets/simple_textfeild.dart';
 
 class SignupPage extends StatefulWidget {
@@ -36,6 +38,9 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
   bool _obscureText = true;
   bool _isChecked = false;
   bool _isLoading = false;
+
+  bool isConnected = true;
+  late StreamSubscription<InternetStatus> subscription;
 
   static const String baseUrl = 'https://workie-lk-backend.onrender.com/api/auth';
 
@@ -57,6 +62,30 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
     super.initState();
     _setupLiveValidation();
     _lottieController = AnimationController(vsync: this);
+    checkConnection();
+    subscription = InternetConnection().onStatusChange.listen((status) {
+      setState(() {
+        isConnected = status == InternetStatus.connected;
+      });
+    });
+  }
+
+  void checkConnection() async {
+    bool result = await InternetConnection().hasInternetAccess;
+    setState(() {
+      isConnected = result;
+    });
+  }
+
+  void _showNoInternetDialog() {
+    if (!isConnected) {
+      showDialog(context: context, builder: (context) => FullScreenPopupDialog(
+          darkLottie: 'assets/animation/lottie_empty_state_no_internet_dark.json',
+          lightLottie: 'assets/animation/lottie_empty_state_no_internet.json',
+          title: 'Connection Lost!',
+          subTitle: 'Check your network settings and try again.'
+      ));
+    }
   }
 
   void _setupLiveValidation() {
@@ -85,6 +114,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
     _lastNameController.dispose();
     _firstNameController.dispose();
     _lottieController.dispose();
+    subscription.cancel();
     super.dispose();
   }
 
@@ -232,7 +262,15 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
             _isLoading = false;
           });
 
+          showDialog(context: context, builder: (context) => FullScreenPopupDialog(
+              darkLottie: 'assets/animation/lottie_empty_state_no_internet_dark.json',
+              lightLottie: 'assets/animation/lottie_empty_state_no_internet.json',
+              title: 'Connection Lost!',
+              subTitle: 'Check your network settings and try again.'
+          ));
+
           _navigateToVerification();
+
         } else {
           setState(() {
             _isLoading = false;
@@ -293,7 +331,8 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
       });
 
       if (e is SocketException) {
-        _showCustomToast('No internet connection. Please check your network.', Iconsax.warning_2);
+        _showNoInternetDialog();
+        //_showCustomToast('No internet connection. Please check your network.', Iconsax.warning_2);
       } else if (e is TimeoutException) {
         _showCustomToast('Request timed out. Please try again.', Iconsax.warning_2);
       } else if (e is FormatException) {

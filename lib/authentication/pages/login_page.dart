@@ -212,7 +212,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
 
       if (e is SocketException) {
         _showNoInternetDialog();
-        _showCustomToast('No internet connection. Please check your network.', Iconsax.warning_2);
+        //_showCustomToast('No internet connection. Please check your network.', Iconsax.warning_2);
       } else if (e is TimeoutException) {
         _showCustomToast('Request timed out. Please try again.', Iconsax.warning_2);
       } else if (e is FormatException) {
