@@ -7,7 +7,12 @@ import 'dart:io';
 import '../../../widgets/imagesource_dialog.dart';
 
 class PortraitVerification extends StatefulWidget {
-  const PortraitVerification({super.key});
+  final Function(bool)? onSelectionChanged;
+
+  const PortraitVerification({
+    super.key,
+    this.onSelectionChanged
+  });
 
   @override
   State<PortraitVerification>createState() => _PortraitVerificationState();
@@ -27,6 +32,12 @@ class _PortraitVerificationState extends State<PortraitVerification> {
     });
   }
 
+  void _notifySelectionChanged() {
+    if (widget.onSelectionChanged != null) {
+      widget.onSelectionChanged!(selectedFile != null);
+    }
+  }
+
   Future<void> _pickFile() async {
     try {
       // Show options for camera or gallery
@@ -44,6 +55,8 @@ class _PortraitVerificationState extends State<PortraitVerification> {
           fileName = image.name;
           this.fileSize = _formatFileSize(fileSize);
         });
+
+        _notifySelectionChanged();
       }
     } catch (e) {
       print('Error picking image: $e');
@@ -248,14 +261,14 @@ class _PortraitVerificationState extends State<PortraitVerification> {
             ),
             children: [
               TextSpan(
-                text: 'Upload',
+                text: 'UPLOAD',
                 style: TextStyle(
                   color: const Color(0xFF4E6BF5),
                   fontWeight: FontWeight.bold,
                   //decoration: TextDecoration.underline,
                 ),
               ),
-              TextSpan(text: ' or take\nimage here'),
+              TextSpan(text: ' or Take\nImage Here'),
             ],
           ),
         ),

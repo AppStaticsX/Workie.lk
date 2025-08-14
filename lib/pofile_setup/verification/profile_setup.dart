@@ -13,6 +13,37 @@ class ProfileSetup extends StatefulWidget {
 
 class _ProfileSetupState extends State<ProfileSetup> {
   int _selectedIndex = 0;
+  bool _isPortraitSelected = false;
+
+  void _onPortraitSelectionChanged(bool isSelected) {
+    setState(() {
+      _isPortraitSelected = isSelected;
+    });
+  }
+
+  void _handleNextStep() {
+    // Check if we're on the portrait verification step (index 0)
+    if (_selectedIndex == 0 && !_isPortraitSelected) {
+      // Show error message or snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              'Please select a portrait photo before proceeding',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.inverseSurface
+            ),
+          ),
+          backgroundColor: Theme.of(context).colorScheme.secondary,
+        ),
+      );
+      return;
+    }
+
+    // Proceed to next step if validation passes
+    setState(() {
+      _selectedIndex = _selectedIndex + 1;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +63,9 @@ class _ProfileSetupState extends State<ProfileSetup> {
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          const PortraitVerification(),
+          PortraitVerification(
+            onSelectionChanged: _onPortraitSelectionChanged,
+          ),
           const NICVerification(),
           const MobileVerification()
         ],
@@ -42,11 +75,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
         children: [
           BottomNavigation(
             actionName: 'Next Step',
-            onTapAction: () {
-              setState(() {
-                _selectedIndex = _selectedIndex + 1;
-              });
-            },
+            onTapAction: _handleNextStep,
             onBackAction: () {
               setState(() {
                 return;

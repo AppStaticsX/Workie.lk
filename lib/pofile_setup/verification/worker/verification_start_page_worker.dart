@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:workie/pofile_setup/collect_info/profile_setup.dart';
+import 'package:workie/pofile_setup/verification/profile_setup.dart';
 
 class WorkerVerificationStartPage extends StatefulWidget {
   const WorkerVerificationStartPage({super.key});
@@ -85,13 +85,13 @@ class _WorkerVerificationStartPageState extends State<WorkerVerificationStartPag
                     child: Column(
                       children: [
                         // Title
-                        const Text(
-                          'Worker\nProfile Verification',
+                        Text(
+                          'Profile Verification',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.inverseSurface,
                             height: 1.2,
                           ),
                         ),
@@ -104,7 +104,7 @@ class _WorkerVerificationStartPageState extends State<WorkerVerificationStartPag
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 16,
-                            color: Colors.white.withValues(alpha: 0.9),
+                            color: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.9),
                             height: 1.5,
                           ),
                         ),
@@ -142,10 +142,11 @@ class _WorkerVerificationStartPageState extends State<WorkerVerificationStartPag
                                 borderRadius: BorderRadius.circular(16),
                               ),
                             ),
-                            child: const Text(
+                            child: Text(
                               'Start Verification',
                               style: TextStyle(
                                 fontSize: 18,
+                                color: Colors.white,
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
@@ -167,14 +168,14 @@ class _WorkerVerificationStartPageState extends State<WorkerVerificationStartPag
                       Icon(
                         Icons.security,
                         size: 16,
-                        color: Colors.white.withValues(alpha: 0.7),
+                        color: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.7),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         'Secured with end-to-end encryption',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.7),
+                          color: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
