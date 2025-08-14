@@ -173,7 +173,7 @@ class _MobileVerificationState extends State<MobileVerification>
           Row(
             children: [
               Container(
-                width: MediaQuery.of(context).size.width * 2/3,
+                width: MediaQuery.of(context).size.width * 3/3,
                 height: 6,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(

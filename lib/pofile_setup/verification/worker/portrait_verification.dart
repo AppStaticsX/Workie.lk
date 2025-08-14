@@ -59,7 +59,7 @@ class _PortraitVerificationState extends State<PortraitVerification> {
         _notifySelectionChanged();
       }
     } catch (e) {
-      print('Error picking image: $e');
+      //print('Error picking image: $e');
     }
   }
 
@@ -87,11 +87,24 @@ class _PortraitVerificationState extends State<PortraitVerification> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Fixed progress bar at the top
-        LinearProgressIndicator(
-          value: 1/3,
-          backgroundColor: Theme.of(context).colorScheme.tertiary,
-          valueColor: AlwaysStoppedAnimation<Color>(const Color(0xFF4E6BF5)),
+        Row(
+          children: [
+            Container(
+              width: MediaQuery.of(context).size.width * 1/3,
+              height: 6,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF4E6BF5).withValues(alpha: 0.3),
+                    const Color(0xFF4E6BF5),
+                  ],
+                ),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(3),
+                ),
+              ),
+            ),
+          ],
         ),
         // Scrollable content below
         Expanded(
