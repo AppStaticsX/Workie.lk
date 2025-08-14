@@ -1,3 +1,4 @@
+import 'package:flame_lottie/flame_lottie.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
@@ -136,9 +137,16 @@ class _TitleSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 54.0),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SvgPicture.asset(
+              Lottie.asset(
+                Theme.of(context).brightness == Brightness.dark
+                  ? 'assets/animation/lottie_empty_state_search_gigs_dark.json'
+                  : 'assets/animation/lottie_empty_state_search_gigs.json',
+                width: 220,
+                height: 180
+              )
+              /*SvgPicture.asset(
                 'assets/icon/undraw_predictive-analytics_6vi1.svg',
                 width: 120,
                 height: 120,
@@ -147,11 +155,11 @@ class _TitleSection extends StatelessWidget {
                 'assets/icon/undraw_business-deal_nx2n.svg',
                 width: 120,
                 height: 120,
-              )
+              )*/
             ],
           ),
         ),
-        const SizedBox(height: 24),
+        //const SizedBox(height: 24),
         Text(
           textAlign: TextAlign.center,
           'Are you looking for a New Job or\nlooking for New Employee?',
