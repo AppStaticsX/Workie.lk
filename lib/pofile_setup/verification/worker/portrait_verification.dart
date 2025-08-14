@@ -73,6 +73,7 @@ class _PortraitVerificationState extends State<PortraitVerification> {
       fileName = null;
       fileSize = null;
     });
+    _notifySelectionChanged();
   }
 
   String _formatFileSize(int bytes) {

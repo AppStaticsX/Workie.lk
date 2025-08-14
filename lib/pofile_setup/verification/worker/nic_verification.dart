@@ -7,21 +7,29 @@ import 'dart:io';
 import '../../../widgets/imagesource_dialog.dart';
 
 class NICVerification extends StatefulWidget {
-  const NICVerification({super.key});
+  final Function(bool)? onSelectionChanged; // Add callback for validation
+
+  const NICVerification({super.key, this.onSelectionChanged});
 
   @override
-  State<NICVerification>createState() => _NICVerificationState();
+  State<NICVerification> createState() => _NICVerificationState();
 }
 
 class _NICVerificationState extends State<NICVerification> {
-  File? selectedFile;
-  String? fileName;
-  String? fileSize;
+  File? selectedFrontFile;
+  File? selectedBackFile;
+  String? frontFileName;
+  String? backFileName;
+  String? frontFileSize;
+  String? backFileSize;
   bool isHovered = false;
 
   final ImagePicker _picker = ImagePicker();
 
-  Future<void> _pickFile() async {
+  // Check if both images are selected
+  bool get bothImagesSelected => selectedFrontFile != null && selectedBackFile != null;
+
+  Future<void> _pickFile({required bool isFront}) async {
     try {
       // Show options for camera or gallery
       final ImageSource? source = await _showImageSourceDialog();
@@ -34,9 +42,18 @@ class _NICVerificationState extends State<NICVerification> {
         int fileSize = await file.length();
 
         setState(() {
-          selectedFile = file;
-          fileName = image.name;
-          this.fileSize = _formatFileSize(fileSize);
+          if (isFront) {
+            selectedFrontFile = file;
+            frontFileName = image.name;
+            frontFileSize = _formatFileSize(fileSize);
+          } else {
+            selectedBackFile = file;
+            backFileName = image.name;
+            backFileSize = _formatFileSize(fileSize);
+          }
+
+          // Notify parent about selection state
+          widget.onSelectionChanged?.call(bothImagesSelected);
         });
       }
     } catch (e) {
@@ -48,11 +65,20 @@ class _NICVerificationState extends State<NICVerification> {
     return showImageSourceDialog(context);
   }
 
-  void _removeFile() {
+  void _removeFile({required bool isFront}) {
     setState(() {
-      selectedFile = null;
-      fileName = null;
-      fileSize = null;
+      if (isFront) {
+        selectedFrontFile = null;
+        frontFileName = null;
+        frontFileSize = null;
+      } else {
+        selectedBackFile = null;
+        backFileName = null;
+        backFileSize = null;
+      }
+
+      // Notify parent about selection state
+      widget.onSelectionChanged?.call(bothImagesSelected);
     });
   }
 
@@ -94,6 +120,7 @@ class _NICVerificationState extends State<NICVerification> {
                   ),
                 ),
                 const SizedBox(height: 24),
+                // Front view upload
                 SizedBox(
                   width: 300,
                   height: 200,
@@ -101,18 +128,18 @@ class _NICVerificationState extends State<NICVerification> {
                     onEnter: (_) => _onHover(true),
                     onExit: (_) => _onHover(false),
                     child: GestureDetector(
-                      onTap: selectedFile == null ? _pickFile : null,
+                      onTap: selectedFrontFile == null ? () => _pickFile(isFront: true) : null,
                       child: Container(
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.tertiary,
                           borderRadius: BorderRadius.circular(12),
-                          border: selectedFile != null ? Border.all(
+                          border: selectedFrontFile != null ? Border.all(
                             color: isHovered ? Color(0xFF4CAF50) : Color(0xFF666666),
                             width: 2,
                           ) : null,
                         ),
                         child: CustomPaint(
-                          painter: selectedFile == null
+                          painter: selectedFrontFile == null
                               ? DashedBorderPainter(
                             color: isHovered ? Color(0xFF4CAF50) : Color(0xFF666666),
                             strokeWidth: 2,
@@ -123,9 +150,13 @@ class _NICVerificationState extends State<NICVerification> {
                           child: SizedBox(
                             width: double.infinity,
                             height: double.infinity,
-                            child: selectedFile == null
+                            child: selectedFrontFile == null
                                 ? _buildUploadContent(Iconsax.personalcard_copy, 'Front-View')
-                                : _buildFileContent(),
+                                : _buildFileContent(
+                              fileName: frontFileName,
+                              fileSize: frontFileSize,
+                              onRemove: () => _removeFile(isFront: true),
+                            ),
                           ),
                         ),
                       ),
@@ -135,6 +166,7 @@ class _NICVerificationState extends State<NICVerification> {
                 const SizedBox(height: 12),
                 _buildImageLimit(),
                 const SizedBox(height: 24),
+                // Back view upload
                 SizedBox(
                   width: 300,
                   height: 200,
@@ -142,18 +174,18 @@ class _NICVerificationState extends State<NICVerification> {
                     onEnter: (_) => _onHover(true),
                     onExit: (_) => _onHover(false),
                     child: GestureDetector(
-                      onTap: selectedFile == null ? _pickFile : null,
+                      onTap: selectedBackFile == null ? () => _pickFile(isFront: false) : null,
                       child: Container(
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.tertiary,
                           borderRadius: BorderRadius.circular(12),
-                          border: selectedFile != null ? Border.all(
+                          border: selectedBackFile != null ? Border.all(
                             color: isHovered ? Color(0xFF4CAF50) : Color(0xFF666666),
                             width: 2,
                           ) : null,
                         ),
                         child: CustomPaint(
-                          painter: selectedFile == null
+                          painter: selectedBackFile == null
                               ? DashedBorderPainter(
                             color: isHovered ? Color(0xFF4CAF50) : Color(0xFF666666),
                             strokeWidth: 2,
@@ -164,9 +196,13 @@ class _NICVerificationState extends State<NICVerification> {
                           child: SizedBox(
                             width: double.infinity,
                             height: double.infinity,
-                            child: selectedFile == null
+                            child: selectedBackFile == null
                                 ? _buildUploadContent(Iconsax.card_copy, 'Back-View')
-                                : _buildFileContent(),
+                                : _buildFileContent(
+                              fileName: backFileName,
+                              fileSize: backFileSize,
+                              onRemove: () => _removeFile(isFront: false),
+                            ),
                           ),
                         ),
                       ),
@@ -283,14 +319,13 @@ class _NICVerificationState extends State<NICVerification> {
             ),
             children: [
               TextSpan(
-                text: 'Upload',
+                text: 'UPLOAD',
                 style: TextStyle(
                   color: const Color(0xFF4E6BF5),
                   fontWeight: FontWeight.bold,
-                  //decoration: TextDecoration.underline,
                 ),
               ),
-              TextSpan(text: ' or take\nimage here'),
+              TextSpan(text: ' or Take\nImage Here'),
             ],
           ),
         ),
@@ -301,7 +336,11 @@ class _NICVerificationState extends State<NICVerification> {
     );
   }
 
-  Widget _buildFileContent() {
+  Widget _buildFileContent({
+    String? fileName,
+    String? fileSize,
+    required VoidCallback onRemove,
+  }) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -335,7 +374,7 @@ class _NICVerificationState extends State<NICVerification> {
         ),
         SizedBox(height: 15),
         ElevatedButton(
-          onPressed: _removeFile,
+          onPressed: onRemove,
           style: ElevatedButton.styleFrom(
             backgroundColor: Color(0xFF666666),
             foregroundColor: Colors.white,
