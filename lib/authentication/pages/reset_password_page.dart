@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:lottie/lottie.dart';
+import 'package:workie/services/auth_service.dart';
 import 'package:workie/widgets/custom_textfield.dart';
+import 'package:http/http.dart' as http;
 
 class ResetPasswordPage extends StatefulWidget {
   const ResetPasswordPage({super.key});
@@ -88,7 +91,27 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
                             obscureText: false,
                           ),
                           Spacer(),
-                          _ContinueButton(onPressed: () {}),
+                          _ContinueButton(
+                            onPressed: () async {
+                              final email = _emailController.text.trim();
+                              if (email.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Please enter your email address')),
+                                );
+                                return;
+                              }
+                              final success = await AuthService().sendResetPasswordEmail(email);
+                              if (success) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Reset password email sent!')),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Failed to send reset email.')),
+                                );
+                              }
+                            },
+                          ),
                           _HelpText(),
                           const SizedBox(height: 32),
                         ],

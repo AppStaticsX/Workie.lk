@@ -1,16 +1,12 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:http/http.dart' as http;
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:lottie/lottie.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workie/authentication/pages/reset_password_page.dart';
 import 'package:workie/authentication/pages/signup_page.dart';
 import 'package:workie/generated/app_localizations.dart';
@@ -19,10 +15,10 @@ import 'package:workie/screens/splash_screen.dart';
 import 'package:workie/widgets/custom_textfield.dart';
 import 'package:workie/widgets/custom_toast.dart';
 import 'package:workie/widgets/full_screen_popup_dialog.dart';
+import '../../services/auth_service.dart';
 import '../../values/color.dart';
 import '../../values/dimension.dart';
 import '../../widgets/agreement_dialog.dart';
-import '../../widgets/error_dialog.dart';
 import '../../widgets/square_tile.dart';
 
 class LoginPage extends StatefulWidget {
@@ -38,8 +34,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
 
   bool isConnected = true;
   late StreamSubscription<InternetStatus> subscription;
-
-  static const String baseUrl = 'https://workie-lk-backend.onrender.com/api/auth';
 
   bool _obscureText = true;
   bool _isChecked = false;
@@ -141,91 +135,55 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
       return;
     }
 
-    if (_isChecked && !_hasErrors) {
-      setState(() {
-        _isLoading = true;
-      });
-    }
+    setState(() {
+      _isLoading = true;
+    });
 
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/login'), // Fixed: Added /auth to match backend route
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode({
-          'email': _emailController.text.trim(),
-          'password': _passwordController.text,
-        }),
-      );
+    // Use AuthService instead of direct HTTP calls
+    final AuthService authService = AuthService();
 
-      // Fixed: Changed from 201 to 200 to match backend login response
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
+    final result = await authService.login(
+      _emailController.text.trim(),
+      _passwordController.text,
+    );
 
-        if (responseData['success'] == true) {
-          if (responseData['data']?['token'] != null) {
-            await _storeToken(responseData['data']['token']);
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result['success'] == true) {
+      // Login successful
+      _showCustomToast('Login successful!', Iconsax.tick_circle);
+      _navigateToRoleSelection();
+
+    } else {
+      // Handle different error types
+      final errorType = result['error'];
+      final statusCode = result['statusCode'];
+
+      switch (errorType) {
+        case 'network':
+          _showNoInternetDialog();
+          break;
+        case 'timeout':
+          _showCustomToast('Request timed out. Please try again.', Iconsax.warning_2);
+          break;
+        case 'format':
+          _showCustomToast('Invalid server response. Please try again.', Iconsax.close_circle);
+          break;
+        default:
+        // Handle HTTP status codes
+          if (statusCode == 401) {
+            _showCustomToast('Invalid email or password', Iconsax.close_circle);
+          } else if (statusCode == 400) {
+            _showCustomToast(result['message'] ?? 'Invalid login data', Iconsax.warning_2);
+          } else if (statusCode == 500) {
+            _showCustomToast('Server error. Please try again later.', Iconsax.close_circle);
+          } else {
+            _showCustomToast(result['message'] ?? 'Login failed', Iconsax.close_circle);
           }
-
-          setState(() {
-            _isLoading = false;
-          });
-
-          _navigateToRoleSelection();
-        } else {
-          setState(() {
-            _isLoading = false;
-          });
-          _showCustomToast(responseData['message'] ?? 'Login failed', Iconsax.warning_2);
-        }
-      } else {
-        final responseData = jsonDecode(response.body);
-        setState(() {
-          _isLoading = false;
-        });
-
-        String errorMessage = 'Login failed';
-
-        // Fixed: Updated error handling for login-specific responses
-        if (response.statusCode == 401) {
-          // Handle invalid credentials or deactivated account
-          errorMessage = responseData['message'] ?? 'Invalid email or password';
-          _showCustomToast(errorMessage, Iconsax.close_circle);
-        } else if (response.statusCode == 400) {
-          // Handle validation errors
-          errorMessage = responseData['message'] ?? 'Invalid login data';
-          _showCustomToast(errorMessage, Iconsax.warning_2);
-        } else if (response.statusCode == 500) {
-          errorMessage = 'Server error. Please try again later.';
-          _showCustomToast(errorMessage, Iconsax.close_circle);
-        } else {
-          errorMessage = responseData['message'] ?? 'Unknown error occurred';
-          _showCustomToast(errorMessage, Iconsax.close_circle);
-        }
-      }
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-
-      if (e is SocketException) {
-        _showNoInternetDialog();
-        //_showCustomToast('No internet connection. Please check your network.', Iconsax.warning_2);
-      } else if (e is TimeoutException) {
-        _showCustomToast('Request timed out. Please try again.', Iconsax.warning_2);
-      } else if (e is FormatException) {
-        _showCustomToast('Invalid server response. Please try again.', Iconsax.close_circle);
-      } else {
-        _showCustomToast('An unexpected error occurred: ${e.toString()}', Iconsax.close_circle);
       }
     }
-  }
-
-  Future<void> _storeToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('auth_token', token);
   }
 
   void _showCustomToast(String message, IconData icon,

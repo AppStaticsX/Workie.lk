@@ -1,12 +1,10 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:http/http.dart' as http;
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:lottie/lottie.dart';
@@ -15,8 +13,8 @@ import 'package:workie/authentication/pages/login_page.dart';
 import 'package:workie/generated/app_localizations.dart';
 import 'package:workie/screens/splash_screen.dart';
 import 'package:workie/widgets/custom_textfield.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workie/widgets/error_dialog.dart';
+import '../../services/auth_service.dart';
 import '../../values/color.dart';
 import '../../values/dimension.dart';
 import '../../values/string.dart';
@@ -41,8 +39,6 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
 
   bool isConnected = true;
   late StreamSubscription<InternetStatus> subscription;
-
-  static const String baseUrl = 'https://workie-lk-backend.onrender.com/api/auth';
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -234,105 +230,76 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
     });
 
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/register'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode({
-          'firstName': _firstNameController.text.trim(),
-          'lastName': _lastNameController.text.trim(),
-          'email': _emailController.text.trim(),
-          'password': _passwordController.text,
-          'userType': 'worker',
-          'phone': _phoneController.text.trim() ?? "",
-        }),
+      final result = await AuthService().register(
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        phone: _phoneController.text.trim(),
       );
 
-      if (response.statusCode == 201) {
-        final responseData = jsonDecode(response.body);
+      setState(() {
+        _isLoading = false;
+      });
 
-        if (responseData['success'] == true) {
-          if (responseData['data']?['token'] != null) {
-            await _storeToken(responseData['data']['token']);
-          }
+      if (result['success']) {
+        showDialog(
+            context: context,
+            builder: (context) => FullScreenPopupDialog(
+                darkLottie: 'assets/animation/lottie_feedback_happy_dark.json',
+                lightLottie: 'assets/animation/lottie_feedback_happy.json',
+                title: 'Hooooray!',
+                subTitle: 'Your account created successfully.'
+            )
+        );
 
-          setState(() {
-            _isLoading = false;
-          });
-
-          showDialog(context: context, builder: (context) => FullScreenPopupDialog(
-              darkLottie: 'assets/animation/lottie_feedback_happy_dark.json',
-              lightLottie: 'assets/animation/lottie_feedback_happy.json',
-              title: 'Hooooray!',
-              subTitle: 'Your account created successfully.'
-          ));
-
-          _navigateToVerification();
-
-        } else {
-          setState(() {
-            _isLoading = false;
-          });
-          _showCustomToast(responseData['message'] ?? 'Registration failed', Iconsax.warning_2);
-        }
+        _navigateToVerification();
       } else {
-        final responseData = jsonDecode(response.body);
-        setState(() {
-          _isLoading = false;
-        });
-
-        String errorMessage = 'Registration failed';
-        if (response.statusCode == 400) {
-          //errorMessage = responseData['message'] ?? 'User already exists or invalid data';
+        // Handle different status codes
+        if (result['statusCode'] == 400) {
           showDialog(
             context: context,
             builder: (BuildContext context) {
               return ErrorDialog(
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text(
-                        'Use Different Email',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text(
+                      'Use Different Email',
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        setState(() => _isChecked = true);
-                        _dismissKeyboard();
-                      },
-                      child: const Text(
-                        'Log In',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      setState(() => _isChecked = true);
+                      _dismissKeyboard();
+                    },
+                    child: const Text(
+                      'Log In',
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                  ],
-                  title: 'Account Already Exists',
-                  contentText: 'Account with this email address (',
+                  ),
+                ],
+                title: 'Account Already Exists',
+                contentText: 'Account with this email address (',
                 contentText2: _emailController.text,
                 contentText3: ') already exists. Would you like to login instead?',
               );
             },
           );
-        } else if (response.statusCode == 500) {
-          errorMessage = 'Server error. Please try again later.';
         } else {
-          errorMessage = responseData['message'] ?? 'Unknown error occurred';
+          _showCustomToast(result['message'], Iconsax.warning_2);
         }
-
-        _showCustomToast(errorMessage, Iconsax.close_circle);
       }
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
 
+      // Handle network and other exceptions
       if (e is SocketException) {
         _showNoInternetDialog();
-        //_showCustomToast('No internet connection. Please check your network.', Iconsax.warning_2);
       } else if (e is TimeoutException) {
         _showCustomToast('Request timed out. Please try again.', Iconsax.warning_2);
       } else if (e is FormatException) {
@@ -341,11 +308,6 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
         _showCustomToast('An unexpected error occurred: ${e.toString()}', Iconsax.close_circle);
       }
     }
-  }
-
-  Future<void> _storeToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('auth_token', token);
   }
 
   void _showCustomToast(String message, IconData icon,
