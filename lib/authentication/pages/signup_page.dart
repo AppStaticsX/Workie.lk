@@ -34,6 +34,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
   Timer? _stopTimer;
 
   bool _obscureText = true;
+  bool _obscureText2 = true;
   bool _isChecked = false;
   bool _isLoading = false;
 
@@ -650,9 +651,9 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
                 : Icons.visibility_outlined,
             color: AppColors.iconSilver,
           ),
-          onPressed: () => setState(() => _obscureText = !_obscureText),
+          onPressed: () => setState(() => _obscureText2 = !_obscureText2),
         ),
-        obscureText: _obscureText,
+        obscureText: _obscureText2,
         errorText: _confirmPassowordError,
       ),
     );

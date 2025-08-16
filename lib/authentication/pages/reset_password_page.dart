@@ -6,6 +6,10 @@ import 'package:pinput/pinput.dart';
 import 'package:workie/services/auth_service.dart';
 import 'package:workie/widgets/custom_textfield.dart';
 
+import '../../generated/app_localizations.dart';
+import '../../values/color.dart';
+import '../../widgets/error_dialog.dart';
+
 class ResetPasswordPage extends StatefulWidget {
   const ResetPasswordPage({super.key});
 
@@ -14,17 +18,24 @@ class ResetPasswordPage extends StatefulWidget {
 }
 
 class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProviderStateMixin {
+
   int _selectedIndex = 0;
   late AnimationController _lottieController;
   Timer? _stopTimer;
+
+
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _pinController = TextEditingController();
+  final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _newPasswordConfirmController = TextEditingController();
 
   String _verificationCode = '';
 
   // Add loading states
   bool _isLoading = false;
   String? _errorMessage;
+  String? _passwordError;
+  String? _confirmPasswordError;
 
   @override
   void initState() {
@@ -41,6 +52,40 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
     super.dispose();
   }
 
+  void _validatePassword(String password) {
+    String? error;
+    if (password.isEmpty) {
+      error = AppLocalizations.of(context)!.passwordRequired;
+    } else if (password.length < 8) {
+      error = AppLocalizations.of(context)!.passwordTooShort;
+    } else if (!RegExp(
+      r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]',
+    ).hasMatch(password)) {
+      error = "Password must contain uppercase, lowercase, number & special character";
+    } else if (RegExp(r'(.)\1{2,}').hasMatch(password)) {
+      error = "Password cannot have repeated characters";
+    } else if (RegExp(
+      r'(012|123|234|345|456|567|678|789|890|abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz)',
+      caseSensitive: false,
+    ).hasMatch(password)) {
+      error = "Password cannot contain sequential characters";
+    }
+
+    if (_passwordError != error) {
+      setState(() => _passwordError = error);
+    }
+  }
+
+  void _validateConfirmPassword(String confirmPassword) {
+    String? error;
+    if (confirmPassword != _newPasswordController.text) {
+      error = "Passwords do not match";
+    }
+    if (_confirmPasswordError != error) {
+      setState(() => _confirmPasswordError = error);
+    }
+  }
+
   void _nextPage() {
     setState(() {
       _selectedIndex++;
@@ -50,6 +95,38 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
   // Add email validation
   bool _isValidEmail(String email) {
     return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+  }
+
+  Future<void> _handleUpdatePassword() async {
+    final password = _newPasswordController.text.trim();
+    final confirmPassword = _newPasswordConfirmController.text.trim();
+
+    _validatePassword(password);
+    _validateConfirmPassword(confirmPassword);
+
+    if (_passwordError != null || _confirmPasswordError != null) {
+      setState(() {}); // To update the error message in the UI
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final authService = AuthService();
+    final result = await authService.resetPassword(_pinController.text.trim(), password);
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result['success'] == true) {
+      // Show success dialog or navigate
+    } else {
+      setState(() {
+        _passwordError = result['message'] ?? 'Failed to reset password.';
+      });
+    }
   }
 
   // Handle sending reset password email
@@ -179,6 +256,19 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
                                 ),
                               ],
                             ),
+                            _updatePassword(
+                              controller: _newPasswordController,
+                              confirmController: _newPasswordConfirmController,
+                              errorText: _passwordError,
+                              confirmErrorText: _confirmPasswordError,
+                              onPasswordChanged: (val) {
+                                _validatePassword(val);
+                                _validateConfirmPassword(_newPasswordConfirmController.text);
+                              },
+                              onConfirmChanged: (val) {
+                                _validateConfirmPassword(val);
+                              },
+                            )
                           ],
                         ),
                         Spacer(),
@@ -237,6 +327,17 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
                                           _errorMessage = result['message'] ?? 'Invalid or expired code.';
                                         });
                                       }
+                                    },
+                                    isLoading: _isLoading,
+                                  ),
+                                  _HelpText(),
+                                ],
+                              ),
+                              Column(
+                                children: [
+                                  _ContinueButton(
+                                    onPressed: () {
+                                      _handleUpdatePassword();
                                     },
                                     isLoading: _isLoading,
                                   ),
@@ -540,6 +641,131 @@ class _verifyEmail extends StatelessWidget {
                   // Optional: Auto-continue when code is complete
                   // _continue();
                 },
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _updatePassword extends StatefulWidget {
+  final TextEditingController controller;
+  final TextEditingController confirmController;
+  final String? errorText;
+  final String? confirmErrorText;
+  final Function(String) onPasswordChanged;
+  final Function(String) onConfirmChanged;
+
+  const _updatePassword({
+    super.key,
+    required this.controller,
+    required this.confirmController,
+    this.errorText,
+    this.confirmErrorText,
+    required this.onPasswordChanged,
+    required this.onConfirmChanged
+  });
+
+  @override
+  State<_updatePassword> createState() => _updatePasswordState();
+}
+
+class _updatePasswordState extends State<_updatePassword> {
+  bool _obscureText = true;
+  bool _obscureText2 = true;
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Container(
+              width: MediaQuery.of(context).size.width * 3/3,
+              height: 6,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF4E6BF5).withValues(alpha: 0.3),
+                    const Color(0xFF4E6BF5),
+                  ],
+                ),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(3),
+                ),
+              ),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 36.0),
+          child: Column(
+            children: [
+              _LockIcon(iconData: Iconsax.lock),
+              const SizedBox(height: 40),
+              _VerificationTitle(title: 'Enter Verification Code'),
+              const SizedBox(height: 40),
+              _VerificationSubtitle(subTitle: 'Enter the 5-digit code sent to your email'),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      'New Password',
+                      style: TextStyle(
+                        fontSize: 15
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              CustomTextfield(
+                controller: widget.controller,
+                lableText: AppLocalizations.of(context)!.password,
+                hintText: AppLocalizations.of(context)!.password,
+                prefixIconData: Icon(Iconsax.lock_copy, color: AppColors.textSilver),
+                suffixIconData: IconButton(
+                  icon: Icon(
+                    _obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    color: AppColors.iconSilver,
+                  ),
+                  onPressed: () => setState(() => _obscureText = !_obscureText),
+                ),
+                obscureText: _obscureText,
+                errorText: widget.errorText,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                        'Confirm New Password',
+                      style: TextStyle(
+                          fontSize: 15
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              CustomTextfield(
+                controller: widget.confirmController,
+                lableText: AppLocalizations.of(context)!.password,
+                hintText: AppLocalizations.of(context)!.password,
+                prefixIconData: Icon(Iconsax.lock_copy, color: AppColors.textSilver),
+                suffixIconData: IconButton(
+                  icon: Icon(
+                    _obscureText2 ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    color: AppColors.iconSilver,
+                  ),
+                  onPressed: () => setState(() => _obscureText2 = !_obscureText2),
+                ),
+                obscureText: _obscureText2,
+                errorText: widget.confirmErrorText,
               ),
             ],
           ),

@@ -379,4 +379,41 @@ class AuthService {
       };
     }
   }
+
+  Future<Map<String, dynamic>> resetPassword(String code, String newPassword) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/reset-password/$code'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'password': newPassword,
+        }),
+      ).timeout(const Duration(seconds: 15));
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && responseData['success'] == true) {
+        return {
+          'success': true,
+          'message': responseData['message'] ?? 'Password reset successful',
+          'token': responseData['data']?['token'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to reset password',
+          'statusCode': response.statusCode,
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'An error occurred: ${e.toString()}',
+        'error': 'unknown'
+      };
+    }
+  }
 }
