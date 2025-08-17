@@ -7,6 +7,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:lottie/lottie.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:workie/authentication/pages/reset_password_page.dart';
 import 'package:workie/authentication/pages/signup_page.dart';
 import 'package:workie/generated/app_localizations.dart';
@@ -616,7 +617,27 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           TextButton(
-            onPressed: () {},
+            onPressed: () async {
+              String? encodeQueryParameters(Map<String, String> params) {
+                return params.entries
+                    .map((MapEntry<String, String> e) =>
+                '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
+                    .join('&');
+              }
+              final Uri emailLaunchUri = Uri(
+                scheme: 'mailto',
+                path: 'workielk@gmail.com',
+                query: encodeQueryParameters(<String, String>{
+                  'subject': 'Report an Issue',
+                }),
+              );
+
+              if (await canLaunchUrl(emailLaunchUri)) {
+                launchUrl(emailLaunchUri);
+              } else {
+                throw Exception();
+              }
+            },
             child: Text(
               AppLocalizations.of(context)!.contactUs,
               style: TextStyle(

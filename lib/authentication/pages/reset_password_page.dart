@@ -201,7 +201,12 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
           );
         }
 
-        _nextPage();
+        if (_selectedIndex == 1) {
+          return;
+        } else {
+          _nextPage();
+        }
+
       } else {
         setState(() {
           _errorMessage = result['message'] ?? 'Failed to send reset email. Please check your email address.';
@@ -353,6 +358,12 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
                                         setState(() {
                                           _errorMessage = result['message'] ?? 'Invalid or expired code.';
                                         });
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text(_errorMessage!, style: TextStyle(color: Colors.white),),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
                                       }
                                     },
                                     isLoading: _isLoading,

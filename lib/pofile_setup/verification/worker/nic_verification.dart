@@ -103,7 +103,7 @@ class _NICVerificationState extends State<NICVerification> {
           children: [
             Container(
               width: MediaQuery.of(context).size.width * 2/3,
-              height: 6,
+              height: 2,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -112,7 +112,7 @@ class _NICVerificationState extends State<NICVerification> {
                   ],
                 ),
                 borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(3),
+                  bottom: Radius.circular(0),
                 ),
               ),
             ),

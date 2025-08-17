@@ -91,7 +91,7 @@ class _PortraitVerificationState extends State<PortraitVerification> {
           children: [
             Container(
               width: MediaQuery.of(context).size.width * 1/3,
-              height: 6,
+              height: 2,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -100,7 +100,7 @@ class _PortraitVerificationState extends State<PortraitVerification> {
                   ],
                 ),
                 borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(3),
+                  bottom: Radius.circular(0),
                 ),
               ),
             ),
