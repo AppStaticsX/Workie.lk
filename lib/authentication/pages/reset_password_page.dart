@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:lottie/lottie.dart';
 import 'package:pinput/pinput.dart';
+import 'package:workie/authentication/pages/login_page.dart';
 import 'package:workie/services/auth_service.dart';
 import 'package:workie/widgets/custom_textfield.dart';
-
 import '../../generated/app_localizations.dart';
 import '../../values/color.dart';
 import '../../widgets/error_dialog.dart';
@@ -121,7 +121,34 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
     });
 
     if (result['success'] == true) {
-      // Show success dialog or navigate
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return ErrorDialog(
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => LoginPage()
+                      )
+                  );
+                },
+                child: const Text(
+                  'Back to Sign-in',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+            title: 'Password Updated!',
+            contentText: 'Password of your account with email address ',
+            contentText2: _emailController.text,
+            contentText3: ' has been changed successfully. You can now sign in with your new password.',
+          );
+        },
+      );
     } else {
       setState(() {
         _passwordError = result['message'] ?? 'Failed to reset password.';
@@ -252,7 +279,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Flexible(
-                                  child: _verifyEmail(pinController: _pinController),
+                                  child: _verifyEmail(pinController: _pinController, resetButtonFunction: () { _sendResetPasswordEmail(); },),
                                 ),
                               ],
                             ),
@@ -283,7 +310,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
                                     onPressed: _isLoading ? null : _sendResetPasswordEmail,
                                     isLoading: _isLoading,
                                   ),
-                                  _HelpText(),
+                                  _HelpText(helpText: 'Make sure you use the same email you signed up with before.'),
                                 ],
                               ),
                               Column(
@@ -330,7 +357,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
                                     },
                                     isLoading: _isLoading,
                                   ),
-                                  _HelpText(),
+                                  _HelpText(helpText: 'Check your inbox and spam folder for the code. Didn’t get it? Request a new one.'),
                                 ],
                               ),
                               Column(
@@ -341,7 +368,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
                                     },
                                     isLoading: _isLoading,
                                   ),
-                                  _HelpText(),
+                                  _HelpText(helpText: 'A mix of letters, numbers, and symbols makes it stronger. Try not to reuse your old password.'),
                                 ],
                               ),
                             ],
@@ -444,7 +471,7 @@ class _ContinueButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      height: 56,
+      height: 50,
       margin: EdgeInsets.only(bottom: 24),
       child: ElevatedButton(
         onPressed: onPressed,
@@ -456,19 +483,22 @@ class _ContinueButton extends StatelessWidget {
           elevation: 0,
         ),
         child: isLoading
-            ? SizedBox(
-          width: 24,
-          height: 24,
-          child: CircularProgressIndicator(
-            strokeWidth: 5,
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ? Transform.scale(
+          scale: 0.45, // Makes it half the size
+          child: Padding(
+            padding: const EdgeInsets.only(right: 4.0),
+            child: CircularProgressIndicator(
+              strokeWidth: 9,
+              color: Colors.white,
+              strokeCap: StrokeCap.square,
+            ),
           ),
         )
             : Text(
           'Continue'.toUpperCase(),
           style: TextStyle(
             fontSize: 18,
-            letterSpacing: 2,
+            letterSpacing: 1.5,
             fontWeight: FontWeight.w900,
             color: Colors.white,
           ),
@@ -479,10 +509,16 @@ class _ContinueButton extends StatelessWidget {
 }
 
 class _HelpText extends StatelessWidget {
+  final String helpText;
+
+  const _HelpText({
+    required this.helpText
+  });
+
   @override
   Widget build(BuildContext context) {
     return Text(
-      "Can't find the code? Please check your spam or junk mail folder.",
+      helpText,
       style: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.bold,
@@ -512,7 +548,7 @@ class _enterEmail extends StatelessWidget {
           children: [
             Container(
               width: MediaQuery.of(context).size.width * 1/3,
-              height: 6,
+              height: 2,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -521,7 +557,7 @@ class _enterEmail extends StatelessWidget {
                   ],
                 ),
                 borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(3),
+                  bottom: Radius.circular(0),
                 ),
               ),
             ),
@@ -531,12 +567,13 @@ class _enterEmail extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 36.0),
           child: Column(
             children: [
-              _LockIcon(iconData: Iconsax.lock),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.05),
+              _LockIcon(iconData: Iconsax.sms_search_copy),
               const SizedBox(height: 40),
-              _VerificationTitle(title: 'Reset Your Account Password'),
-              const SizedBox(height: 40),
-              _VerificationSubtitle(subTitle: 'Enter your email address to receive a reset code'),
+              _VerificationTitle(title: 'Find Your Account'),
               const SizedBox(height: 20),
+              _VerificationSubtitle(subTitle: 'Enter your registered email address to get a verification code.'),
+              const SizedBox(height: 30),
               CustomTextfield(
                 controller: controller,
                 lableText: 'Email Address',
@@ -564,9 +601,10 @@ class _enterEmail extends StatelessWidget {
 
 class _verifyEmail extends StatelessWidget {
   final TextEditingController pinController;
+  final VoidCallback resetButtonFunction;
 
   const _verifyEmail({
-    required this.pinController
+    required this.pinController, required this.resetButtonFunction
   });
 
   @override
@@ -606,7 +644,7 @@ class _verifyEmail extends StatelessWidget {
           children: [
             Container(
               width: MediaQuery.of(context).size.width * 2/3,
-              height: 6,
+              height: 2,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -615,7 +653,7 @@ class _verifyEmail extends StatelessWidget {
                   ],
                 ),
                 borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(3),
+                  bottom: Radius.circular(0),
                 ),
               ),
             ),
@@ -625,12 +663,13 @@ class _verifyEmail extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 36.0),
           child: Column(
             children: [
-              _LockIcon(iconData: Iconsax.lock),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.05),
+              _LockIcon(iconData: Iconsax.shield_tick_copy),
               const SizedBox(height: 40),
-              _VerificationTitle(title: 'Enter Verification Code'),
-              const SizedBox(height: 40),
-              _VerificationSubtitle(subTitle: 'Enter the 5-digit code sent to your email'),
+              _VerificationTitle(title: 'Verify Your Identity'),
               const SizedBox(height: 20),
+              _VerificationSubtitle(subTitle: 'Enter the 5-digit code we sent to your email.'),
+              const SizedBox(height: 30),
               Pinput(
                 controller: pinController,
                 length: 5,
@@ -642,6 +681,23 @@ class _verifyEmail extends StatelessWidget {
                   // _continue();
                 },
               ),
+              const SizedBox(height: 30),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.15),
+                child: TextButton(
+                    onPressed: resetButtonFunction,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Iconsax.refresh_circle_copy),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Resend Code'
+                        )
+                      ],
+                    )
+                ),
+              )
             ],
           ),
         ),
@@ -659,7 +715,6 @@ class _updatePassword extends StatefulWidget {
   final Function(String) onConfirmChanged;
 
   const _updatePassword({
-    super.key,
     required this.controller,
     required this.confirmController,
     this.errorText,
@@ -683,7 +738,7 @@ class _updatePasswordState extends State<_updatePassword> {
           children: [
             Container(
               width: MediaQuery.of(context).size.width * 3/3,
-              height: 6,
+              height: 2,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -692,7 +747,7 @@ class _updatePasswordState extends State<_updatePassword> {
                   ],
                 ),
                 borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(3),
+                  bottom: Radius.circular(0),
                 ),
               ),
             ),
@@ -702,12 +757,13 @@ class _updatePasswordState extends State<_updatePassword> {
           padding: const EdgeInsets.symmetric(horizontal: 36.0),
           child: Column(
             children: [
-              _LockIcon(iconData: Iconsax.lock),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.05),
+              _LockIcon(iconData: Iconsax.lock_1_copy),
               const SizedBox(height: 40),
-              _VerificationTitle(title: 'Enter Verification Code'),
-              const SizedBox(height: 40),
-              _VerificationSubtitle(subTitle: 'Enter the 5-digit code sent to your email'),
+              _VerificationTitle(title: 'Set a New Password'),
               const SizedBox(height: 20),
+              _VerificationSubtitle(subTitle: 'Create a strong password to secure your account.'),
+              const SizedBox(height: 30),
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -754,8 +810,8 @@ class _updatePasswordState extends State<_updatePassword> {
               ),
               CustomTextfield(
                 controller: widget.confirmController,
-                lableText: AppLocalizations.of(context)!.password,
-                hintText: AppLocalizations.of(context)!.password,
+                lableText: 'Confirm Password',
+                hintText: 'Confirm Password',
                 prefixIconData: Icon(Iconsax.lock_copy, color: AppColors.textSilver),
                 suffixIconData: IconButton(
                   icon: Icon(
