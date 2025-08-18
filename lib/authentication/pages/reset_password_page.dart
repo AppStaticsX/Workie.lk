@@ -8,6 +8,7 @@ import 'package:workie/services/auth_service.dart';
 import 'package:workie/widgets/custom_textfield.dart';
 import '../../generated/app_localizations.dart';
 import '../../values/color.dart';
+import '../../widgets/custom_toast.dart';
 import '../../widgets/error_dialog.dart';
 
 class ResetPasswordPage extends StatefulWidget {
@@ -41,6 +42,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
   void initState() {
     super.initState();
     _lottieController = AnimationController(vsync: this);
+    CustomToast.init(context);
   }
 
   @override
@@ -94,7 +96,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
 
   // Add email validation
   bool _isValidEmail(String email) {
-    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+    return RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
   }
 
   Future<void> _handleUpdatePassword() async {
@@ -208,9 +210,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
         }
 
       } else {
-        setState(() {
-          _errorMessage = result['message'] ?? 'Failed to send reset email. Please check your email address.';
-        });
+        CustomToast.show(result['message'], Iconsax.close_circle);
       }
     } catch (e) {
       setState(() {
@@ -276,7 +276,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
                         IndexedStack(
                           index: _selectedIndex,
                           children: [
-                            _enterEmail(
+                            _EnterEmail(
                               controller: _emailController,
                               errorMessage: _errorMessage,
                             ),
@@ -284,11 +284,11 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Flexible(
-                                  child: _verifyEmail(pinController: _pinController, resetButtonFunction: () { _sendResetPasswordEmail(); },),
+                                  child: _VerifyEmail(pinController: _pinController, resetButtonFunction: () { _sendResetPasswordEmail(); },),
                                 ),
                               ],
                             ),
-                            _updatePassword(
+                            _UpdatePassword(
                               controller: _newPasswordController,
                               confirmController: _newPasswordConfirmController,
                               errorText: _passwordError,
@@ -542,11 +542,11 @@ class _HelpText extends StatelessWidget {
 
 // Screens
 
-class _enterEmail extends StatelessWidget {
+class _EnterEmail extends StatelessWidget {
   final TextEditingController controller;
   final String? errorMessage;
 
-  const _enterEmail({
+  const _EnterEmail({
     required this.controller,
     this.errorMessage,
   });
@@ -610,11 +610,11 @@ class _enterEmail extends StatelessWidget {
   }
 }
 
-class _verifyEmail extends StatelessWidget {
+class _VerifyEmail extends StatelessWidget {
   final TextEditingController pinController;
   final VoidCallback resetButtonFunction;
 
-  const _verifyEmail({
+  const _VerifyEmail({
     required this.pinController, required this.resetButtonFunction
   });
 
@@ -717,7 +717,7 @@ class _verifyEmail extends StatelessWidget {
   }
 }
 
-class _updatePassword extends StatefulWidget {
+class _UpdatePassword extends StatefulWidget {
   final TextEditingController controller;
   final TextEditingController confirmController;
   final String? errorText;
@@ -725,7 +725,7 @@ class _updatePassword extends StatefulWidget {
   final Function(String) onPasswordChanged;
   final Function(String) onConfirmChanged;
 
-  const _updatePassword({
+  const _UpdatePassword({
     required this.controller,
     required this.confirmController,
     this.errorText,
@@ -735,10 +735,10 @@ class _updatePassword extends StatefulWidget {
   });
 
   @override
-  State<_updatePassword> createState() => _updatePasswordState();
+  State<_UpdatePassword> createState() => _UpdatePasswordState();
 }
 
-class _updatePasswordState extends State<_updatePassword> {
+class _UpdatePasswordState extends State<_UpdatePassword> {
   bool _obscureText = true;
   bool _obscureText2 = true;
   @override

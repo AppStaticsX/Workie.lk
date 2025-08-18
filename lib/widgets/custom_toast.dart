@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 class CustomToast {
   static final FToast _fToast = FToast();
@@ -11,11 +10,11 @@ class CustomToast {
   }
 
   /// Function to show the custom toast
-  static void show(String message, String svgPath, {ToastGravity gravity = ToastGravity.BOTTOM}) {
+  static void show(String message, IconData iconData, {ToastGravity gravity = ToastGravity.BOTTOM}) {
     Widget toast = Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         color: Colors.black87,
         boxShadow: const [
           BoxShadow(color: Colors.black26, blurRadius: 3, spreadRadius: 1),
@@ -24,11 +23,7 @@ class CustomToast {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SvgPicture.asset(
-            svgPath, // Change this to your SVG icon
-            height: 24,
-            width: 24,
-          ),
+          Icon(iconData, size: 24),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
