@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:workie/pofile_setup/collect_info/worker/add_skills_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/select_work_page.dart';
-import 'package:workie/pofile_setup/verification/worker/mobile_verification.dart';
-import 'package:workie/pofile_setup/verification/worker/nic_verification.dart';
-import 'package:workie/pofile_setup/verification/worker/portrait_verification.dart';
 import 'package:workie/widgets/bottom_navigation.dart';
-import 'package:workie/pofile_setup/verification/worker/verification_start_page_worker.dart';
 import 'package:workie/widgets/simple_bottom_navigation.dart';
-import '../../pages/activity_page.dart';
-import '../../pages/post_page.dart';
-import 'worker/start_page.dart';
+import 'start_page.dart';
 
 class ProfileSetup extends StatefulWidget {
   const ProfileSetup({super.key});
@@ -54,8 +49,9 @@ class _ProfileSetupState extends State<ProfileSetup> {
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          const StartPage(),
-          const SelectWorkPage()
+          const WorkerCollectInfoStartPage(),
+          const SelectWorkPage(),
+          const AddSkillsPage()
         ],
       ),
       bottomNavigationBar: IndexedStack(

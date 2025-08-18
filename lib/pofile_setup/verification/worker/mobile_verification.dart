@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/widgets/simple_prefixtextfield.dart';
 
-import '../../collect_info/profile_setup.dart';
+import '../../collect_info/worker/page_setup.dart';
 
 class MobileVerification extends StatefulWidget {
   const MobileVerification({super.key});

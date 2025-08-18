@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:workie/pofile_setup/verification/profile_setup.dart';
+import 'package:workie/pofile_setup/verification/worker/page_setup.dart';
 
 class WorkerVerificationStartPage extends StatefulWidget {
   const WorkerVerificationStartPage({super.key});

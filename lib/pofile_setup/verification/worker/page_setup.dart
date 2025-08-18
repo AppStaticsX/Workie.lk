@@ -78,7 +78,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
           size: 26,
         ),
         title: const Text(
-          'Profile Verification'
+          'Create & Verify Your Profile'
         ),
       ),
       body: IndexedStack(

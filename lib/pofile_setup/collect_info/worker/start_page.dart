@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
-class StartPage extends StatefulWidget {
-  const StartPage({super.key,});
+class WorkerCollectInfoStartPage extends StatefulWidget {
+  const WorkerCollectInfoStartPage({super.key,});
 
   @override
-  State<StartPage> createState() => _StartPageState();
+  State<WorkerCollectInfoStartPage> createState() => _WorkerCollectInfoStartPage();
 }
 
-class _StartPageState extends State<StartPage> {
+class _WorkerCollectInfoStartPage extends State<WorkerCollectInfoStartPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
