@@ -290,7 +290,7 @@ class AuthService {
           'Accept': 'application/json',
           'Authorization': 'Bearer $token',
         },
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(minutes: 10));// new edit
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);

@@ -82,7 +82,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
             onBackAction: _navigateBack,
           ),
           BottomNavigation(
-            actionName: 'Next',
+            actionName: 'Add Profile Title',
             onTapAction: _navigateNext,
             onBackAction: _navigateBack,
           ),

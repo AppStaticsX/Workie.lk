@@ -27,7 +27,7 @@ class _InitPageState extends State<InitPage> {
         padding: EdgeInsets.symmetric(horizontal: 24),
         child: Column(
           children: [
-            const SizedBox(height: 36),
+            const SizedBox(height: 50),
             Text(
               'Hey, Are you ready for your next big opportunities?',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -114,7 +114,7 @@ class _InitPageState extends State<InitPage> {
               thickness: 0.4,
               color: Colors.grey,
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 20),
             Row(
               children: [
                 Expanded(
