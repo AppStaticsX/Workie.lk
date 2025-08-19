@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_skills_page.dart';
+import 'package:workie/pofile_setup/collect_info/worker/add_title_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/select_work_page.dart';
 import 'package:workie/widgets/bottom_navigation.dart';
 import 'package:workie/widgets/simple_bottom_navigation.dart';
@@ -79,6 +80,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
               });
             },
           ),
+          AddTitlePage()
         ],
       ),
       bottomNavigationBar: IndexedStack(
@@ -99,7 +101,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
             onBackAction: _navigateBack,
           ),
           BottomNavigation(
-            actionName: 'Finish',
+            actionName: 'Add Experience',
             onTapAction: () {
               Navigator.of(context).pushReplacementNamed('/main');
             },
