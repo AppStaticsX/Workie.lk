@@ -646,7 +646,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
         prefixIconData: Icon(Iconsax.lock_copy, color: AppColors.textSilver),
         suffixIconData: IconButton(
           icon: Icon(
-            _obscureText
+            _obscureText2
                 ? Icons.visibility_off_outlined
                 : Icons.visibility_outlined,
             color: AppColors.iconSilver,

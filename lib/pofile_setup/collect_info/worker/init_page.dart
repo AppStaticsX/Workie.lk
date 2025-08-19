@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:workie/pofile_setup/collect_info/worker/page_setup.dart';
 
 class InitPage extends StatefulWidget {
   const InitPage({super.key});
@@ -10,6 +12,150 @@ class InitPage extends StatefulWidget {
 class _InitPageState extends State<InitPage> {
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
+        surfaceTintColor: Colors.transparent,
+        leading: const Icon(
+          Iconsax.user_copy,
+          size: 26,
+        ),
+        title: const Text('Create & Verify Your Profile'),
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          children: [
+            const SizedBox(height: 36),
+            Text(
+              'Hey, Are you ready for your next big opportunities?',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold
+              )
+            ),
+            const SizedBox(height: 44),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.secondary,
+                    shape: BoxShape.circle
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Icon(Iconsax.user_edit_copy,
+                      size: 22,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Text(
+                    'Answer a few questions and start building your profile.',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                )
+              ],
+            ),
+            const SizedBox(height: 36),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.secondary,
+                      shape: BoxShape.circle
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Icon(Iconsax.shield_tick_copy,
+                      size: 22,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Text(
+                    'Verify your profile for make clients can put trust on you.',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                )
+              ],
+            ),
+            const SizedBox(height: 36),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.secondary,
+                      shape: BoxShape.circle
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Icon(Iconsax.tick_circle_copy,
+                      size: 22,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Text(
+                    'You are good to go. 🚀',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                )
+              ],
+            ),
+            const SizedBox(height: 40),
+            Divider(
+              thickness: 0.4,
+              color: Colors.grey,
+            ),
+            const SizedBox(height: 40),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    textAlign: TextAlign.center,
+                    'It only takes 5-10 minutes and you can edit it later. We\'ll save as you go.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey
+                    )
+                  ),
+                ),
+              ],
+            )
+          ],
+        ),
+      ),
+      bottomNavigationBar: BottomAppBar(
+        child: Container(
+          height: 50,
+          padding: EdgeInsets.symmetric(horizontal: 24),
+          child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileSetup()));
+              },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4E6BF5),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))
+            ),
+              child: Text(
+                'Get Started',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  letterSpacing: 1.5,
+                ),
+              ),
+          ),
+        ),
+      ),
+    );
   }
 }

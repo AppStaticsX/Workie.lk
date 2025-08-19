@@ -2,7 +2,7 @@ import 'package:flame_lottie/flame_lottie.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:workie/pofile_setup/collect_info/worker/start_page.dart';
+import 'package:workie/pofile_setup/collect_info/worker/init_page.dart';
 import 'package:workie/screens/main_screen.dart';
 import 'package:workie/values/color.dart';
 import '../values/dimension.dart';
@@ -23,7 +23,7 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
     await Future.delayed(const Duration(seconds: 3));
     if (mounted) {
       Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => const WorkerCollectInfoStartPage())
+          MaterialPageRoute(builder: (context) => const InitPage())
       );
     }
     setState(() {

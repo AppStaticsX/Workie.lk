@@ -50,7 +50,7 @@ class BottomNavigation extends StatelessWidget {
               actionName,
               style: TextStyle(
                 color: Colors.white,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w900,
                 fontSize: 15,
               ),
             ),

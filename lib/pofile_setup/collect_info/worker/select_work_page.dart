@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import '../../../widgets/expandebale_selection_widget.dart';
 
 class SelectWorkPage extends StatefulWidget {
-  const SelectWorkPage({super.key});
+  final void Function(bool hasSelection)? onSelectionChanged;
+
+  const SelectWorkPage({super.key, this.onSelectionChanged});
 
   @override
   State<SelectWorkPage> createState() => _SelectWorkPageState();
@@ -33,6 +35,11 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
         }
       }
     });
+
+    // Notify parent if at least one selection exists
+    if (widget.onSelectionChanged != null) {
+      widget.onSelectionChanged!(totalSelectedCount > 0);
+    }
 
     print('Selected options in $categoryTitle: $selectedOptions');
     print('Total selections: $totalSelectedCount');

@@ -17,7 +17,16 @@ class _ProfileSetupState extends State<ProfileSetup> {
   int _selectedIndex = 0;
   final int _maxIndex = 3; // Define max index for safety
 
+  bool _hasWorkSelection = false; // Track if user has selected at least one work option
+
   void _navigateNext() {
+    // If on SelectWorkPage (index 1) and no selection, block
+    if (_selectedIndex == 1 && !_hasWorkSelection) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please select at least one option to continue.')),
+      );
+      return;
+    }
     if (_selectedIndex < _maxIndex) {
       setState(() {
         _selectedIndex++;
@@ -50,7 +59,13 @@ class _ProfileSetupState extends State<ProfileSetup> {
         index: _selectedIndex,
         children: [
           const WorkerCollectInfoStartPage(),
-          const SelectWorkPage(),
+          SelectWorkPage(
+            onSelectionChanged: (hasSelection) {
+              setState(() {
+                _hasWorkSelection = hasSelection;
+              });
+            },
+          ),
           const AddSkillsPage()
         ],
       ),
@@ -58,11 +73,11 @@ class _ProfileSetupState extends State<ProfileSetup> {
         index: _selectedIndex,
         children: [
           SimpleBottomNavigation(
-              actionName: 'Let\'s Get Started',
-              onTapAction: _navigateNext,
+            actionName: 'Let\'s Continue',
+            onTapAction: _navigateNext,
           ),
           BottomNavigation(
-            actionName: 'Next',
+            actionName: 'Add Skills',
             onTapAction: _navigateNext,
             onBackAction: _navigateBack,
           ),
