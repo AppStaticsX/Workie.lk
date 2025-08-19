@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class AddSkillsPage extends StatefulWidget {
-  const AddSkillsPage({super.key});
+  final ValueChanged<bool>? onSkillsChanged; // <-- Add this callback
+
+  const AddSkillsPage({super.key, this.onSkillsChanged});
 
   @override
   State<AddSkillsPage> createState() => _AddSkillsPageState();
@@ -27,6 +29,10 @@ class _AddSkillsPageState extends State<AddSkillsPage> {
     'Web Application',
   ];
 
+  void _notifyParent() {
+    widget.onSkillsChanged?.call(selectedSkills.isNotEmpty);
+  }
+
   void _addSkill(String skill) {
     if (selectedSkills.length >= maxSkills) return;
     setState(() {
@@ -34,16 +40,17 @@ class _AddSkillsPageState extends State<AddSkillsPage> {
       suggestedSkills.remove(skill);
     });
     _skillController.clear();
+    _notifyParent();
   }
 
   void _removeSkill(String skill) {
     setState(() {
       selectedSkills.remove(skill);
-      // Optionally, add back to suggestions if you want
       if (!suggestedSkills.contains(skill)) {
         suggestedSkills.add(skill);
       }
     });
+    _notifyParent();
   }
 
   void _onSkillInput(String value) {
@@ -54,6 +61,14 @@ class _AddSkillsPageState extends State<AddSkillsPage> {
       selectedSkills.add(value.trim());
     });
     _skillController.clear();
+    _notifyParent();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Notify parent on first build
+    WidgetsBinding.instance.addPostFrameCallback((_) => _notifyParent());
   }
 
   @override

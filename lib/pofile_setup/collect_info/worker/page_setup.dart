@@ -15,15 +15,21 @@ class ProfileSetup extends StatefulWidget {
 
 class _ProfileSetupState extends State<ProfileSetup> {
   int _selectedIndex = 0;
-  final int _maxIndex = 3; // Define max index for safety
+  final int _maxIndex = 3;
 
-  bool _hasWorkSelection = false; // Track if user has selected at least one work option
+  bool _hasWorkSelection = false;
+  bool _hasSkills = true; // Default true for initial skills, will update
 
   void _navigateNext() {
-    // If on SelectWorkPage (index 1) and no selection, block
     if (_selectedIndex == 1 && !_hasWorkSelection) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please select at least one option to continue.')),
+        const SnackBar(content: Text('Please select at least one option to continue.')),
+      );
+      return;
+    }
+    if (_selectedIndex == 2 && !_hasSkills) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please add at least one skill to continue.')),
       );
       return;
     }
@@ -66,7 +72,13 @@ class _ProfileSetupState extends State<ProfileSetup> {
               });
             },
           ),
-          const AddSkillsPage()
+          AddSkillsPage(
+            onSkillsChanged: (hasSkills) {
+              setState(() {
+                _hasSkills = hasSkills;
+              });
+            },
+          ),
         ],
       ),
       bottomNavigationBar: IndexedStack(
@@ -89,7 +101,6 @@ class _ProfileSetupState extends State<ProfileSetup> {
           BottomNavigation(
             actionName: 'Finish',
             onTapAction: () {
-              // Handle completion - maybe navigate to main app
               Navigator.of(context).pushReplacementNamed('/main');
             },
             onBackAction: _navigateBack,
