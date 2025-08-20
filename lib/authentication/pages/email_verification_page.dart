@@ -2,8 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
-import 'package:lottie/lottie.dart';
+import 'package:flame_lottie/flame_lottie.dart';
 import 'package:pinput/pinput.dart';
+import 'package:workie/screens/select_role_screen.dart';
 
 import '../../services/auth_service.dart';
 
@@ -26,8 +27,10 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> with Tick
   Timer? _stopTimer;
 
   int _resendCountdown = 30;
+  int _selectedIndex = 0;
   Timer? _timer;
   bool _isResendEnabled = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -51,13 +54,30 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> with Tick
     });
   }
 
+  void _nextPage() {
+    setState(() {
+      _selectedIndex++;
+    });
+  }
+
   void _resendCode() async {
     if (_isResendEnabled) {
       final result = await AuthService().resendEmailOtp(widget.email);
       if (result['success'] == true) {
-        // Optionally show a success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Verification code sent successfully!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
+          ),
+        );
       } else {
-        // Optionally show an error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to send code. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
       _startCountdown();
     }
@@ -65,12 +85,22 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> with Tick
 
   void _continue() async {
     String code = _pinController.text;
+
     if (code.length == 5) {
+      setState(() {
+        _isLoading = true;
+      });
       final result = await AuthService().verifyEmailOtp(widget.email, code);
       if (result['success'] == true) {
-        // Verification successful, proceed to next step
+        setState(() {
+          _isLoading = false;
+        });
+        _nextPage();
       } else {
-        // Show error message
+        setState(() {
+          _isLoading = false;
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(result['message'] ?? 'Verification failed')),
         );
@@ -159,54 +189,104 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> with Tick
             ),
           ),
 
-          // Content
-          LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: constraints.maxHeight,
-                  ),
-                  child: IntrinsicHeight(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 36.0),
-                      child: Column(
-                        children: [
-                          _LockIcon(),
-                          const SizedBox(height: 40),
-                          _VerificationTitle(),
-                          _VerificationSubtitle(),
-                          _EmailDisplay(email: widget.email),
-                          const SizedBox(height: 40),
-                          Pinput(
-                            controller: _pinController,
-                            length: 5,
-                            defaultPinTheme: defaultPinTheme,
-                            focusedPinTheme: focusedPinTheme,
-                            keyboardType: TextInputType.number,
-                            onCompleted: (value) {
-                              // Optional: Auto-continue when code is complete
-                              // _continue();
-                            },
+          IndexedStack(
+            index: _selectedIndex,
+            children: [
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: IntrinsicHeight(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 36.0),
+                          child: Column(
+                            children: [
+                              _LockIcon(),
+                              const SizedBox(height: 40),
+                              _VerificationTitle(title: 'A verification code was sent to your email'),
+                              _VerificationSubtitle(),
+                              _EmailDisplay(email: widget.email),
+                              const SizedBox(height: 40),
+                              Pinput(
+                                controller: _pinController,
+                                length: 5,
+                                defaultPinTheme: defaultPinTheme,
+                                focusedPinTheme: focusedPinTheme,
+                                keyboardType: TextInputType.number,
+                                onCompleted: (value) {
+                                  // Optional: Auto-continue when code is complete
+                                  // _continue();
+                                },
+                              ),
+                              const SizedBox(height: 24),
+                              _ResendCodeSection(
+                                isResendEnabled: _isResendEnabled,
+                                resendCountdown: _resendCountdown,
+                                onResend: _resendCode,
+                              ),
+                              Spacer(),
+                              _ContinueButton(
+                                onPressed: _continue,
+                                loadingStatus: _isLoading,
+                              ),
+                              _HelpText(helpText: 'Can\'t find the code? Please check your spam or junk mail folder.'),
+                              const SizedBox(height: 32),
+                            ],
                           ),
-                          const SizedBox(height: 24),
-                          _ResendCodeSection(
-                            isResendEnabled: _isResendEnabled,
-                            resendCountdown: _resendCountdown,
-                            onResend: _resendCode,
-                          ),
-                          Spacer(),
-                          _ContinueButton(onPressed: _continue),
-                          _HelpText(),
-                          const SizedBox(height: 32),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              );
-            },
-          ),
+                  );
+                },
+              ),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: IntrinsicHeight(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 36.0),
+                          child: Column(
+                            children: [
+                              const SizedBox(height: 40),
+                              Lottie.asset(
+                                'assets/animation/blue_checkmark.json',
+                                repeat: false,
+                                width: 200,
+                                height: 200
+                              ),
+                              const SizedBox(height: 40),
+                              _VerificationTitle(title: 'Your email has been successfully verified!'),
+                              const SizedBox(height: 40),
+                              Spacer(),
+                              _ContinueButton(
+                                onPressed: (){
+                                  Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => const SelectRoleScreen()
+                                      )
+                                  );
+                                },
+                              ),
+                              _HelpText(helpText: 'You’re almost ready to get started with us.'),
+                              const SizedBox(height: 32),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          )
         ],
       ),
     );
@@ -233,11 +313,18 @@ class _LockIcon extends StatelessWidget {
 }
 
 class _VerificationTitle extends StatelessWidget {
+  final String title;
+
+  const _VerificationTitle({
+    required this.title
+  });
+
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: Text(
-        'A verification code was sent to your email',
+        title,
+        //'A verification code was sent to your email',
         style: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,
@@ -325,11 +412,16 @@ class _ResendCodeSection extends StatelessWidget {
 
 class _ContinueButton extends StatelessWidget {
   final VoidCallback onPressed;
+  final bool? loadingStatus;
 
-  const _ContinueButton({required this.onPressed});
+  const _ContinueButton({
+    required this.onPressed,
+    this.loadingStatus
+  });
 
   @override
   Widget build(BuildContext context) {
+    final isLoading = loadingStatus ?? false;
     return Container(
       width: double.infinity,
       height: 56,
@@ -343,14 +435,32 @@ class _ContinueButton extends StatelessWidget {
           ),
           elevation: 0,
         ),
-        child: Text(
-          'Continue'.toUpperCase(),
-          style: TextStyle(
-            fontSize: 18,
-            letterSpacing: 2,
-            fontWeight: FontWeight.w900,
-            color: Colors.white,
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (isLoading)
+              Transform.scale(
+                scale: 0.45, // Makes it half the size
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 4.0),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 9,
+                    color: Colors.white,
+                    strokeCap: StrokeCap.square,
+                  ),
+                ),
+              ),
+            Text(
+              'Continue'.toUpperCase(),
+              style: TextStyle(
+                fontSize: 18,
+                letterSpacing: 2,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -358,10 +468,17 @@ class _ContinueButton extends StatelessWidget {
 }
 
 class _HelpText extends StatelessWidget {
+  final String helpText;
+
+  const _HelpText({
+    required this.helpText
+  });
+
   @override
   Widget build(BuildContext context) {
     return Text(
-      "Can't find the code? Please check your spam or junk mail folder.",
+      helpText,
+      //"Can't find the code? Please check your spam or junk mail folder.",
       style: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.bold,

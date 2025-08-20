@@ -343,17 +343,17 @@ class AuthService {
     }
   }
 
-  Future<Map<String, dynamic>> verifyResetCode(String email, String code) async {
+  Future<Map<String, dynamic>> verifyResetCode(String email, String pin) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/verify-reset-code'),
+        Uri.parse('$baseUrl/verify-reset-pin'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
         body: jsonEncode({
           'email': email.trim(),
-          'code': code.trim(),
+          'pin': pin.trim(),
         }),
       ).timeout(const Duration(seconds: 15));
 
@@ -362,12 +362,13 @@ class AuthService {
       if (response.statusCode == 200 && responseData['success'] == true) {
         return {
           'success': true,
-          'message': responseData['message'] ?? 'Code verified successfully',
+          'message': responseData['message'] ?? 'PIN verified successfully',
+          'resetToken': responseData['resetToken'],
         };
       } else {
         return {
           'success': false,
-          'message': responseData['message'] ?? 'Invalid or expired code',
+          'message': responseData['message'] ?? 'Invalid or expired PIN',
           'statusCode': response.statusCode,
         };
       }

@@ -158,7 +158,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
     if (confirmPassword.isEmpty) {
       error = AppLocalizations.of(context)!.passwordRequired;
     } else if (confirmPassword != _passwordController.text) {
-      error = AppLocalizations.of(context)!.passwordTooShort;
+      error = 'Password doesn\'t match!';
     }
 
     if (_confirmPassowordError != error) {
@@ -369,7 +369,9 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
         PageRouteBuilder(
           pageBuilder:
               (context, animation, secondaryAnimation) =>
-                  const EmailVerificationPage(),
+                  EmailVerificationPage(
+                    email: _emailController.text.trim(),
+                  ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             const begin = Offset(0.0, 1.0);
             const end = Offset.zero;
