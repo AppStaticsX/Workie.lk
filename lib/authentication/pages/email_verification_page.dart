@@ -5,6 +5,8 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:lottie/lottie.dart';
 import 'package:pinput/pinput.dart';
 
+import '../../services/auth_service.dart';
+
 class EmailVerificationPage extends StatefulWidget {
   final String email;
 
@@ -49,25 +51,31 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> with Tick
     });
   }
 
-  void _resendCode() {
+  void _resendCode() async {
     if (_isResendEnabled) {
-      // Implement resend logic here
-      if (kDebugMode) {
-        print('Resending code...');
+      final result = await AuthService().resendEmailOtp(widget.email);
+      if (result['success'] == true) {
+        // Optionally show a success message
+      } else {
+        // Optionally show an error message
       }
       _startCountdown();
     }
   }
 
-  void _continue() {
+  void _continue() async {
     String code = _pinController.text;
     if (code.length == 5) {
-      // Implement verification logic here
-      if (kDebugMode) {
-        print('Verifying code: $code');
+      final result = await AuthService().verifyEmailOtp(widget.email, code);
+      if (result['success'] == true) {
+        // Verification successful, proceed to next step
+      } else {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'] ?? 'Verification failed')),
+        );
       }
     } else {
-      // Show error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please enter the complete 5-digit code')),
       );
