@@ -1,35 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../values/color.dart';
 
 class SimpleTextfield extends StatelessWidget {
 
   final TextEditingController controller;
-  final String lableText;
+  final String? lableText;
   final String hintText;
-  final Icon prefixIconData;
+  final int maxLines;
+  final Icon? prefixIconData;
+  final double paddingHorizontal;
   final bool obscureText;
-  final String? errorText; // Add error text parameter
-  final String? Function(String?)? validator; // Add validator function
+  final String? errorText;
+  final String? Function(String?)? validator;
 
   const SimpleTextfield({
     super.key,
     required this.controller,
-    required this.lableText,
+    this.lableText,
     required this.hintText,
-    required this.prefixIconData,
+    this.prefixIconData,
     required this.obscureText,
     this.errorText,
-    this.validator
+    this.validator,
+    required this.paddingHorizontal,
+    required this.maxLines
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6),
+      padding: EdgeInsets.symmetric(horizontal: paddingHorizontal),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TextFormField(
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(99),
+            ],
+            maxLines: maxLines,
             obscureText: obscureText,
             controller: controller,
             style: TextStyle(

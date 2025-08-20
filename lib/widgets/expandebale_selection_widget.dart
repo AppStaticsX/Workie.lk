@@ -92,16 +92,16 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
   Widget build(BuildContext context) {
     final isDisabled = widget.isDisabled;
     final containerColor = isDisabled
-        ? const Color(0xFF2D2D2D).withOpacity(0.5)
-        : const Color(0xFF2D2D2D);
+        ? Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.5)
+        : Theme.of(context).colorScheme.tertiary;
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
         color: containerColor,
         borderRadius: BorderRadius.circular(8),
         border: isDisabled
-            ? Border.all(color: Colors.grey.withOpacity(0.3), width: 1)
+            ? Border.all(color: Colors.grey.withValues(alpha: 0.3), width: 1)
             : null,
       ),
       child: Column(
@@ -111,7 +111,7 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
             onTap: isDisabled ? null : _toggleExpansion,
             borderRadius: BorderRadius.circular(8),
             child: Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

@@ -16,10 +16,11 @@ class ProfileSetup extends StatefulWidget {
 
 class _ProfileSetupState extends State<ProfileSetup> {
   int _selectedIndex = 0;
-  final int _maxIndex = 3;
+  final int _maxIndex = 4;
 
   bool _hasWorkSelection = false;
   bool _hasSkills = true; // Default true for initial skills, will update
+  bool _hasText = true;
 
   void _navigateNext() {
     if (_selectedIndex == 1 && !_hasWorkSelection) {
@@ -31,6 +32,12 @@ class _ProfileSetupState extends State<ProfileSetup> {
     if (_selectedIndex == 2 && !_hasSkills) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please add at least one skill to continue.')),
+      );
+      return;
+    }
+    if (_selectedIndex == 3 && !_hasText) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your professional title to continue.')),
       );
       return;
     }
@@ -80,7 +87,13 @@ class _ProfileSetupState extends State<ProfileSetup> {
               });
             },
           ),
-          AddTitlePage()
+          AddTitlePage(
+            onTextChanged: (hasText) {
+              setState(() {
+                _hasText = hasText;
+              });
+            },
+          ),
         ],
       ),
       bottomNavigationBar: IndexedStack(
@@ -102,9 +115,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
           ),
           BottomNavigation(
             actionName: 'Add Experience',
-            onTapAction: () {
-              Navigator.of(context).pushReplacementNamed('/main');
-            },
+            onTapAction: _navigateNext,
             onBackAction: _navigateBack,
           ),
         ],

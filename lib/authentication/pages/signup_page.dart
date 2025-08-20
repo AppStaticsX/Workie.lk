@@ -574,6 +574,8 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
               ),
               obscureText: false,
               errorText: _firstNameError,
+              paddingHorizontal: 6,
+              maxLines: 1,
             ),
           ),
           Expanded(
@@ -587,6 +589,8 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
               ),
               obscureText: false,
               errorText: _lastNameError,
+              paddingHorizontal: 6,
+              maxLines: 1,
             ),
           ),
         ],
