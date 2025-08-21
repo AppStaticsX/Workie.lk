@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -12,6 +13,86 @@ class AuthService {
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
   AuthService._internal();
+
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: [
+      'email',
+      'profile',
+      'openid', // Add this scope for idToken
+    ],
+  );
+
+  /// Google Sign-In and backend authentication
+  Future<Map<String, dynamic>> signInWithGoogleAccessToken() async {
+    try {
+      await _googleSignIn.signOut();
+
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        return {'success': false, 'message': 'Sign in aborted by user'};
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      // If idToken is not available, try using accessToken
+      String? token = googleAuth.idToken ?? googleAuth.accessToken;
+
+      if (token == null) {
+        return {
+          'success': false,
+          'message': 'Google authentication failed: No authentication token available.'
+        };
+      }
+
+      // Send the token to your backend
+      final response = await http.post(
+        Uri.parse('$baseUrl/google-signin'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'idToken': googleAuth.idToken,
+          'accessToken': googleAuth.accessToken,
+          'userInfo': {
+            'email': googleUser.email,
+            'displayName': googleUser.displayName,
+            'photoUrl': googleUser.photoUrl,
+            'id': googleUser.id,
+          }
+        }),
+      ).timeout(const Duration(seconds: 15));
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && responseData['success'] == true) {
+        if (responseData['data']?['token'] != null) {
+          await storeToken(responseData['data']['token']);
+        }
+        if (responseData['data']?['user']?['_id'] != null) {
+          await storeUserId(responseData['data']['user']['_id']);
+        }
+        return {
+          'success': true,
+          'data': responseData['data'],
+          'message': responseData['message'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Google sign-in failed',
+          'statusCode': response.statusCode,
+        };
+      }
+    } catch (e) {
+      print('Google Sign-In Error: $e');
+      return {
+        'success': false,
+        'message': 'Google sign-in failed: ${e.toString()}',
+        'error': 'unknown'
+      };
+    }
+  }
 
   /// Check if user is authenticated by validating stored token
   Future<bool> isAuthenticated() async {

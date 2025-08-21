@@ -187,6 +187,28 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
     }
   }
 
+  void handleGoogleSignIn() async {
+    if (!_isChecked) {
+      _showAgreement();
+      return;
+    }
+
+    // Use the more robust fallback method directly
+    Map<String, dynamic> result = await AuthService().signInWithGoogleAccessToken();
+
+    if (result['success'] == true) {
+      _navigateToRoleSelection();
+    } else {
+      // Show user-friendly error message
+      String message = result['message'] ?? 'Google sign-in failed';
+      if (message.contains('aborted')) message = 'Sign-in cancelled';
+      if (message.contains('network') || message.contains('timeout')) {
+        message = 'Network error. Please try again.';
+      }
+      _showCustomToast(message, Iconsax.close_circle);
+    }
+  }
+
   void _showCustomToast(String message, IconData icon,
       {int durationInSeconds = 3}) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -715,7 +737,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
       children: [
         GestureDetector(
           onTap: () {
-            if (!_isChecked) _showAgreement();
+            handleGoogleSignIn();
           },
           child: SquareTile(
             imagePath: 'assets/icon/google-color-svgrepo-com.svg',
