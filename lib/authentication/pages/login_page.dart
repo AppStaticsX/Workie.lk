@@ -207,6 +207,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
       });
       _navigateToRoleSelection();
     } else {
+      setState(() {
+        _isGoogleLoading = false;
+      });
       // Show user-friendly error message
       String message = result['message'] ?? 'Google sign-in failed';
       if (message.contains('aborted')) message = 'Sign-in cancelled';
