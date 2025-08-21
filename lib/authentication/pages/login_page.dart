@@ -39,6 +39,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
   bool _obscureText = true;
   bool _isChecked = false;
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -193,10 +194,17 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
       return;
     }
 
+    setState(() {
+      _isGoogleLoading = true;
+    });
+
     // Use the more robust fallback method directly
     Map<String, dynamic> result = await AuthService().signInWithGoogleAccessToken();
 
     if (result['success'] == true) {
+      setState(() {
+        _isGoogleLoading = false;
+      });
       _navigateToRoleSelection();
     } else {
       // Show user-friendly error message
