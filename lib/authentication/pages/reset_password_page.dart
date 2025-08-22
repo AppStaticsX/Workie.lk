@@ -116,7 +116,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
     });
 
     final authService = AuthService();
-    final result = await authService.resetPassword(_pinController.text.trim(), password);
+    final result = await authService.resetPassword(_verificationCode, password);
 
     setState(() {
       _isLoading = false;
@@ -338,13 +338,16 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
                                       });
 
                                       final authService = AuthService();
-                                      final result = await authService.verifyResetCode(email, code);
+                                      final verifyResult = await authService.verifyResetCode(
+                                        email,
+                                        code,
+                                      );
 
                                       setState(() {
                                         _isLoading = false;
                                       });
 
-                                      if (result['success'] == true) {
+                                      if (verifyResult['success'] == true) {
                                         if (mounted) {
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             SnackBar(
@@ -353,10 +356,13 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
                                             ),
                                           );
                                         }
+                                        setState(() {
+                                          _verificationCode = verifyResult['resetToken'] ?? '';
+                                        });
                                         _nextPage(); // Or navigate to the password reset form
                                       } else {
                                         setState(() {
-                                          _errorMessage = result['message'] ?? 'Invalid or expired code.';
+                                          _errorMessage = verifyResult['message'] ?? 'Invalid or expired code.';
                                         });
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(

@@ -105,6 +105,7 @@ class _SquareTileState extends State<SquareTile> with SingleTickerProviderStateM
                 widget.provider,
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.inverseSurface,
                     fontSize: 16
                 ),
               ),
