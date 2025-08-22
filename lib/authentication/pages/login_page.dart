@@ -743,19 +743,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
   }
 
   Widget _buildSocialLogin() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        GestureDetector(
-          onTap: () {
-            handleGoogleSignIn();
-          },
-          child: SquareTile(
-            imagePath: 'assets/icon/google-color-svgrepo-com.svg',
-            provider: AppLocalizations.of(context)!.continueWithGoogle,
-          ),
-        ),
-      ],
+    return SquareTile(
+        imagePath: 'assets/icon/google-color-svgrepo-com.svg',
+        provider: AppLocalizations.of(context)!.continueWithGoogle,
+        loading: _isGoogleLoading,
+        onPressed: () {
+          handleGoogleSignIn();
+        }
     );
   }
 
