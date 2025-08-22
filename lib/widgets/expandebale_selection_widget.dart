@@ -120,7 +120,7 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
                       Text(
                         widget.title,
                         style: TextStyle(
-                          color: isDisabled ? Colors.white.withOpacity(0.4) : Colors.white,
+                          color: isDisabled ? Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.4) : Theme.of(context).colorScheme.inverseSurface,
                           fontSize: 18,
                           fontWeight: FontWeight.w500,
                         ),
@@ -130,7 +130,7 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
                           _getSelectionCountText(),
                           style: TextStyle(
                             color: isDisabled
-                                ? const Color(0xFF4CAF50).withOpacity(0.4)
+                                ? const Color(0xFF4CAF50).withValues(alpha: 0.4)
                                 : const Color(0xFF4CAF50),
                             fontSize: 18,
                             fontWeight: FontWeight.w500,
@@ -143,7 +143,7 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
                     duration: const Duration(milliseconds: 200),
                     child: Icon(
                       Icons.keyboard_arrow_down,
-                      color: isDisabled ? Colors.white.withOpacity(0.4) : Colors.white,
+                      color: isDisabled ? Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.4) : Theme.of(context).colorScheme.inverseSurface,
                       size: 28,
                     ),
                   ),
@@ -164,8 +164,8 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
                     'Now, select ${widget.minSelections} to ${widget.maxSelections} specialties',
                     style: TextStyle(
                       color: isDisabled
-                          ? Colors.grey[400]?.withOpacity(0.4)
-                          : Colors.grey[400],
+                          ? Colors.grey[400]?.withValues(alpha: 0.4)
+                          : Colors.grey,
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
                     ),
@@ -198,7 +198,7 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
               decoration: BoxDecoration(
                 border: Border.all(
                   color: isDisabled
-                      ? Colors.grey[600]!.withOpacity(0.4)
+                      ? Colors.grey[600]!.withValues(alpha: 0.4)
                       : isSelected
                       ? const Color(0xFF4CAF50)
                       : Colors.grey[600]!,
@@ -211,7 +211,7 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
                   ? Icon(
                 Icons.check,
                 color: isDisabled
-                    ? const Color(0xFF4CAF50).withOpacity(0.4)
+                    ? const Color(0xFF4CAF50).withValues(alpha: 0.4)
                     : const Color(0xFF4CAF50),
                 size: 18,
               )
@@ -223,8 +223,8 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
                 option,
                 style: TextStyle(
                   color: isDisabled
-                      ? Colors.white.withOpacity(0.4)
-                      : Colors.white,
+                      ? Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.4)
+                      : Theme.of(context).colorScheme.inverseSurface,
                   fontSize: 16,
                   fontWeight: FontWeight.w400,
                 ),

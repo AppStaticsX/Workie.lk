@@ -47,6 +47,11 @@ flutter:
    - assets/icon/profession/
    - assets/icon/profession/mono/
 
+  fonts:
+    - family: Montserrat
+      fonts:
+        - asset: assets/font/Montserrat-Regular.ttf
+
 
 # Flutter launcher icons
 flutter_icons:
