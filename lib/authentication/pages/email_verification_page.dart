@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
@@ -64,20 +63,24 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> with Tick
     if (_isResendEnabled) {
       final result = await AuthService().resendEmailOtp(widget.email);
       if (result['success'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Verification code sent successfully!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Verification code sent successfully!'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to send code. Please try again.'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to send code. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
       _startCountdown();
     }
@@ -100,10 +103,11 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> with Tick
         setState(() {
           _isLoading = false;
         });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'] ?? 'Verification failed')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result['message'] ?? 'Verification failed')),
+          );
+        }
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -154,14 +158,13 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> with Tick
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        elevation: 0, // Remove shadow/elevation
-        surfaceTintColor: Colors.transparent, // Remove surface tint
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
       ),
       resizeToAvoidBottomInset: false,
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: Stack(
         children: [
-          // Lottie animation
           Positioned.fill(
             child: Lottie.asset(
               Theme.of(context).brightness == Brightness.dark
@@ -181,8 +184,6 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> with Tick
               },
             ),
           ),
-
-          // Semi-transparent overlay
           Positioned.fill(
             child: Container(
               color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.6),
@@ -217,7 +218,6 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> with Tick
                                 focusedPinTheme: focusedPinTheme,
                                 keyboardType: TextInputType.number,
                                 onCompleted: (value) {
-                                  // Optional: Auto-continue when code is complete
                                   // _continue();
                                 },
                               ),
