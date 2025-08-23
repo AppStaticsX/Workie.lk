@@ -13,6 +13,7 @@ class SimpleTextfield extends StatelessWidget {
   final bool obscureText;
   final String? errorText;
   final String? Function(String?)? validator;
+  final Color focusBorderColor;
 
   const SimpleTextfield({
     super.key,
@@ -24,7 +25,8 @@ class SimpleTextfield extends StatelessWidget {
     this.errorText,
     this.validator,
     required this.paddingHorizontal,
-    required this.maxLines
+    required this.maxLines,
+    required this.focusBorderColor
   });
 
   @override
@@ -63,7 +65,7 @@ class SimpleTextfield extends StatelessWidget {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(15),
-                borderSide: const BorderSide(color: Color(0xFF4E6BF5), width: 2),
+                borderSide: BorderSide(color: focusBorderColor, width: 2),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(15),

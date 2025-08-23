@@ -68,6 +68,7 @@ class _AddTitlePageState extends State<AddTitlePage> {
             ),
             const SizedBox(height: 8),
             SimpleTextfield(
+              focusBorderColor: Colors.white,
                 paddingHorizontal: 0,
                 controller: _professionController,
                 hintText: 'Example: Professional Carpenter Specializing in Custom Furniture & Woodcraft',

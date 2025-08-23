@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:workie/pofile_setup/collect_info/worker/add_experience_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_skills_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_title_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/select_work_page.dart';
 import 'package:workie/widgets/bottom_navigation.dart';
+import 'package:workie/widgets/bottom_navigation_with_skip.dart';
 import 'package:workie/widgets/simple_bottom_navigation.dart';
 import 'start_page.dart';
 
@@ -19,32 +21,52 @@ class _ProfileSetupState extends State<ProfileSetup> {
   final int _maxIndex = 4;
 
   bool _hasWorkSelection = false;
-  bool _hasSkills = true; // Default true for initial skills, will update
-  bool _hasText = true;
+  bool _hasSkills = false;
+  bool _hasText = false;
 
   void _navigateNext() {
-    if (_selectedIndex == 1 && !_hasWorkSelection) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select at least one option to continue.')),
-      );
-      return;
+
+    // Validation for each step
+    switch (_selectedIndex) {
+      case 0:
+        break;
+      case 1:
+      // Select work page validation
+        if (!_hasWorkSelection) {
+          _showSnackBar('Please select at least one work option to continue.');
+          return;
+        }
+        break;
+      case 2:
+      // Add skills page validation
+        if (!_hasSkills) {
+          _showSnackBar('Please add at least one skill to continue.');
+          return;
+        }
+        break;
+      case 3:
+      // Add title page validation - be more strict
+        if (!_hasText) {
+          _showSnackBar('Please enter your professional title to continue.');
+          return;
+        }
+        break;
+      case 4:
+      // Experience page - handle completion or navigation to next flow
+        _handleProfileCompletion();
+        return;
+      default:
+        break;
     }
-    if (_selectedIndex == 2 && !_hasSkills) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add at least one skill to continue.')),
-      );
-      return;
-    }
-    if (_selectedIndex == 3 && !_hasText) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your professional title to continue.')),
-      );
-      return;
-    }
+
+    // Navigate to next page if validation passes
     if (_selectedIndex < _maxIndex) {
       setState(() {
         _selectedIndex++;
       });
+    } else {
+      // Handle completion when reached the end
+      _handleProfileCompletion();
     }
   }
 
@@ -54,6 +76,31 @@ class _ProfileSetupState extends State<ProfileSetup> {
         _selectedIndex--;
       });
     }
+  }
+
+  void _skipNext() {
+    if (_selectedIndex < _maxIndex) {
+      setState(() {
+        _selectedIndex++;
+      });
+    } else {
+      // Handle completion when skipping from the last page
+      _handleProfileCompletion();
+    }
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.fixed,
+      ),
+    );
+  }
+
+  void _handleProfileCompletion() {
+    _showSnackBar('Profile setup completed!');
   }
 
   @override
@@ -68,6 +115,17 @@ class _ProfileSetupState extends State<ProfileSetup> {
           size: 26,
         ),
         title: const Text('Create & Verify Your Profile'),
+        // Optional: Add progress indicator
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(4.0),
+          child: LinearProgressIndicator(
+            value: (_selectedIndex + 1) / (_maxIndex + 1),
+            backgroundColor: Colors.grey.withValues(alpha: 0.3),
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Theme.of(context).colorScheme.primary,
+            ),
+          ),
+        ),
       ),
       body: IndexedStack(
         index: _selectedIndex,
@@ -94,6 +152,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
               });
             },
           ),
+          const AddExperiencePage(), // Added const
         ],
       ),
       bottomNavigationBar: IndexedStack(
@@ -117,6 +176,12 @@ class _ProfileSetupState extends State<ProfileSetup> {
             actionName: 'Add Experience',
             onTapAction: _navigateNext,
             onBackAction: _navigateBack,
+          ),
+          BottomNavigationWithSkip(
+            actionName: 'Complete Profile',
+            onTapAction: _navigateNext,
+            onBackAction: _navigateBack,
+            onSkip: _skipNext,
           ),
         ],
       ),

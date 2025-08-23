@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:workie/l10n/l10n.dart';
 import 'package:workie/screens/splash_screen.dart';
 import 'package:workie/themes/theme_provider.dart';
-import 'package:workie/providers/language_provider.dart'; // Add this import
+import 'package:workie/providers/language_provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'generated/app_localizations.dart';
 
@@ -15,7 +15,7 @@ void main() {
       MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (context) => ThemeProvider()),
-          ChangeNotifierProvider(create: (context) => LanguageProvider()), // Add this
+          ChangeNotifierProvider(create: (context) => LanguageProvider()),
         ],
         child: const MyApp(),
       )

@@ -565,6 +565,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
         children: [
           Expanded(
             child: SimpleTextfield(
+              focusBorderColor: const Color(0xFF4E6BF5),
               controller: _firstNameController,
               lableText: 'First Name',
               hintText: 'First Name',
@@ -580,6 +581,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
           ),
           Expanded(
             child: SimpleTextfield(
+              focusBorderColor: const Color(0xFF4E6BF5),
               controller: _lastNameController,
               lableText: 'Last Name',
               hintText: 'Last Name',
