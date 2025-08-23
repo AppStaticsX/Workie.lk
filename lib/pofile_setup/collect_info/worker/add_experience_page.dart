@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:workie/pofile_setup/collect_info/worker/components/work_experience_bottomsheet.dart';
 
 class AddExperiencePage extends StatelessWidget {
   const AddExperiencePage({super.key});
@@ -29,7 +30,18 @@ class AddExperiencePage extends StatelessWidget {
             ),
             const SizedBox(height: 32),
             OutlinedButton(
-                onPressed: () {},
+                onPressed: () {
+                  showModalBottomSheet(
+                      isScrollControlled: true,
+                      isDismissible: false,
+                      context: context,
+                      builder: (context) => WorkExperienceBottomsheet(
+                          closeBottomSheet: () {
+                            Navigator.pop(context);
+                          }
+                      )
+                  );
+                },
                 style: OutlinedButton.styleFrom(
                   side: BorderSide(
                     color: const Color(0xFF4E6BF5),
