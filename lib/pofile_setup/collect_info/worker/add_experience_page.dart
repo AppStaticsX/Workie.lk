@@ -1,9 +1,36 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:workie/models/work_experience_model.dart';
 import 'package:workie/pofile_setup/collect_info/worker/components/work_experience_bottomsheet.dart';
 
-class AddExperiencePage extends StatelessWidget {
+class AddExperiencePage extends StatefulWidget {
   const AddExperiencePage({super.key});
+
+  @override
+  State<AddExperiencePage> createState() => _AddExperiencePageState();
+}
+
+class _AddExperiencePageState extends State<AddExperiencePage> {
+  List<WorkExperienceModel> workExperiences = [];
+
+  void _addWorkExperience(WorkExperienceModel experience) {
+    setState(() {
+      workExperiences.add(experience);
+    });
+  }
+
+  void _editWorkExperience(int index, WorkExperienceModel updatedExperience) {
+    setState(() {
+      workExperiences[index] = updatedExperience;
+    });
+  }
+
+  void _deleteWorkExperience(int index) {
+    setState(() {
+      workExperiences.removeAt(index);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,52 +56,146 @@ class AddExperiencePage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 32),
+
+            // Display work experiences
+            if (workExperiences.isNotEmpty) ...[
+              ...workExperiences.asMap().entries.map((entry) {
+                int index = entry.key;
+                WorkExperienceModel experience = entry.value;
+                return _buildExperienceCard(experience, index);
+              }),
+              const SizedBox(height: 16),
+            ],
+
             OutlinedButton(
-                onPressed: () {
-                  showModalBottomSheet(
-                      isScrollControlled: true,
-                      isDismissible: false,
-                      context: context,
-                      builder: (context) => WorkExperienceBottomsheet(
-                          closeBottomSheet: () {
-                            Navigator.pop(context);
-                          }
-                      )
-                  );
-                },
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(
-                    color: const Color(0xFF4E6BF5),
-                    width: 2.5,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
+              onPressed: () {
+                showModalBottomSheet(
+                    isScrollControlled: true,
+                    isDismissible: false,
+                    context: context,
+                    builder: (context) => WorkExperienceBottomsheet(
+                      closeBottomSheet: () {
+                        Navigator.pop(context);
+                      },
+                      onSave: _addWorkExperience,
+                    )
+                );
+              },
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(
+                  color: Color(0xFF4E6BF5),
+                  width: 2.5,
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                          Iconsax.add_copy,
-                        color: Theme.of(context).colorScheme.inverseSurface,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Add Experience',
-                        style: TextStyle(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Iconsax.add_copy,
+                      color: Theme.of(context).colorScheme.inverseSurface,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Add Experience',
+                      style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Theme.of(context).colorScheme.inverseSurface
-                        ),
-                      )
-                    ],
-                  ),
+                      ),
+                    )
+                  ],
                 ),
+              ),
             )
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildExperienceCard(WorkExperienceModel experience, int index) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.tertiary,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+          width: 1.5,
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  experience.title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${experience.company} | ${experience.location}',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.7),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  experience.dateRange,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.6),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                onPressed: () {
+                  showModalBottomSheet(
+                    isScrollControlled: true,
+                    isDismissible: false,
+                    context: context,
+                    builder: (context) => WorkExperienceBottomsheet(
+                      closeBottomSheet: () {
+                        Navigator.pop(context);
+                      },
+                      onSave: (updatedExperience) {
+                        _editWorkExperience(index, updatedExperience);
+                      },
+                      initialData: experience,
+                    ),
+                  );
+                },
+                icon: const Icon(
+                  CupertinoIcons.trash_circle,
+                  color: Color(0xFF4E6BF5),
+                  size: 20,
+                ),
+              ),
+              IconButton(
+                onPressed: () => _deleteWorkExperience(index),
+                icon: const Icon(
+                  Icons.delete,
+                  color: Colors.red,
+                  size: 20,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

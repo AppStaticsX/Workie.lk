@@ -1,13 +1,17 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:workie/widgets/simple_textfeild.dart';
+import 'package:workie/models/work_experience_model.dart';
 
 class WorkExperienceBottomsheet extends StatefulWidget {
   final VoidCallback closeBottomSheet;
+  final Function(WorkExperienceModel) onSave;
+  final WorkExperienceModel? initialData;
 
   const WorkExperienceBottomsheet({
     super.key,
-    required this.closeBottomSheet
+    required this.closeBottomSheet,
+    required this.onSave,
+    this.initialData,
   });
 
   @override
@@ -15,25 +19,141 @@ class WorkExperienceBottomsheet extends StatefulWidget {
 }
 
 class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
-
   String endYear = 'Year';
   String startYear = 'Year';
   String endMonth = 'Month';
   String startMonth = 'Month';
 
+  bool _isTitleEmpty = false;
+  bool _isCompanyEmpty = false;
+  bool _isLocationEmpty = false;
+  bool _isStartDateEmpty = false;
+  bool _isEndDateEmpty = false;
+  bool _isDateRangeInvalid = false;
+  bool _hasErrors = false;
   bool _isChecked = false;
+
   final TextEditingController titleController = TextEditingController();
+  final TextEditingController companyController = TextEditingController();
+  final TextEditingController locationController = TextEditingController();
+
+  final FocusNode titleFocusNode = FocusNode();
+  final FocusNode companyFocusNode = FocusNode();
+  final FocusNode locationFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialData != null) {
+      _populateFields(widget.initialData!);
+    }
+  }
+
+  void _populateFields(WorkExperienceModel experience) {
+    titleController.text = experience.title;
+    companyController.text = experience.company;
+    locationController.text = experience.location;
+    startMonth = experience.startMonth;
+    startYear = experience.startYear;
+    _isChecked = experience.isCurrentWork;
+
+    if (!experience.isCurrentWork && experience.endMonth != null && experience.endYear != null) {
+      endMonth = experience.endMonth!;
+      endYear = experience.endYear!;
+    }
+  }
 
   @override
   void dispose() {
     titleController.dispose();
+    companyController.dispose();
+    locationController.dispose();
+    titleFocusNode.dispose();
+    companyFocusNode.dispose();
+    locationFocusNode.dispose();
     super.dispose();
   }
 
   void _toggleCheck() {
     setState(() {
       _isChecked = !_isChecked;
+      if (_isChecked) {
+        _isEndDateEmpty = false;
+        _isDateRangeInvalid = false;
+        endMonth = 'Month';
+        endYear = 'Year';
+      }
     });
+  }
+
+  void _validateInput() {
+    setState(() {
+      _isTitleEmpty = titleController.text.isEmpty;
+      _isCompanyEmpty = companyController.text.isEmpty;
+      _isLocationEmpty = locationController.text.isEmpty;
+      _isStartDateEmpty = startMonth == 'Month' || startYear == 'Year';
+      _isEndDateEmpty = !_isChecked && (endMonth == 'Month' || endYear == 'Year');
+      _isDateRangeInvalid = false;
+
+      if (!_isStartDateEmpty && !_isEndDateEmpty && !_isChecked) {
+        _isDateRangeInvalid = _isEndDateBeforeStartDate();
+      }
+
+      _hasErrors = _isTitleEmpty || _isCompanyEmpty || _isLocationEmpty ||
+          _isStartDateEmpty || _isEndDateEmpty || _isDateRangeInvalid;
+    });
+
+    if (_isTitleEmpty && titleController.text.isNotEmpty) {
+      setState(() => _isTitleEmpty = false);
+    }
+    if (_isCompanyEmpty && companyController.text.isNotEmpty) {
+      setState(() => _isCompanyEmpty = false);
+    }
+    if (_isLocationEmpty && locationController.text.isNotEmpty) {
+      setState(() => _isLocationEmpty = false);
+    }
+  }
+
+  bool _isEndDateBeforeStartDate() {
+    if (startMonth == 'Month' || startYear == 'Year' ||
+        endMonth == 'Month' || endYear == 'Year') {
+      return false;
+    }
+
+    List<String> monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    int startMonthIndex = monthNames.indexOf(startMonth) + 1;
+    int startYearInt = int.parse(startYear);
+    int endMonthIndex = monthNames.indexOf(endMonth) + 1;
+    int endYearInt = int.parse(endYear);
+
+    DateTime startDate = DateTime(startYearInt, startMonthIndex);
+    DateTime endDate = DateTime(endYearInt, endMonthIndex);
+
+    return endDate.isBefore(startDate);
+  }
+
+  void _handleSave() {
+    _validateInput();
+
+    if (!_hasErrors) {
+      final workExperience = WorkExperienceModel(
+        title: titleController.text,
+        company: companyController.text,
+        location: locationController.text,
+        startMonth: startMonth,
+        startYear: startYear,
+        endMonth: _isChecked ? null : endMonth,
+        endYear: _isChecked ? null : endYear,
+        isCurrentWork: _isChecked,
+      );
+
+      widget.onSave(workExperience);
+      Navigator.pop(context);
+    }
   }
 
   @override
@@ -88,17 +208,18 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildTitleField(),
-            const SizedBox(height: 30),
+            const SizedBox(height: 16),
             _buildCompanyField(),
-            const SizedBox(height: 30),
+            const SizedBox(height: 16),
             _buildLocationField(),
             const SizedBox(height: 20),
             _buildCurrentWorkCheckbox(),
             const SizedBox(height: 30),
             _buildStartDateSection(),
             const SizedBox(height: 20),
-            _buildEndDateSection(),
-            const SizedBox(height: 36),
+            if (!_isChecked) _buildEndDateSection(),
+            if (!_isChecked) const SizedBox(height: 36),
+            if (_isChecked) const SizedBox(height: 16),
             _buildBottomActionButtons(),
             const SizedBox(height: 30),
           ],
@@ -118,14 +239,70 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
           ),
         ),
         const SizedBox(height: 4),
-        SimpleTextfield(
-            controller: titleController,
+        TextFormField(
+          controller: titleController,
+          focusNode: titleFocusNode,
+          onChanged: (value) {
+            if (_isTitleEmpty && value.isNotEmpty) {
+              setState(() => _isTitleEmpty = false);
+            }
+          },
+          decoration: InputDecoration(
             hintText: 'Ex: Carpenter specialize in Cupboard Making',
-            obscureText: false,
-            paddingHorizontal: 0,
-            maxLines: 1,
-            focusBorderColor: Theme.of(context).colorScheme.inverseSurface
+            hintStyle: TextStyle(
+              color: Colors.grey
+            ),
+            filled: true,
+            fillColor: Theme.of(context).colorScheme.tertiary,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.outline,
+                width: 1.5,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: _isTitleEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                width: 1.5,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: _isTitleEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
+                width: 2,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Colors.red,
+                width: 1.5,
+              ),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Colors.red,
+                width: 2,
+              ),
+            ),
+          ),
         ),
+        if (_isTitleEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              'Title is required',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 12,
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -141,14 +318,70 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
           ),
         ),
         const SizedBox(height: 4),
-        SimpleTextfield(
-            controller: titleController,
+        TextFormField(
+          controller: companyController,
+          focusNode: companyFocusNode,
+          onChanged: (value) {
+            if (_isCompanyEmpty && value.isNotEmpty) {
+              setState(() => _isCompanyEmpty = false);
+            }
+          },
+          decoration: InputDecoration(
             hintText: 'Ex: WooddieCraft Pvt. LTD',
-            obscureText: false,
-            paddingHorizontal: 0,
-            maxLines: 1,
-            focusBorderColor: Theme.of(context).colorScheme.inverseSurface
+            hintStyle: TextStyle(
+                color: Colors.grey
+            ),
+            filled: true,
+            fillColor: Theme.of(context).colorScheme.tertiary,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.outline,
+                width: 1.5,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: _isCompanyEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                width: 1.5,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: _isCompanyEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
+                width: 2,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Colors.red,
+                width: 1.5,
+              ),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Colors.red,
+                width: 2,
+              ),
+            ),
+          ),
         ),
+        if (_isCompanyEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              'Company is required',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 12,
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -158,20 +391,76 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Location',
+          'Location *',
           style: TextStyle(
               fontSize: 16
           ),
         ),
         const SizedBox(height: 4),
-        SimpleTextfield(
-            controller: titleController,
+        TextFormField(
+          controller: locationController,
+          focusNode: locationFocusNode,
+          onChanged: (value) {
+            if (_isLocationEmpty && value.isNotEmpty) {
+              setState(() => _isLocationEmpty = false);
+            }
+          },
+          decoration: InputDecoration(
             hintText: 'Ex: Ambalangoda',
-            obscureText: false,
-            paddingHorizontal: 0,
-            maxLines: 1,
-            focusBorderColor: Theme.of(context).colorScheme.inverseSurface
+            hintStyle: TextStyle(
+                color: Colors.grey
+            ),
+            filled: true,
+            fillColor: Theme.of(context).colorScheme.tertiary,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.outline,
+                width: 1.5,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: _isLocationEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                width: 1.5,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: _isLocationEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
+                width: 2,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Colors.red,
+                width: 1.5,
+              ),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Colors.red,
+                width: 2,
+              ),
+            ),
+          ),
         ),
+        if (_isLocationEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              'Location is required',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 12,
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -182,7 +471,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
         _buildCustomCheckbox(),
         const SizedBox(width: 12),
         Text(
-          'I am currently working on this role',
+          'I am currently working in this role',
           style: Theme.of(context).textTheme.bodyLarge,
         )
       ],
@@ -191,21 +480,20 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
 
   Widget _buildCustomCheckbox() {
     return InkWell(
-      onTap: (){
-        _toggleCheck();
-      },
+      onTap: _toggleCheck,
       child: Container(
         height: 24,
         width: 24,
         decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-                width: _isChecked? 1.5 : 2,
-                color: _isChecked? Colors.grey : Colors.white
-            )
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+              width: _isChecked? 1.5 : 2,
+              color: _isChecked? Theme.of(context).primaryColor : Colors.grey
+          ),
+          color: _isChecked ? Theme.of(context).primaryColor : Colors.transparent,
         ),
-        child: !_isChecked
-            ? Icon(Icons.check, size: 16, color: Colors.white,)
+        child: _isChecked
+            ? const Icon(Icons.check, size: 16, color: Colors.white,)
             : null,
       ),
     );
@@ -228,9 +516,12 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
               flex: 1,
               child: _buildMonthPicker(
                   selectedMonth: startMonth,
+                  isError: _isStartDateEmpty || _isDateRangeInvalid,
                   onMonthSelected: (month) {
                     setState(() {
                       startMonth = month;
+                      _isStartDateEmpty = false;
+                      _isDateRangeInvalid = false;
                     });
                   }
               ),
@@ -240,15 +531,40 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
               flex: 1,
               child: _buildYearPicker(
                   selectedYear: startYear,
+                  isError: _isStartDateEmpty || _isDateRangeInvalid,
                   onYearSelected: (year) {
                     setState(() {
                       startYear = year;
+                      _isStartDateEmpty = false;
+                      _isDateRangeInvalid = false;
                     });
                   }
               ),
             )
           ],
         ),
+        if (_isStartDateEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              'Start date is required',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        if (_isDateRangeInvalid)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              'Start date cannot be after end date',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 12,
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -270,9 +586,12 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
               flex: 1,
               child: _buildMonthPicker(
                   selectedMonth: endMonth,
+                  isError: _isEndDateEmpty || _isDateRangeInvalid,
                   onMonthSelected: (month) {
                     setState(() {
                       endMonth = month;
+                      _isEndDateEmpty = false;
+                      _isDateRangeInvalid = false;
                     });
                   }
               ),
@@ -282,35 +601,63 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
               flex: 1,
               child: _buildYearPicker(
                   selectedYear: endYear,
+                  isError: _isEndDateEmpty || _isDateRangeInvalid,
                   onYearSelected: (year) {
                     setState(() {
                       endYear = year;
+                      _isEndDateEmpty = false;
+                      _isDateRangeInvalid = false;
                     });
                   }
               ),
             )
           ],
         ),
+        if (_isEndDateEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              'End date is required',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        if (_isDateRangeInvalid)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              'End date cannot be before start date',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 12,
+              ),
+            ),
+          ),
       ],
     );
   }
 
   Widget _buildMonthPicker({
     required String selectedMonth,
-    required Function(String) onMonthSelected
+    required Function(String) onMonthSelected,
+    bool isError = false
   }) {
     return InkWell(
       onTap: (){
         _showMonthPicker(onMonthSelected);
       },
       child: Container(
-        height: 48,
+        height: 44,
         decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.tertiary,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
                 width: 1.5,
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)
+                color: isError
+                    ? Colors.red
+                    : Theme.of(context).colorScheme.primary.withOpacity(0.2)
             )
         ),
         child: Row(
@@ -319,7 +666,10 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
             Text(
               selectedMonth,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.normal
+                  fontWeight: FontWeight.normal,
+                  color: selectedMonth == 'Month'
+                      ? Theme.of(context).hintColor
+                      : null
               ),
             ),
           ],
@@ -330,20 +680,23 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
 
   Widget _buildYearPicker({
     required String selectedYear,
-    required Function(String) onYearSelected
+    required Function(String) onYearSelected,
+    bool isError = false
   }) {
     return InkWell(
       onTap: () {
         _showYearPicker(onYearSelected);
       },
       child: Container(
-        height: 48,
+        height: 44,
         decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.tertiary,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
                 width: 1.5,
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)
+                color: isError
+                    ? Colors.red
+                    : Theme.of(context).colorScheme.primary.withOpacity(0.2)
             )
         ),
         child: Row(
@@ -352,7 +705,10 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
             Text(
               selectedYear,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.normal
+                  fontWeight: FontWeight.normal,
+                  color: selectedYear == 'Year'
+                      ? Theme.of(context).hintColor
+                      : null
               ),
             ),
           ],
@@ -373,7 +729,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
         int selectedMonthIndex = DateTime.now().month - 1;
 
         return CupertinoAlertDialog(
-          title: Text('Select Month'),
+          title: const Text('Select Month'),
           content: SizedBox(
             height: 200,
             child: CupertinoPicker(
@@ -388,7 +744,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
                 return Center(
                   child: Text(
                     monthNames[index],
-                    style: TextStyle(fontSize: 18),
+                    style: const TextStyle(fontSize: 18),
                   ),
                 );
               }),
@@ -396,13 +752,13 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
           ),
           actions: [
             CupertinoDialogAction(
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             CupertinoDialogAction(
-              child: Text('Select'),
+              child: const Text('Select'),
               onPressed: () {
                 Navigator.of(context).pop();
                 onMonthSelected(monthNames[selectedMonthIndex]);
@@ -419,21 +775,26 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
       context: context,
       builder: (BuildContext context) {
         int selectedYear = DateTime.now().year;
+        int initialIndex = 50; // Start from current year
+
         return CupertinoAlertDialog(
-          title: Text('Select Year'),
+          title: const Text('Select Year'),
           content: SizedBox(
             height: 200,
             child: CupertinoPicker(
               itemExtent: 32.0,
+              scrollController: FixedExtentScrollController(
+                initialItem: initialIndex,
+              ),
               onSelectedItemChanged: (int index) {
                 selectedYear = DateTime.now().year - 50 + index;
               },
-              children: List.generate(100, (index) {
+              children: List.generate(51, (index) {
                 int year = DateTime.now().year - 50 + index;
                 return Center(
                   child: Text(
                     year.toString(),
-                    style: TextStyle(fontSize: 18),
+                    style: const TextStyle(fontSize: 18),
                   ),
                 );
               }),
@@ -441,13 +802,13 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
           ),
           actions: [
             CupertinoDialogAction(
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             CupertinoDialogAction(
-              child: Text('Select'),
+              child: const Text('Select'),
               onPressed: () {
                 Navigator.of(context).pop();
                 onYearSelected(selectedYear.toString());
@@ -458,7 +819,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
       },
     );
   }
-  
+
   Widget _buildBottomActionButtons() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
@@ -468,24 +829,24 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
               Navigator.pop(context);
             },
             child: Text(
-              'Cancel',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Colors.grey,
-              )
+                'Cancel',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Colors.grey,
+                )
             )
         ),
         const SizedBox(width: 24),
         ElevatedButton(
-          onPressed: (){},
+          onPressed: _handleSave,
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF4E6BF5),
-            padding: EdgeInsets.symmetric(horizontal: 28, vertical: 8),
-            shape: RoundedRectangleBorder(
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 8),
+            shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(10)),
             ),
           ),
           child: Text(
-            'Save',
+              'Save',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: Colors.white,
               )
