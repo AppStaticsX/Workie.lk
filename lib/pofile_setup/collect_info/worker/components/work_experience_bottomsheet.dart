@@ -203,27 +203,38 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
 
   Widget _buildFormFields(BuildContext context) {
     return Expanded(
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildTitleField(),
-            const SizedBox(height: 16),
-            _buildCompanyField(),
-            const SizedBox(height: 16),
-            _buildLocationField(),
-            const SizedBox(height: 20),
-            _buildCurrentWorkCheckbox(),
-            const SizedBox(height: 30),
-            _buildStartDateSection(),
-            const SizedBox(height: 20),
-            if (!_isChecked) _buildEndDateSection(),
-            if (!_isChecked) const SizedBox(height: 36),
-            if (_isChecked) const SizedBox(height: 16),
-            _buildBottomActionButtons(),
-            const SizedBox(height: 30),
-          ],
-        ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildTitleField(),
+                  const SizedBox(height: 16),
+                  _buildCompanyField(),
+                  const SizedBox(height: 16),
+                  _buildLocationField(),
+                  const SizedBox(height: 20),
+                  _buildCurrentWorkCheckbox(),
+                  const SizedBox(height: 30),
+                  _buildStartDateSection(),
+                  const SizedBox(height: 20),
+                  if (!_isChecked) _buildEndDateSection(),
+                  if (!_isChecked) const SizedBox(height: 36),
+                  if (_isChecked) const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          ),
+          Column(
+            children: [
+              _buildBottomActionButtons(),
+              const SizedBox(height: 24)
+            ],
+          ),
+        ],
       ),
     );
   }

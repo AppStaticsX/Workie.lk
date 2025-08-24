@@ -121,7 +121,7 @@ class _AddExperiencePageState extends State<AddExperiencePage> {
   Widget _buildExperienceCard(WorkExperienceModel experience, int index) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.tertiary,
         borderRadius: BorderRadius.circular(12),
@@ -138,18 +138,16 @@ class _AddExperiencePageState extends State<AddExperiencePage> {
               children: [
                 Text(
                   experience.title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 4),
                 Text(
-                  '${experience.company} | ${experience.location}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  '@${experience.company} | ${experience.location}',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.7),
                   ),
                 ),
-                const SizedBox(height: 4),
                 Text(
                   experience.dateRange,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -159,7 +157,7 @@ class _AddExperiencePageState extends State<AddExperiencePage> {
               ],
             ),
           ),
-          Row(
+          Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
@@ -180,17 +178,17 @@ class _AddExperiencePageState extends State<AddExperiencePage> {
                   );
                 },
                 icon: const Icon(
-                  CupertinoIcons.trash_circle,
-                  color: Color(0xFF4E6BF5),
-                  size: 20,
+                  CupertinoIcons.pencil_outline,
+                  color: Colors.green,
+                  size: 32,
                 ),
               ),
               IconButton(
                 onPressed: () => _deleteWorkExperience(index),
                 icon: const Icon(
-                  Icons.delete,
-                  color: Colors.red,
-                  size: 20,
+                  CupertinoIcons.trash_circle,
+                  color: Colors.green,
+                  size: 36,
                 ),
               ),
             ],
