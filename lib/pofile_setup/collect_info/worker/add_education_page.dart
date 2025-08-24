@@ -14,42 +14,45 @@ class AddEducationPage extends StatefulWidget {
 }
 
 class _AddEducationPageState extends State<AddEducationPage> {
-  List<EducationModel> workExperiences = [];
+  List<EducationModel> educationExperiences = [];
 
-  void _addWorkExperience(EducationModel experience) {
+  void _addEducationExperience(EducationModel experience) {
     setState(() {
-      workExperiences.add(experience);
+      educationExperiences.add(experience);
     });
     // Notify parent about the change
     if (widget.onEducationChanged != null) {
-      widget.onEducationChanged!(workExperiences.isNotEmpty);
+      widget.onEducationChanged!(educationExperiences.isNotEmpty);
     }
   }
 
-  void _editWorkExperience(int index, EducationModel updatedExperience) {
+  void _editEducationExperience(int index, EducationModel updatedExperience) {
     setState(() {
-      workExperiences[index] = updatedExperience;
+      educationExperiences[index] = updatedExperience;
     });
     // Notify parent about the change
     if (widget.onEducationChanged != null) {
-      widget.onEducationChanged!(workExperiences.isNotEmpty);
+      widget.onEducationChanged!(educationExperiences.isNotEmpty);
     }
   }
 
-  void _deleteWorkExperience(int index) {
+  void _deleteEducationExperience(int index) {
     setState(() {
-      workExperiences.removeAt(index);
+      educationExperiences.removeAt(index);
     });
     // Notify parent about the change
     if (widget.onEducationChanged != null) {
-      widget.onEducationChanged!(workExperiences.isNotEmpty);
+      widget.onEducationChanged!(educationExperiences.isNotEmpty);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: Theme
+          .of(context)
+          .colorScheme
+          .surface,
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Column(
@@ -58,22 +61,36 @@ class _AddEducationPageState extends State<AddEducationPage> {
             const SizedBox(height: 50),
             Text(
               'Clients like to know what you know - add your education here.',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              style: Theme
+                  .of(context)
+                  .textTheme
+                  .headlineMedium
+                  ?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 12),
             Text(
               'You don\'t have to have a degree/diploma. Adding any relevant education helps make your profile more visible.',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.inverseSurface
+              style: Theme
+                  .of(context)
+                  .textTheme
+                  .bodyLarge
+                  ?.copyWith(
+                  color: Theme
+                      .of(context)
+                      .colorScheme
+                      .inverseSurface
               ),
             ),
             const SizedBox(height: 32),
 
-            // Display work experiences
-            if (workExperiences.isNotEmpty) ...[
-              ...workExperiences.asMap().entries.map((entry) {
+            // Display education experiences
+            if (educationExperiences.isNotEmpty) ...[
+              ...educationExperiences
+                  .asMap()
+                  .entries
+                  .map((entry) {
                 int index = entry.key;
                 EducationModel experience = entry.value;
                 return _buildExperienceCard(experience, index);
@@ -87,12 +104,13 @@ class _AddEducationPageState extends State<AddEducationPage> {
                     isScrollControlled: true,
                     isDismissible: false,
                     context: context,
-                    builder: (context) => EducationBottomsheet(
-                      closeBottomSheet: () {
-                        Navigator.pop(context);
-                      },
-                      onSave: _addWorkExperience,
-                    )
+                    builder: (context) =>
+                        EducationBottomsheet(
+                          closeBottomSheet: () {
+                            Navigator.pop(context);
+                          },
+                          onSave: _addEducationExperience,
+                        )
                 );
               },
               style: OutlinedButton.styleFrom(
@@ -105,13 +123,17 @@ class _AddEducationPageState extends State<AddEducationPage> {
                 ),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
+                padding: const EdgeInsets.symmetric(
+                    vertical: 12.0, horizontal: 8.0),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       Iconsax.add_copy,
-                      color: Theme.of(context).colorScheme.inverseSurface,
+                      color: Theme
+                          .of(context)
+                          .colorScheme
+                          .inverseSurface,
                     ),
                     const SizedBox(width: 8),
                     Text(
@@ -119,7 +141,10 @@ class _AddEducationPageState extends State<AddEducationPage> {
                       style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.inverseSurface
+                          color: Theme
+                              .of(context)
+                              .colorScheme
+                              .inverseSurface
                       ),
                     )
                   ],
@@ -135,80 +160,170 @@ class _AddEducationPageState extends State<AddEducationPage> {
   Widget _buildExperienceCard(EducationModel experience, int index) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.tertiary,
+        color: Theme
+            .of(context)
+            .colorScheme
+            .tertiary,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+          color: Theme
+              .of(context)
+              .colorScheme
+              .primary
+              .withValues(alpha: 0.2),
           width: 1.5,
         ),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  experience.school,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  '@${experience.course} | ${experience.fieldOfStudy}',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.7),
-                  ),
-                ),
-                Text(
-                  experience.dateRange,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.6),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
+          Row(
             children: [
-              IconButton(
-                onPressed: () {
-                  showModalBottomSheet(
-                    isScrollControlled: true,
-                    isDismissible: false,
-                    context: context,
-                    builder: (context) => EducationBottomsheet(
-                      closeBottomSheet: () {
-                        Navigator.pop(context);
-                      },
-                      onSave: (updatedExperience) {
-                        _editWorkExperience(index, updatedExperience);
-                      },
-                      initialData: experience,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      experience.school,
+                      style: Theme
+                          .of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  );
-                },
-                icon: const Icon(
-                  CupertinoIcons.pencil_outline,
-                  color: Color(0xFF4E6BF5),
-                  size: 32,
+                    const SizedBox(height: 4),
+                    Text(
+                      '@${experience.course} | ${experience.fieldOfStudy}',
+                      style: Theme
+                          .of(context)
+                          .textTheme
+                          .bodyLarge
+                          ?.copyWith(
+                        color: Theme
+                            .of(context)
+                            .colorScheme
+                            .inverseSurface
+                            .withValues(alpha: 0.7),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      experience.dateRange,
+                      style: Theme
+                          .of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(
+                        color: Theme
+                            .of(context)
+                            .colorScheme
+                            .inverseSurface
+                            .withValues(alpha: 0.6),
+                      ),
+                    ),
+                    if (experience.hasCertificate) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Icon(
+                            _getCertificateIcon(experience.certificateFileName!),
+                            color: Colors.green,
+                            size: 28,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Certificate attached',
+                                  style: TextStyle(
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                Text(
+                                  experience.certificateFileName!,
+                                  style: const TextStyle(
+                                    color: Colors.green,
+                                    fontSize: 11,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
                 ),
               ),
-              IconButton(
-                onPressed: () => _deleteWorkExperience(index),
-                icon: const Icon(
-                  CupertinoIcons.trash_circle,
-                  color: Color(0xFF4E6BF5),
-                  size: 36,
-                ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      showModalBottomSheet(
+                        isScrollControlled: true,
+                        isDismissible: false,
+                        context: context,
+                        builder: (context) =>
+                            EducationBottomsheet(
+                              closeBottomSheet: () {
+                                Navigator.pop(context);
+                              },
+                              onSave: (updatedExperience) {
+                                _editEducationExperience(
+                                    index, updatedExperience);
+                              },
+                              initialData: experience,
+                            ),
+                      );
+                    },
+                    icon: const Icon(
+                      CupertinoIcons.pencil_outline,
+                      color: Color(0xFF4E6BF5),
+                      size: 28,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => _deleteEducationExperience(index),
+                    icon: const Icon(
+                      CupertinoIcons.trash_circle,
+                      color: Color(0xFF4E6BF5),
+                      size: 32,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
+          // Certificate section
         ],
       ),
     );
+  }
+
+  IconData _getCertificateIcon(String fileName) {
+    String extension = fileName
+        .split('.')
+        .last
+        .toLowerCase();
+    switch (extension) {
+      case 'pdf':
+        return Icons.picture_as_pdf;
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+        return Icons.image;
+      default:
+        return Icons.description;
+    }
   }
 }

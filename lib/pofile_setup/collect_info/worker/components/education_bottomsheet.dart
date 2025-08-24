@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:workie/models/education_model.dart';
+import 'package:workie/services/file_cache_service.dart'; // Add this import
 
 class EducationBottomsheet extends StatefulWidget {
   final VoidCallback closeBottomSheet;
@@ -25,6 +26,7 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
   String startYear = 'Year';
   File? certificateFile;
   String? certificateFileName;
+  bool _isFileSaving = false;
 
   bool _isSchoolEmpty = false;
   bool _isCourseEmpty = false;
@@ -60,9 +62,11 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
       endYear = education.endYear!;
     }
 
-    // If your EducationModel has certificate fields, populate them here
-    // certificateFileName = education.certificateFileName;
-    // certificateFile = education.certificateFile;
+    // Populate certificate fields if they exist
+    if (education.hasCertificate) {
+      certificateFile = education.certificateFile;
+      certificateFileName = education.certificateFileName;
+    }
   }
 
   @override
@@ -78,6 +82,10 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
 
   Future<void> _pickCertificate() async {
     try {
+      setState(() {
+        _isFileSaving = true;
+      });
+
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
@@ -85,26 +93,81 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
       );
 
       if (result != null && result.files.single.path != null) {
+        final File pickedFile = File(result.files.single.path!);
+        final String fileName = result.files.single.name;
+
+        // Save file to cache
+        final File? cachedFile = await FileCacheService.saveFileToCache(pickedFile, fileName);
+
+        if (cachedFile != null) {
+          setState(() {
+            certificateFile = cachedFile;
+            certificateFileName = fileName;
+            _isFileSaving = false;
+          });
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Certificate saved successfully!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        } else {
+          setState(() {
+            _isFileSaving = false;
+          });
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Failed to save certificate. Please try again.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } else {
         setState(() {
-          certificateFile = File(result.files.single.path!);
-          certificateFileName = result.files.single.name;
+          _isFileSaving = false;
         });
       }
     } catch (e) {
-      // Handle error - you might want to show a snackbar or dialog
+      setState(() {
+        _isFileSaving = false;
+      });
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error picking file: $e')),
+          SnackBar(
+            content: Text('Error picking file: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
   }
 
-  void _removeCertificate() {
+  void _removeCertificate() async {
+    if (certificateFile != null) {
+      // Delete from cache
+      await FileCacheService.deleteFileFromCache(certificateFile!);
+    }
+
     setState(() {
       certificateFile = null;
       certificateFileName = null;
     });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Certificate removed'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
   }
 
   void _validateInput() {
@@ -139,17 +202,26 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
   void _handleSave() {
     _validateInput();
 
-    if (!_hasErrors) {
+    if (!_hasErrors && !_isFileSaving) {
       final education = EducationModel(
         school: schoolController.text,
         course: courseController.text,
         fieldOfStudy: fieldOfStudyController.text,
         startYear: startYear,
         endYear: endYear,
+        certificateFile: certificateFile,
+        certificateFileName: certificateFileName,
       );
 
       widget.onSave(education);
       Navigator.pop(context);
+    } else if (_isFileSaving) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please wait while file is being saved...'),
+          backgroundColor: Colors.orange,
+        ),
+      );
     }
   }
 
@@ -181,7 +253,7 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-              'Add Education History',
+              widget.initialData != null ? 'Edit Education History' : 'Add Education History',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold
               )
@@ -249,11 +321,13 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
         const SizedBox(height: 8),
         if (certificateFile == null)
           InkWell(
-            onTap: _pickCertificate,
+            onTap: _isFileSaving ? null : _pickCertificate,
             child: Container(
               height: 50,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.tertiary,
+                color: _isFileSaving
+                    ? Theme.of(context).colorScheme.tertiary
+                    : Theme.of(context).colorScheme.tertiary,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
@@ -264,13 +338,30 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.upload_file,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                  if (_isFileSaving)
+                    SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: Transform.scale(
+                        scale: 0.45, // Makes it half the size
+                        child: const Padding(
+                          padding: EdgeInsets.only(right: 4.0),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 9,
+                            color: Colors.white,
+                            strokeCap: StrokeCap.square,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    Icon(
+                      Icons.upload_file,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   const SizedBox(width: 8),
                   Text(
-                    'Choose File',
+                    _isFileSaving ? 'Saving File...' : 'Choose File',
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.w500,
@@ -319,6 +410,14 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
                           fontSize: 12,
                         ),
                       ),
+                      const Text(
+                        'Saved in cache',
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -326,10 +425,12 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      onPressed: _pickCertificate,
+                      onPressed: _isFileSaving ? null : _pickCertificate,
                       icon: Icon(
                         CupertinoIcons.pencil_outline,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: _isFileSaving
+                            ? Colors.grey
+                            : Theme.of(context).colorScheme.primary,
                         size: 20,
                       ),
                       constraints: const BoxConstraints(
@@ -339,10 +440,10 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
                       padding: EdgeInsets.zero,
                     ),
                     IconButton(
-                      onPressed: _removeCertificate,
-                      icon: const Icon(
+                      onPressed: _isFileSaving ? null : _removeCertificate,
+                      icon: Icon(
                         CupertinoIcons.trash_circle,
-                        color: Colors.red,
+                        color: _isFileSaving ? Colors.grey : Colors.red,
                         size: 24,
                       ),
                       constraints: const BoxConstraints(
@@ -794,15 +895,31 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
         ),
         const SizedBox(width: 24),
         ElevatedButton(
-          onPressed: _handleSave,
+          onPressed: _isFileSaving ? null : _handleSave,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF4E6BF5),
+            backgroundColor: _isFileSaving ? Colors.grey : const Color(0xFF4E6BF5),
             padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 8),
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(10)),
             ),
           ),
-          child: Text(
+          child: _isFileSaving
+              ? SizedBox(
+            width: 16,
+            height: 16,
+            child: Transform.scale(
+              scale: 0.45, // Makes it half the size
+              child: const Padding(
+                padding: EdgeInsets.only(right: 4.0),
+                child: CircularProgressIndicator(
+                  strokeWidth: 9,
+                  color: Colors.white,
+                  strokeCap: StrokeCap.square,
+                ),
+              ),
+            ),
+          )
+              : Text(
               'Save',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: Colors.white,

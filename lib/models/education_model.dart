@@ -1,9 +1,13 @@
+import 'dart:io';
+
 class EducationModel {
   final String school;
   final String course;
   final String fieldOfStudy;
   final String startYear;
   final String? endYear;
+  final File? certificateFile;
+  final String? certificateFileName;
 
   EducationModel({
     required this.school,
@@ -11,6 +15,8 @@ class EducationModel {
     required this.fieldOfStudy,
     required this.startYear,
     this.endYear,
+    this.certificateFile,
+    this.certificateFileName,
   });
 
   bool get isCurrentEducation {
@@ -25,5 +31,9 @@ class EducationModel {
       String end = endYear!;
       return '$start - $end';
     }
+  }
+
+  bool get hasCertificate {
+    return certificateFile != null && certificateFileName != null;
   }
 }
