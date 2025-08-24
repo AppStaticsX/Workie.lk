@@ -5,7 +5,9 @@ import 'package:workie/pofile_setup/collect_info/worker/components/education_bot
 import '../../../models/education_model.dart';
 
 class AddEducationPage extends StatefulWidget {
-  const AddEducationPage({super.key});
+  final Function(bool)? onEducationChanged;
+
+  const AddEducationPage({super.key, this.onEducationChanged});
 
   @override
   State<AddEducationPage> createState() => _AddEducationPageState();
@@ -18,18 +20,30 @@ class _AddEducationPageState extends State<AddEducationPage> {
     setState(() {
       workExperiences.add(experience);
     });
+    // Notify parent about the change
+    if (widget.onEducationChanged != null) {
+      widget.onEducationChanged!(workExperiences.isNotEmpty);
+    }
   }
 
   void _editWorkExperience(int index, EducationModel updatedExperience) {
     setState(() {
       workExperiences[index] = updatedExperience;
     });
+    // Notify parent about the change
+    if (widget.onEducationChanged != null) {
+      widget.onEducationChanged!(workExperiences.isNotEmpty);
+    }
   }
 
   void _deleteWorkExperience(int index) {
     setState(() {
       workExperiences.removeAt(index);
     });
+    // Notify parent about the change
+    if (widget.onEducationChanged != null) {
+      widget.onEducationChanged!(workExperiences.isNotEmpty);
+    }
   }
 
   @override

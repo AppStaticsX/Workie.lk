@@ -5,7 +5,9 @@ import 'package:workie/models/work_experience_model.dart';
 import 'package:workie/pofile_setup/collect_info/worker/components/work_experience_bottomsheet.dart';
 
 class AddExperiencePage extends StatefulWidget {
-  const AddExperiencePage({super.key});
+  final Function(bool)? onExperienceChanged;
+
+  const AddExperiencePage({super.key, this.onExperienceChanged});
 
   @override
   State<AddExperiencePage> createState() => _AddExperiencePageState();
@@ -18,18 +20,30 @@ class _AddExperiencePageState extends State<AddExperiencePage> {
     setState(() {
       workExperiences.add(experience);
     });
+    // Notify parent about the change
+    if (widget.onExperienceChanged != null) {
+      widget.onExperienceChanged!(workExperiences.isNotEmpty);
+    }
   }
 
   void _editWorkExperience(int index, WorkExperienceModel updatedExperience) {
     setState(() {
       workExperiences[index] = updatedExperience;
     });
+    // Notify parent about the change
+    if (widget.onExperienceChanged != null) {
+      widget.onExperienceChanged!(workExperiences.isNotEmpty);
+    }
   }
 
   void _deleteWorkExperience(int index) {
     setState(() {
       workExperiences.removeAt(index);
     });
+    // Notify parent about the change
+    if (widget.onExperienceChanged != null) {
+      widget.onExperienceChanged!(workExperiences.isNotEmpty);
+    }
   }
 
   @override

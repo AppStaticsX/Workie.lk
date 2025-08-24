@@ -4,7 +4,7 @@ import 'package:workie/pofile_setup/collect_info/worker/add_education_page.dart'
 import 'package:workie/pofile_setup/collect_info/worker/add_experience_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_skills_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_title_page.dart';
-import 'package:workie/pofile_setup/collect_info/worker/select_work_page.dart';
+import 'package:workie/pofile_setup/collect_info/worker/select_work_page.dart'; // Add this new page import
 import 'package:workie/widgets/bottom_navigation.dart';
 import 'package:workie/widgets/bottom_navigation_with_skip.dart';
 import 'package:workie/widgets/simple_bottom_navigation.dart';
@@ -19,14 +19,15 @@ class ProfileSetup extends StatefulWidget {
 
 class _ProfileSetupState extends State<ProfileSetup> {
   int _selectedIndex = 0;
-  final int _maxIndex = 4;
+  final int _maxIndex = 5; // Updated to include the new page
 
   bool _hasWorkSelection = false;
   bool _hasSkills = false;
   bool _hasText = false;
+  bool _hasExperience = false; // New validation for experience
+  bool _hasEducation = false; // New validation for education (if needed)
 
   void _navigateNext() {
-
     // Validation for each step
     switch (_selectedIndex) {
       case 0:
@@ -46,14 +47,25 @@ class _ProfileSetupState extends State<ProfileSetup> {
         }
         break;
       case 3:
-      // Add title page validation - be more strict
+      // Add title page validation
         if (!_hasText) {
           _showSnackBar('Please enter your professional title to continue.');
           return;
         }
         break;
       case 4:
-      // Experience page - handle completion or navigation to next flow
+      // Experience page validation - prevent navigation if no experience added
+        if (!_hasExperience) {
+          _showSnackBar('Please add at least one work experience to continue, or use the skip button.');
+          return;
+        }
+        break;
+      case 5:
+      // Education page - handle completion or navigation to next flow
+        _handleProfileCompletion();
+        return;
+      case 6:
+      // Overview page - final step
         _handleProfileCompletion();
         return;
       default:
@@ -102,6 +114,8 @@ class _ProfileSetupState extends State<ProfileSetup> {
 
   void _handleProfileCompletion() {
     _showSnackBar('Profile setup completed!');
+    // Add navigation to next screen or complete the flow
+    // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => NextScreen()));
   }
 
   @override
@@ -116,7 +130,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
           size: 26,
         ),
         title: const Text('Create & Verify Your Profile'),
-        // Optional: Add progress indicator
+        // Progress indicator
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4.0),
           child: LinearProgressIndicator(
@@ -153,8 +167,20 @@ class _ProfileSetupState extends State<ProfileSetup> {
               });
             },
           ),
-          const AddExperiencePage(),
-          const AddEducationPage() // Added const
+          AddExperiencePage(
+            onExperienceChanged: (hasExperience) {
+              setState(() {
+                _hasExperience = hasExperience;
+              });
+            },
+          ),
+          AddEducationPage(
+            onEducationChanged: (hasEducation) {
+              setState(() {
+                _hasEducation = hasEducation;
+              });
+            },
+          ),
         ],
       ),
       bottomNavigationBar: IndexedStack(
@@ -187,6 +213,12 @@ class _ProfileSetupState extends State<ProfileSetup> {
           ),
           BottomNavigationWithSkip(
             actionName: 'Write an Overview',
+            onTapAction: _navigateNext,
+            onBackAction: _navigateBack,
+            onSkip: _skipNext,
+          ),
+          BottomNavigationWithSkip(
+            actionName: 'Complete Profile',
             onTapAction: _navigateNext,
             onBackAction: _navigateBack,
             onSkip: _skipNext,
