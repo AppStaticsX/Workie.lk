@@ -26,21 +26,21 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
   File? certificateFile;
   String? certificateFileName;
 
-  bool _isTitleEmpty = false;
-  bool _isCompanyEmpty = false;
-  bool _isLocationEmpty = false;
-  bool _isStartDateEmpty = false;
-  bool _isEndDateEmpty = false;
-  bool _isDateRangeInvalid = false;
+  bool _isSchoolEmpty = false;
+  bool _isCourseEmpty = false;
+  bool _isFieldOfStudyEmpty = false;
+  bool _isStartYearEmpty = false;
+  bool _isEndYearEmpty = false;
+  bool _isYearRangeInvalid = false;
   bool _hasErrors = false;
 
-  final TextEditingController titleController = TextEditingController();
-  final TextEditingController companyController = TextEditingController();
-  final TextEditingController locationController = TextEditingController();
+  final TextEditingController schoolController = TextEditingController();
+  final TextEditingController courseController = TextEditingController();
+  final TextEditingController fieldOfStudyController = TextEditingController();
 
-  final FocusNode titleFocusNode = FocusNode();
-  final FocusNode companyFocusNode = FocusNode();
-  final FocusNode locationFocusNode = FocusNode();
+  final FocusNode schoolFocusNode = FocusNode();
+  final FocusNode courseFocusNode = FocusNode();
+  final FocusNode fieldOfStudyFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -51,9 +51,9 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
   }
 
   void _populateFields(EducationModel education) {
-    titleController.text = education.title;
-    companyController.text = education.company;
-    locationController.text = education.location;
+    schoolController.text = education.school;
+    courseController.text = education.course;
+    fieldOfStudyController.text = education.fieldOfStudy;
     startYear = education.startYear;
 
     if (education.endYear != null) {
@@ -67,12 +67,12 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
 
   @override
   void dispose() {
-    titleController.dispose();
-    companyController.dispose();
-    locationController.dispose();
-    titleFocusNode.dispose();
-    companyFocusNode.dispose();
-    locationFocusNode.dispose();
+    schoolController.dispose();
+    courseController.dispose();
+    fieldOfStudyController.dispose();
+    schoolFocusNode.dispose();
+    courseFocusNode.dispose();
+    fieldOfStudyFocusNode.dispose();
     super.dispose();
   }
 
@@ -92,9 +92,11 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
       }
     } catch (e) {
       // Handle error - you might want to show a snackbar or dialog
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error picking file: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking file: $e')),
+        );
+      }
     }
   }
 
@@ -107,23 +109,23 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
 
   void _validateInput() {
     setState(() {
-      _isTitleEmpty = titleController.text.isEmpty;
-      _isCompanyEmpty = companyController.text.isEmpty;
-      _isLocationEmpty = locationController.text.isEmpty;
-      _isStartDateEmpty = startYear == 'Year';
-      _isEndDateEmpty = endYear == 'Year';
-      _isDateRangeInvalid = false;
+      _isSchoolEmpty = schoolController.text.isEmpty;
+      _isCourseEmpty = courseController.text.isEmpty;
+      _isFieldOfStudyEmpty = fieldOfStudyController.text.isEmpty;
+      _isStartYearEmpty = startYear == 'Year';
+      _isEndYearEmpty = endYear == 'Year';
+      _isYearRangeInvalid = false;
 
-      if (!_isStartDateEmpty && !_isEndDateEmpty) {
-        _isDateRangeInvalid = _isEndDateBeforeStartDate();
+      if (!_isStartYearEmpty && !_isEndYearEmpty) {
+        _isYearRangeInvalid = _isEndYearBeforeStartYear();
       }
 
-      _hasErrors = _isTitleEmpty || _isCompanyEmpty || _isLocationEmpty ||
-          _isStartDateEmpty || _isEndDateEmpty || _isDateRangeInvalid;
+      _hasErrors = _isSchoolEmpty || _isCourseEmpty || _isFieldOfStudyEmpty ||
+          _isStartYearEmpty || _isEndYearEmpty || _isYearRangeInvalid;
     });
   }
 
-  bool _isEndDateBeforeStartDate() {
+  bool _isEndYearBeforeStartYear() {
     if (startYear == 'Year' || endYear == 'Year') {
       return false;
     }
@@ -139,17 +141,11 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
 
     if (!_hasErrors) {
       final education = EducationModel(
-        title: titleController.text,
-        company: companyController.text,
-        location: locationController.text,
-        startMonth: 'January', // Default month since only years are used
+        school: schoolController.text,
+        course: courseController.text,
+        fieldOfStudy: fieldOfStudyController.text,
         startYear: startYear,
-        endMonth: 'December', // Default month since only years are used
         endYear: endYear,
-        isCurrentWork: false, // Education is always completed
-        // Add certificate fields to your model if needed
-        // certificateFile: certificateFile,
-        // certificateFileName: certificateFileName,
       );
 
       widget.onSave(education);
@@ -212,11 +208,11 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildTitleField(),
+                  _buildSchoolField(),
                   const SizedBox(height: 16),
-                  _buildCompanyField(),
+                  _buildCourseField(),
                   const SizedBox(height: 16),
-                  _buildLocationField(),
+                  _buildFieldOfStudyField(),
                   const SizedBox(height: 24),
                   _buildDateSection(),
                   const SizedBox(height: 24),
@@ -332,7 +328,7 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
                     IconButton(
                       onPressed: _pickCertificate,
                       icon: Icon(
-                        Icons.edit,
+                        CupertinoIcons.pencil_outline,
                         color: Theme.of(context).colorScheme.primary,
                         size: 20,
                       ),
@@ -345,9 +341,9 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
                     IconButton(
                       onPressed: _removeCertificate,
                       icon: const Icon(
-                        Icons.delete,
+                        CupertinoIcons.trash_circle,
                         color: Colors.red,
-                        size: 20,
+                        size: 24,
                       ),
                       constraints: const BoxConstraints(
                         minWidth: 32,
@@ -393,7 +389,7 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
     }
   }
 
-  Widget _buildTitleField() {
+  Widget _buildSchoolField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -405,11 +401,11 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
         ),
         const SizedBox(height: 4),
         TextFormField(
-          controller: titleController,
-          focusNode: titleFocusNode,
+          controller: schoolController,
+          focusNode: schoolFocusNode,
           onChanged: (value) {
-            if (_isTitleEmpty && value.isNotEmpty) {
-              setState(() => _isTitleEmpty = false);
+            if (_isSchoolEmpty && value.isNotEmpty) {
+              setState(() => _isSchoolEmpty = false);
             }
           },
           decoration: InputDecoration(
@@ -430,20 +426,20 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: _isTitleEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                color: _isSchoolEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
                 width: 1.5,
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: _isTitleEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
+                color: _isSchoolEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
                 width: 2,
               ),
             ),
           ),
         ),
-        if (_isTitleEmpty)
+        if (_isSchoolEmpty)
           const Padding(
             padding: EdgeInsets.only(top: 4),
             child: Text(
@@ -458,7 +454,7 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
     );
   }
 
-  Widget _buildCompanyField() {
+  Widget _buildCourseField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -470,11 +466,11 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
         ),
         const SizedBox(height: 4),
         TextFormField(
-          controller: companyController,
-          focusNode: companyFocusNode,
+          controller: courseController,
+          focusNode: courseFocusNode,
           onChanged: (value) {
-            if (_isCompanyEmpty && value.isNotEmpty) {
-              setState(() => _isCompanyEmpty = false);
+            if (_isCourseEmpty && value.isNotEmpty) {
+              setState(() => _isCourseEmpty = false);
             }
           },
           decoration: InputDecoration(
@@ -495,20 +491,20 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: _isCompanyEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                color: _isCourseEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
                 width: 1.5,
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: _isCompanyEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
+                color: _isCourseEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
                 width: 2,
               ),
             ),
           ),
         ),
-        if (_isCompanyEmpty)
+        if (_isCourseEmpty)
           const Padding(
             padding: EdgeInsets.only(top: 4),
             child: Text(
@@ -523,7 +519,7 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
     );
   }
 
-  Widget _buildLocationField() {
+  Widget _buildFieldOfStudyField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -535,11 +531,11 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
         ),
         const SizedBox(height: 4),
         TextFormField(
-          controller: locationController,
-          focusNode: locationFocusNode,
+          controller: fieldOfStudyController,
+          focusNode: fieldOfStudyFocusNode,
           onChanged: (value) {
-            if (_isLocationEmpty && value.isNotEmpty) {
-              setState(() => _isLocationEmpty = false);
+            if (_isFieldOfStudyEmpty && value.isNotEmpty) {
+              setState(() => _isFieldOfStudyEmpty = false);
             }
           },
           decoration: InputDecoration(
@@ -560,20 +556,20 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: _isLocationEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                color: _isFieldOfStudyEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
                 width: 1.5,
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: _isLocationEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
+                color: _isFieldOfStudyEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
                 width: 2,
               ),
             ),
           ),
         ),
-        if (_isLocationEmpty)
+        if (_isFieldOfStudyEmpty)
           const Padding(
             padding: EdgeInsets.only(top: 4),
             child: Text(
@@ -612,12 +608,12 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
                   const SizedBox(height: 4),
                   _buildYearPicker(
                       selectedYear: startYear,
-                      isError: _isStartDateEmpty || _isDateRangeInvalid,
+                      isError: _isStartYearEmpty || _isYearRangeInvalid,
                       onYearSelected: (year) {
                         setState(() {
                           startYear = year;
-                          _isStartDateEmpty = false;
-                          _isDateRangeInvalid = false;
+                          _isStartYearEmpty = false;
+                          _isYearRangeInvalid = false;
                         });
                       }
                   ),
@@ -636,12 +632,12 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
                   const SizedBox(height: 4),
                   _buildYearPicker(
                       selectedYear: endYear,
-                      isError: _isEndDateEmpty || _isDateRangeInvalid,
+                      isError: _isEndYearEmpty || _isYearRangeInvalid,
                       onYearSelected: (year) {
                         setState(() {
                           endYear = year;
-                          _isEndDateEmpty = false;
-                          _isDateRangeInvalid = false;
+                          _isEndYearEmpty = false;
+                          _isYearRangeInvalid = false;
                         });
                       }
                   ),
@@ -652,7 +648,7 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
         ),
         Row(
           children: [
-            if (_isStartDateEmpty)
+            if (_isStartYearEmpty)
               Expanded(
                 child: const Padding(
                   padding: EdgeInsets.only(top: 4),
@@ -665,7 +661,7 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
                   ),
                 ),
               ),
-            if (_isEndDateEmpty)
+            if (_isEndYearEmpty)
               Expanded(
                 child: const Padding(
                   padding: EdgeInsets.only(top: 4, left: 12),
@@ -678,7 +674,7 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
                   ),
                 ),
               ),
-            if (_isDateRangeInvalid)
+            if (_isYearRangeInvalid)
               const Padding(
                 padding: EdgeInsets.only(top: 4),
                 child: Text(

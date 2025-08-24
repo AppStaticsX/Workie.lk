@@ -151,13 +151,13 @@ class _AddEducationPageState extends State<AddEducationPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  experience.title,
+                  experience.school,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
-                  '@${experience.company} | ${experience.location}',
+                  '@${experience.course} | ${experience.fieldOfStudy}',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.7),
                   ),
