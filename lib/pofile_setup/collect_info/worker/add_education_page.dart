@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/pofile_setup/collect_info/worker/components/education_bottomsheet.dart';
 import '../../../models/education_model.dart';
@@ -225,23 +226,28 @@ class _AddEducationPageState extends State<AddEducationPage> {
                       ),
                     ),
                     if (experience.hasCertificate) ...[
-                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 24.0),
+                        child: Divider(
+                          thickness: 0.5,
+                          color: Colors.grey,
+                        ),
+                      ),
                       Row(
                         children: [
-                          Icon(
+                          SvgPicture.asset(
                             _getCertificateIcon(experience.certificateFileName!),
-                            color: Colors.green,
-                            size: 28,
+                            width: 28,
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   'Certificate attached',
                                   style: TextStyle(
-                                    color: Colors.green,
+                                    color: Theme.of(context).colorScheme.inverseSurface,
                                     fontWeight: FontWeight.w600,
                                     fontSize: 12,
                                   ),
@@ -249,7 +255,7 @@ class _AddEducationPageState extends State<AddEducationPage> {
                                 Text(
                                   experience.certificateFileName!,
                                   style: const TextStyle(
-                                    color: Colors.green,
+                                    color: Colors.grey,
                                     fontSize: 11,
                                   ),
                                   maxLines: 1,
@@ -310,20 +316,20 @@ class _AddEducationPageState extends State<AddEducationPage> {
     );
   }
 
-  IconData _getCertificateIcon(String fileName) {
+  String _getCertificateIcon(String fileName) {
     String extension = fileName
         .split('.')
         .last
         .toLowerCase();
     switch (extension) {
       case 'pdf':
-        return Icons.picture_as_pdf;
+        return 'assets/icon/pdf2-svgrepo-com.svg';
       case 'jpg':
       case 'jpeg':
       case 'png':
-        return Icons.image;
+        return 'assets/icon/images-svgrepo-com.svg';
       default:
-        return Icons.description;
+        return 'assets/icon/script-svgrepo-com.svg';
     }
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:io';
 import 'package:workie/models/education_model.dart';
 import 'package:workie/services/file_cache_service.dart'; // Add this import
@@ -384,10 +385,9 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
             ),
             child: Row(
               children: [
-                Icon(
+                SvgPicture.asset(
                   _getFileIcon(),
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 24,
+                  width: 24,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -408,14 +408,6 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
                         style: const TextStyle(
                           color: Colors.grey,
                           fontSize: 12,
-                        ),
-                      ),
-                      const Text(
-                        'Saved in cache',
-                        style: TextStyle(
-                          color: Colors.green,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
@@ -461,19 +453,19 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
     );
   }
 
-  IconData _getFileIcon() {
-    if (certificateFileName == null) return Icons.description;
+  String _getFileIcon() {
+    if (certificateFileName == null) return 'assets/icon/script-svgrepo-com.svg';
 
     String extension = certificateFileName!.split('.').last.toLowerCase();
     switch (extension) {
       case 'pdf':
-        return Icons.picture_as_pdf;
+        return 'assets/icon/pdf2-svgrepo-com.svg';
       case 'jpg':
       case 'jpeg':
       case 'png':
-        return Icons.image;
+        return 'assets/icon/images-svgrepo-com.svg';
       default:
-        return Icons.description;
+        return 'assets/icon/script-svgrepo-com.svg';
     }
   }
 
