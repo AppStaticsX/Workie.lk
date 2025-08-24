@@ -130,8 +130,8 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
                           _getSelectionCountText(),
                           style: TextStyle(
                             color: isDisabled
-                                ? const Color(0xFF4CAF50).withValues(alpha: 0.4)
-                                : const Color(0xFF4CAF50),
+                                ? const Color(0xFF4E6BF5).withValues(alpha: 0.4)
+                                : const Color(0xFF4E6BF5),
                             fontSize: 18,
                             fontWeight: FontWeight.w500,
                           ),
@@ -200,7 +200,7 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
                   color: isDisabled
                       ? Colors.grey[600]!.withValues(alpha: 0.4)
                       : isSelected
-                      ? const Color(0xFF4CAF50)
+                      ? const Color(0xFF4E6BF5)
                       : Colors.grey[600]!,
                   width: 2,
                 ),
@@ -211,8 +211,8 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
                   ? Icon(
                 Icons.check,
                 color: isDisabled
-                    ? const Color(0xFF4CAF50).withValues(alpha: 0.4)
-                    : const Color(0xFF4CAF50),
+                    ? const Color(0xFF4E6BF5).withValues(alpha: 0.4)
+                    : const Color(0xFF4E6BF5),
                 size: 18,
               )
                   : null,

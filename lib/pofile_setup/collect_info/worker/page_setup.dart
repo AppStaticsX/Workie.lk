@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:workie/pofile_setup/collect_info/worker/add_education_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_experience_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_skills_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_title_page.dart';
@@ -152,7 +153,8 @@ class _ProfileSetupState extends State<ProfileSetup> {
               });
             },
           ),
-          const AddExperiencePage(), // Added const
+          const AddExperiencePage(),
+          const AddEducationPage() // Added const
         ],
       ),
       bottomNavigationBar: IndexedStack(
@@ -178,7 +180,13 @@ class _ProfileSetupState extends State<ProfileSetup> {
             onBackAction: _navigateBack,
           ),
           BottomNavigationWithSkip(
-            actionName: 'Complete Profile',
+            actionName: 'Add Education',
+            onTapAction: _navigateNext,
+            onBackAction: _navigateBack,
+            onSkip: _skipNext,
+          ),
+          BottomNavigationWithSkip(
+            actionName: 'Write an Overview',
             onTapAction: _navigateNext,
             onBackAction: _navigateBack,
             onSkip: _skipNext,

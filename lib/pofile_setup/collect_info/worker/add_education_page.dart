@@ -1,26 +1,26 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
-import 'package:workie/models/work_experience_model.dart';
-import 'package:workie/pofile_setup/collect_info/worker/components/work_experience_bottomsheet.dart';
+import 'package:workie/pofile_setup/collect_info/worker/components/education_bottomsheet.dart';
+import '../../../models/education_model.dart';
 
-class AddExperiencePage extends StatefulWidget {
-  const AddExperiencePage({super.key});
+class AddEducationPage extends StatefulWidget {
+  const AddEducationPage({super.key});
 
   @override
-  State<AddExperiencePage> createState() => _AddExperiencePageState();
+  State<AddEducationPage> createState() => _AddEducationPageState();
 }
 
-class _AddExperiencePageState extends State<AddExperiencePage> {
-  List<WorkExperienceModel> workExperiences = [];
+class _AddEducationPageState extends State<AddEducationPage> {
+  List<EducationModel> workExperiences = [];
 
-  void _addWorkExperience(WorkExperienceModel experience) {
+  void _addWorkExperience(EducationModel experience) {
     setState(() {
       workExperiences.add(experience);
     });
   }
 
-  void _editWorkExperience(int index, WorkExperienceModel updatedExperience) {
+  void _editWorkExperience(int index, EducationModel updatedExperience) {
     setState(() {
       workExperiences[index] = updatedExperience;
     });
@@ -43,14 +43,14 @@ class _AddExperiencePageState extends State<AddExperiencePage> {
           children: [
             const SizedBox(height: 50),
             Text(
-              'If you have relevant work experience, add it here.',
+              'Clients like to know what you know - add your education here.',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'Workers who add their experience are twice as likely to win work. But if you\'re just starting out, you can still create a great profile. just head on to the next page.',
+              '',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: Theme.of(context).colorScheme.inverseSurface
               ),
@@ -61,7 +61,7 @@ class _AddExperiencePageState extends State<AddExperiencePage> {
             if (workExperiences.isNotEmpty) ...[
               ...workExperiences.asMap().entries.map((entry) {
                 int index = entry.key;
-                WorkExperienceModel experience = entry.value;
+                EducationModel experience = entry.value;
                 return _buildExperienceCard(experience, index);
               }),
               const SizedBox(height: 16),
@@ -73,7 +73,7 @@ class _AddExperiencePageState extends State<AddExperiencePage> {
                     isScrollControlled: true,
                     isDismissible: false,
                     context: context,
-                    builder: (context) => WorkExperienceBottomsheet(
+                    builder: (context) => EducationBottomsheet(
                       closeBottomSheet: () {
                         Navigator.pop(context);
                       },
@@ -118,7 +118,7 @@ class _AddExperiencePageState extends State<AddExperiencePage> {
     );
   }
 
-  Widget _buildExperienceCard(WorkExperienceModel experience, int index) {
+  Widget _buildExperienceCard(EducationModel experience, int index) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -166,7 +166,7 @@ class _AddExperiencePageState extends State<AddExperiencePage> {
                     isScrollControlled: true,
                     isDismissible: false,
                     context: context,
-                    builder: (context) => WorkExperienceBottomsheet(
+                    builder: (context) => EducationBottomsheet(
                       closeBottomSheet: () {
                         Navigator.pop(context);
                       },
