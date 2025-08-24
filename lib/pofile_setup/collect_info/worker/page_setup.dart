@@ -19,13 +19,13 @@ class ProfileSetup extends StatefulWidget {
 
 class _ProfileSetupState extends State<ProfileSetup> {
   int _selectedIndex = 0;
-  final int _maxIndex = 5; // Updated to include the new page
+  final int _maxIndex = 5;
 
   bool _hasWorkSelection = false;
   bool _hasSkills = false;
   bool _hasText = false;
-  bool _hasExperience = false; // New validation for experience
-  bool _hasEducation = false; // New validation for education (if needed)
+  bool _hasExperience = false;
+  bool _hasEducation = false;
 
   void _navigateNext() {
     // Validation for each step

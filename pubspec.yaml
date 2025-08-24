@@ -29,6 +29,7 @@ dependencies:
   internet_connection_checker_plus: ^2.7.2
   url_launcher: ^6.3.2
   google_sign_in: ^6.2.1
+  file_picker: ^10.3.2
 
 dev_dependencies:
   flutter_test:

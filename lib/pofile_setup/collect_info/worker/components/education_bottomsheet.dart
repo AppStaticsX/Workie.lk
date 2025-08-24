@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
 import 'package:workie/models/education_model.dart';
 
 class EducationBottomsheet extends StatefulWidget {
@@ -21,6 +23,8 @@ class EducationBottomsheet extends StatefulWidget {
 class _EducationBottomsheetState extends State<EducationBottomsheet> {
   String endYear = 'Year';
   String startYear = 'Year';
+  File? certificateFile;
+  String? certificateFileName;
 
   bool _isTitleEmpty = false;
   bool _isCompanyEmpty = false;
@@ -55,6 +59,10 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
     if (education.endYear != null) {
       endYear = education.endYear!;
     }
+
+    // If your EducationModel has certificate fields, populate them here
+    // certificateFileName = education.certificateFileName;
+    // certificateFile = education.certificateFile;
   }
 
   @override
@@ -66,6 +74,35 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
     companyFocusNode.dispose();
     locationFocusNode.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickCertificate() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.single.path != null) {
+        setState(() {
+          certificateFile = File(result.files.single.path!);
+          certificateFileName = result.files.single.name;
+        });
+      }
+    } catch (e) {
+      // Handle error - you might want to show a snackbar or dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error picking file: $e')),
+      );
+    }
+  }
+
+  void _removeCertificate() {
+    setState(() {
+      certificateFile = null;
+      certificateFileName = null;
+    });
   }
 
   void _validateInput() {
@@ -110,6 +147,9 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
         endMonth: 'December', // Default month since only years are used
         endYear: endYear,
         isCurrentWork: false, // Education is always completed
+        // Add certificate fields to your model if needed
+        // certificateFile: certificateFile,
+        // certificateFileName: certificateFileName,
       );
 
       widget.onSave(education);
@@ -179,6 +219,8 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
                   _buildLocationField(),
                   const SizedBox(height: 24),
                   _buildDateSection(),
+                  const SizedBox(height: 24),
+                  _buildCertificateField(),
                   const SizedBox(height: 36),
                 ],
               ),
@@ -193,6 +235,162 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
         ],
       ),
     );
+  }
+
+  Widget _buildCertificateField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Certificate (Optional)',
+          style: TextStyle(fontSize: 16),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          'Upload PDF or image of your certificate',
+          style: TextStyle(fontSize: 12, color: Colors.grey),
+        ),
+        const SizedBox(height: 8),
+        if (certificateFile == null)
+          InkWell(
+            onTap: _pickCertificate,
+            child: Container(
+              height: 50,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.tertiary,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                  width: 1.5,
+                  style: BorderStyle.solid,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.upload_file,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Choose File',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.tertiary,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                width: 1.5,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  _getFileIcon(),
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        certificateFileName ?? 'Unknown file',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        _getFileSize(),
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      onPressed: _pickCertificate,
+                      icon: Icon(
+                        Icons.edit,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 20,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
+                      padding: EdgeInsets.zero,
+                    ),
+                    IconButton(
+                      onPressed: _removeCertificate,
+                      icon: const Icon(
+                        Icons.delete,
+                        color: Colors.red,
+                        size: 20,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
+                      padding: EdgeInsets.zero,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  IconData _getFileIcon() {
+    if (certificateFileName == null) return Icons.description;
+
+    String extension = certificateFileName!.split('.').last.toLowerCase();
+    switch (extension) {
+      case 'pdf':
+        return Icons.picture_as_pdf;
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+        return Icons.image;
+      default:
+        return Icons.description;
+    }
+  }
+
+  String _getFileSize() {
+    if (certificateFile == null) return '';
+
+    try {
+      int bytes = certificateFile!.lengthSync();
+      if (bytes < 1024) return '$bytes B';
+      if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    } catch (e) {
+      return 'Unknown size';
+    }
   }
 
   Widget _buildTitleField() {
