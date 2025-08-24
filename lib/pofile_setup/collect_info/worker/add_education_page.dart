@@ -64,7 +64,7 @@ class _AddEducationPageState extends State<AddEducationPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              '',
+              'You don\'t have to have a degree/diploma. Adding any relevant education helps make your profile more visible.',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: Theme.of(context).colorScheme.inverseSurface
               ),
@@ -115,7 +115,7 @@ class _AddEducationPageState extends State<AddEducationPage> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Add Experience',
+                      'Add Education',
                       style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
