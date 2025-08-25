@@ -55,7 +55,7 @@ class _AddExperiencePageState extends State<AddExperiencePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 50),
+            const SizedBox(height: 16),
             Text(
               'If you have relevant work experience, add it here.',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(

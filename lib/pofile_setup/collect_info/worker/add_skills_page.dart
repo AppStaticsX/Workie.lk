@@ -80,7 +80,7 @@ class _AddSkillsPageState extends State<AddSkillsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 50),
+            const SizedBox(height: 16),
             Text(
               'Nearly there! What work are you here to do?',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(

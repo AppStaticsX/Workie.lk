@@ -125,7 +125,7 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 50),
+            const SizedBox(height: 16),
             Text(
               'Great, so what kind of work are you here to do?',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(

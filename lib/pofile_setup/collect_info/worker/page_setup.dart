@@ -37,7 +37,6 @@ class _ProfileSetupState extends State<ProfileSetup> {
     _checkForExistingWorkSelection();
   }
 
-  // Initialize Hive database
   Future<void> _initializeHive() async {
     try {
       await HiveService.initHive();
@@ -48,7 +47,6 @@ class _ProfileSetupState extends State<ProfileSetup> {
     }
   }
 
-  // Check if work selection already exists when page loads
   Future<void> _checkForExistingWorkSelection() async {
     try {
       final hasSelection = await HiveService.hasWorkSelection();
@@ -63,72 +61,63 @@ class _ProfileSetupState extends State<ProfileSetup> {
   }
 
   void _navigateNext() {
-    // Validation for each step
     switch (_selectedIndex) {
       case 0:
         break;
       case 1:
-      // Select work page validation
         if (!_hasWorkSelection) {
           _showSnackBar('Please select at least one work option to continue.');
           return;
         }
-        // Save work selection to Hive when "Add Skills" is pressed
         _saveWorkSelectionOnContinue();
         break;
       case 2:
-      // Add skills page validation
         if (!_hasSkills) {
           _showSnackBar('Please add at least one skill to continue.');
           return;
         }
         break;
       case 3:
-      // Add title page validation
         if (!_hasText) {
           _showSnackBar('Please enter your professional title to continue.');
           return;
         }
         break;
       case 4:
-      // Experience page validation - prevent navigation if no experience added
         if (!_hasExperience) {
           _showSnackBar('Please add at least one work experience to continue, or use the skip button.');
           return;
         }
         break;
       case 5:
-      // Education page - Photo & Location button should navigate to AddPersonalDetailsPage
         if (!_hasEducation) {
           _showSnackBar('Please add at least one education to continue, or use the skip button.');
           return;
         }
-        // If education exists, allow the normal increment below (do not `return` here)
         break;
       case 6:
-      // AddPersonalDetailsPage - final step
         _handleProfileCompletion();
         return;
       default:
         break;
     }
 
-    // Navigate to next page if validation passes
     if (_selectedIndex < _maxIndex) {
       setState(() {
         _selectedIndex++;
       });
-    } else {
-      // Handle completion when reached the end
-      _handleProfileCompletion();
+
+      if (kDebugMode) {
+        print('Navigated to index: $_selectedIndex');
+        if (_selectedIndex == 6) {
+          print('Now showing AddPersonalDetailsPage');
+        }
+      }
     }
   }
 
-  // Save work selection when "Add Skills" is pressed
   Future<void> _saveWorkSelectionOnContinue() async {
     try {
-      // The work selection is already saved in SelectWorkPage's _onSelectionChanged
-      // This is just for logging/confirmation
       final savedData = await HiveService.getWorkSelection();
       if (savedData != null) {
         if (kDebugMode) {
@@ -148,6 +137,10 @@ class _ProfileSetupState extends State<ProfileSetup> {
       setState(() {
         _selectedIndex--;
       });
+
+      if (kDebugMode) {
+        print('Navigated back to index: $_selectedIndex');
+      }
     }
   }
 
@@ -156,8 +149,14 @@ class _ProfileSetupState extends State<ProfileSetup> {
       setState(() {
         _selectedIndex++;
       });
+
+      if (kDebugMode) {
+        print('Skipped to index: $_selectedIndex');
+        if (_selectedIndex == 6) {
+          print('Skipped to AddPersonalDetailsPage');
+        }
+      }
     } else {
-      // Handle completion when skipping from the last page
       _handleProfileCompletion();
     }
   }
@@ -174,8 +173,6 @@ class _ProfileSetupState extends State<ProfileSetup> {
 
   void _handleProfileCompletion() {
     _showSnackBar('Profile setup completed!');
-    // Add navigation to next screen or complete the flow
-    // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => NextScreen()));
   }
 
   @override
@@ -190,7 +187,6 @@ class _ProfileSetupState extends State<ProfileSetup> {
           size: 26,
         ),
         title: const Text('Create & Verify Your Profile'),
-        // Progress indicator
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4.0),
           child: LinearProgressIndicator(
@@ -241,7 +237,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
               });
             },
           ),
-          AddPersonalDetailsPage()
+          const AddPersonalDetailsPage(),
         ],
       ),
       bottomNavigationBar: IndexedStack(
@@ -273,16 +269,15 @@ class _ProfileSetupState extends State<ProfileSetup> {
             onSkip: _skipNext,
           ),
           BottomNavigationWithSkip(
-            actionName: 'Photo & Location',
+            actionName: 'Add Personal Info',
             onTapAction: _navigateNext,
             onBackAction: _navigateBack,
             onSkip: _skipNext,
           ),
-          BottomNavigationWithSkip(
+          BottomNavigation(
             actionName: 'Complete Profile',
             onTapAction: _navigateNext,
             onBackAction: _navigateBack,
-            onSkip: _skipNext,
           ),
         ],
       ),

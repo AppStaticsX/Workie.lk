@@ -44,7 +44,7 @@ class _AddTitlePageState extends State<AddTitlePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 50),
+            const SizedBox(height: 16),
             Text(
               'Got it. Now, add a title to tell the world what you do.',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(

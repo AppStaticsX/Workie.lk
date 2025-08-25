@@ -59,7 +59,7 @@ class _AddEducationPageState extends State<AddEducationPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 50),
+            const SizedBox(height: 16),
             Text(
               'Clients like to know what you know - add your education here.',
               style: Theme
