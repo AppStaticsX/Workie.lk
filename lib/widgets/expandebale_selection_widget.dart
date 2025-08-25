@@ -1,3 +1,6 @@
+// SOLUTION: Make ExpandableSelectionWidget a controlled component
+// Replace your entire expandable_selection_widget.dart with this:
+
 import 'package:flutter/material.dart';
 
 class ExpandableSelectionWidget extends StatefulWidget {
@@ -7,7 +10,7 @@ class ExpandableSelectionWidget extends StatefulWidget {
   final int maxSelections;
   final Function(List<String>)? onSelectionChanged;
   final bool isDisabled;
-  final List<String> initialSelectedOptions;
+  final List<String> selectedOptions; // Changed from initialSelectedOptions to selectedOptions
 
   const ExpandableSelectionWidget({
     super.key,
@@ -17,7 +20,7 @@ class ExpandableSelectionWidget extends StatefulWidget {
     this.maxSelections = 3,
     this.onSelectionChanged,
     this.isDisabled = false,
-    this.initialSelectedOptions = const [],
+    this.selectedOptions = const [], // This is now the current selected options, not initial
   });
 
   @override
@@ -27,25 +30,17 @@ class ExpandableSelectionWidget extends StatefulWidget {
 class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
     with SingleTickerProviderStateMixin {
   bool _isExpanded = false;
-  List<String> _selectedOptions = [];
   late AnimationController _animationController;
   late Animation<double> _expandAnimation;
 
   @override
   void initState() {
     super.initState();
-    _initializeState();
+    _initializeAnimation();
+    _updateExpansionState();
   }
 
-  void _initializeState() {
-    // Initialize selected options with the provided initial values
-    _selectedOptions = List<String>.from(widget.initialSelectedOptions);
-
-    // If there are initial selections, expand the widget
-    if (_selectedOptions.isNotEmpty) {
-      _isExpanded = true;
-    }
-
+  void _initializeAnimation() {
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 200),
       vsync: this,
@@ -54,49 +49,24 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
       parent: _animationController,
       curve: Curves.easeInOut,
     );
+  }
 
-    // Start with expanded state if there are initial selections
-    if (_isExpanded) {
-      _animationController.value = 1.0;
+  void _updateExpansionState() {
+    final shouldExpand = widget.selectedOptions.isNotEmpty;
+    if (shouldExpand != _isExpanded) {
+      _isExpanded = shouldExpand;
+      if (_isExpanded) {
+        _animationController.forward();
+      } else {
+        _animationController.reverse();
+      }
     }
   }
 
   @override
   void didUpdateWidget(ExpandableSelectionWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-
-    // Check if initial selected options have changed
-    if (!_listsEqual(oldWidget.initialSelectedOptions, widget.initialSelectedOptions)) {
-      setState(() {
-        _selectedOptions = List<String>.from(widget.initialSelectedOptions);
-
-        // Update expansion state based on selections
-        final shouldExpand = _selectedOptions.isNotEmpty;
-        if (shouldExpand != _isExpanded) {
-          _isExpanded = shouldExpand;
-          if (_isExpanded) {
-            _animationController.forward();
-          } else {
-            _animationController.reverse();
-          }
-        }
-      });
-    }
-
-    // Handle disabled state changes
-    if (oldWidget.isDisabled != widget.isDisabled && widget.isDisabled && _isExpanded) {
-      // If widget becomes disabled and is expanded, consider collapsing it
-      // or keep it expanded based on your UX preference
-    }
-  }
-
-  // Helper method to compare two lists
-  bool _listsEqual(List<String> list1, List<String> list2) {
-    if (list1.length != list2.length) return false;
-    for (int i = 0; i < list1.length; i++) {
-      if (list1[i] != list2[i]) return false;
-    }
-    return true;
+    _updateExpansionState();
   }
 
   @override
@@ -106,7 +76,6 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
   }
 
   void _toggleExpansion() {
-    // Don't allow expansion if disabled
     if (widget.isDisabled) return;
 
     setState(() {
@@ -120,29 +89,28 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
   }
 
   void _toggleSelection(String option) {
-    // Don't allow selection changes if disabled
     if (widget.isDisabled) return;
 
-    setState(() {
-      if (_selectedOptions.contains(option)) {
-        _selectedOptions.remove(option);
-      } else {
-        if (_selectedOptions.length < widget.maxSelections) {
-          _selectedOptions.add(option);
-        }
+    List<String> newSelections = List<String>.from(widget.selectedOptions);
+
+    if (newSelections.contains(option)) {
+      newSelections.remove(option);
+    } else {
+      if (newSelections.length < widget.maxSelections) {
+        newSelections.add(option);
       }
-    });
+    }
 
     if (widget.onSelectionChanged != null) {
-      widget.onSelectionChanged!(_selectedOptions);
+      widget.onSelectionChanged!(newSelections);
     }
   }
 
   String _getSelectionCountText() {
-    if (_selectedOptions.isEmpty) {
+    if (widget.selectedOptions.isEmpty) {
       return '';
     }
-    return ' (${_selectedOptions.length})';
+    return ' (${widget.selectedOptions.length})';
   }
 
   @override
@@ -184,7 +152,7 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      if (_selectedOptions.isNotEmpty)
+                      if (widget.selectedOptions.isNotEmpty)
                         Text(
                           _getSelectionCountText(),
                           style: TextStyle(
@@ -243,7 +211,7 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
   }
 
   Widget _buildOptionItem(String option) {
-    final isSelected = _selectedOptions.contains(option);
+    final isSelected = widget.selectedOptions.contains(option);
     final isDisabled = widget.isDisabled;
 
     return Container(

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../services/hive_service.dart';
 import '../../../widgets/expandebale_selection_widget.dart';
@@ -11,6 +12,8 @@ class SelectWorkPage extends StatefulWidget {
   State<SelectWorkPage> createState() => _SelectWorkPageState();
 }
 
+// Updated _loadSavedData method for select_work_page.dart
+
 class _SelectWorkPageState extends State<SelectWorkPage> {
   // Track which category has selections and total selected count
   String? activeCategoryTitle;
@@ -18,6 +21,9 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
 
   // Track selections for each category
   Map<String, List<String>> categorySelections = {};
+
+  // Add loading state
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -28,48 +34,58 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
   // Load saved data from Hive when page initializes
   Future<void> _loadSavedData() async {
     try {
-      final savedWorkSelection = await HiveService.getWorkSelection();
-      if (savedWorkSelection != null) {
-        // Use Future.microtask to ensure setState runs after build
-        Future.microtask(() {
-          setState(() {
-            activeCategoryTitle = savedWorkSelection.categoryTitle;
-            categorySelections[savedWorkSelection.categoryTitle] = savedWorkSelection.selectedOptions;
-            totalSelectedCount = savedWorkSelection.selectedOptions.length;
-          });
+      setState(() {
+        _isLoading = true;
+      });
 
-          // Notify parent about existing selection
-          if (widget.onSelectionChanged != null) {
-            widget.onSelectionChanged!(totalSelectedCount > 0);
-          }
+      final savedWorkSelection = await HiveService.getWorkSelection();
+
+      if (savedWorkSelection != null) {
+
+        // Clear existing selections first
+        categorySelections.clear();
+
+        // Set the loaded data
+        setState(() {
+          activeCategoryTitle = savedWorkSelection.categoryTitle;
+          categorySelections[savedWorkSelection.categoryTitle] =
+          List<String>.from(savedWorkSelection.selectedOptions);
+          totalSelectedCount = savedWorkSelection.selectedOptions.length;
+          _isLoading = false;
         });
 
-        print('Loaded saved work selection: ${savedWorkSelection.categoryTitle}');
-        print('Loaded options: ${savedWorkSelection.selectedOptions}');
+        // Notify parent about existing selection
+        if (widget.onSelectionChanged != null) {
+          widget.onSelectionChanged!(totalSelectedCount > 0);
+        }
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
       }
     } catch (e) {
-      print('Error loading saved data: $e');
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
   void _onSelectionChanged(String categoryTitle, List<String> selectedOptions) {
+
     setState(() {
-      categorySelections[categoryTitle] = selectedOptions;
+      // Clear all other category selections (since only one can be active)
+      categorySelections.clear();
 
-      // Calculate total selections across all categories
-      totalSelectedCount = categorySelections.values
-          .fold(0, (sum, selections) => sum + selections.length);
-
-      // Determine active category (the one with selections)
-      activeCategoryTitle = null;
-      for (var entry in categorySelections.entries) {
-        if (entry.value.isNotEmpty) {
-          activeCategoryTitle = entry.key;
-          break;
-        }
+      // Set the new selections
+      if (selectedOptions.isNotEmpty) {
+        categorySelections[categoryTitle] = selectedOptions;
+        activeCategoryTitle = categoryTitle;
+        totalSelectedCount = selectedOptions.length;
+      } else {
+        activeCategoryTitle = null;
+        totalSelectedCount = 0;
       }
     });
-
     // Notify parent if at least one selection exists
     if (widget.onSelectionChanged != null) {
       widget.onSelectionChanged!(totalSelectedCount > 0);
@@ -77,10 +93,6 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
 
     // Save to Hive whenever selection changes
     _saveToHive();
-
-    print('Selected options in $categoryTitle: $selectedOptions');
-    print('Total selections: $totalSelectedCount');
-    print('Active category: $activeCategoryTitle');
   }
 
   // Save current selections to Hive
@@ -88,16 +100,28 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
     try {
       await HiveService.saveCategorySelections(categorySelections);
     } catch (e) {
-      print('Error saving to Hive: $e');
+      if (kDebugMode) {
+        print('Error saving to Hive: $e');
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Show loading indicator while data is being loaded
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 24),
+        padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -116,12 +140,10 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
               ),
             ),
             const SizedBox(height: 12),
-            Divider(
-              thickness: 1,
-            ),
+            const Divider(thickness: 1),
             const SizedBox(height: 20),
+
             ExpandableSelectionWidget(
-              key: Key('Accounting & Consulting-${categorySelections['Accounting & Consulting']?.join(',') ?? ''}'),
               title: 'Accounting & Consulting',
               options: const [
                 'Personal & Professional Coaching',
@@ -134,14 +156,13 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
               minSelections: 1,
               maxSelections: 3,
               isDisabled: activeCategoryTitle != null && activeCategoryTitle != 'Accounting & Consulting',
-              initialSelectedOptions: categorySelections['Accounting & Consulting'] ?? [],
+              selectedOptions: categorySelections['Accounting & Consulting'] ?? [],
               onSelectionChanged: (selectedOptions) {
                 _onSelectionChanged('Accounting & Consulting', selectedOptions);
               },
             ),
 
             ExpandableSelectionWidget(
-              key: Key('Admin Support-${categorySelections['Admin Support']?.join(',') ?? ''}'),
               title: 'Admin Support',
               options: const [
                 'Virtual Assistant',
@@ -154,14 +175,13 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
               minSelections: 1,
               maxSelections: 3,
               isDisabled: activeCategoryTitle != null && activeCategoryTitle != 'Admin Support',
-              initialSelectedOptions: categorySelections['Admin Support'] ?? [],
+              selectedOptions: categorySelections['Admin Support'] ?? [],
               onSelectionChanged: (selectedOptions) {
                 _onSelectionChanged('Admin Support', selectedOptions);
               },
             ),
 
             ExpandableSelectionWidget(
-              key: Key('Customer Service-${categorySelections['Customer Service']?.join(',') ?? ''}'),
               title: 'Customer Service',
               options: const [
                 'Phone Support',
@@ -174,14 +194,13 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
               minSelections: 1,
               maxSelections: 3,
               isDisabled: activeCategoryTitle != null && activeCategoryTitle != 'Customer Service',
-              initialSelectedOptions: categorySelections['Customer Service'] ?? [],
+              selectedOptions: categorySelections['Customer Service'] ?? [],
               onSelectionChanged: (selectedOptions) {
                 _onSelectionChanged('Customer Service', selectedOptions);
               },
             ),
 
             ExpandableSelectionWidget(
-              key: Key('Design & Creative-${categorySelections['Design & Creative']?.join(',') ?? ''}'),
               title: 'Design & Creative',
               options: const [
                 'Graphic Design',
@@ -194,14 +213,13 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
               minSelections: 1,
               maxSelections: 3,
               isDisabled: activeCategoryTitle != null && activeCategoryTitle != 'Design & Creative',
-              initialSelectedOptions: categorySelections['Design & Creative'] ?? [],
+              selectedOptions: categorySelections['Design & Creative'] ?? [],
               onSelectionChanged: (selectedOptions) {
                 _onSelectionChanged('Design & Creative', selectedOptions);
               },
             ),
 
             ExpandableSelectionWidget(
-              key: Key('Engineering & Architecture-${categorySelections['Engineering & Architecture']?.join(',') ?? ''}'),
               title: 'Engineering & Architecture',
               options: const [
                 'Software Development',
@@ -214,12 +232,13 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
               minSelections: 1,
               maxSelections: 3,
               isDisabled: activeCategoryTitle != null && activeCategoryTitle != 'Engineering & Architecture',
-              initialSelectedOptions: categorySelections['Engineering & Architecture'] ?? [],
+              selectedOptions: categorySelections['Engineering & Architecture'] ?? [],
               onSelectionChanged: (selectedOptions) {
                 _onSelectionChanged('Engineering & Architecture', selectedOptions);
               },
             ),
-            const SizedBox(height: 50), // Add some bottom padding
+
+            const SizedBox(height: 50),
           ],
         ),
       ),
