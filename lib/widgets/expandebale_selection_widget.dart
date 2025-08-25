@@ -1,7 +1,6 @@
-// SOLUTION: Make ExpandableSelectionWidget a controlled component
-// Replace your entire expandable_selection_widget.dart with this:
-
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 
 class ExpandableSelectionWidget extends StatefulWidget {
   final String title;
@@ -169,11 +168,11 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
                     turns: _isExpanded ? 0.5 : 0,
                     duration: const Duration(milliseconds: 200),
                     child: Icon(
-                      Icons.keyboard_arrow_down,
+                      Iconsax.arrow_down_1_copy,
                       color: isDisabled
                           ? Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.4)
                           : Theme.of(context).colorScheme.inverseSurface,
-                      size: 28,
+                      size: 24,
                     ),
                   ),
                 ],
