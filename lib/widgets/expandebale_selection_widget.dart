@@ -7,7 +7,7 @@ class ExpandableSelectionWidget extends StatefulWidget {
   final int maxSelections;
   final Function(List<String>)? onSelectionChanged;
   final bool isDisabled;
-  final List<String> initialSelectedOptions; // Add this property
+  final List<String> initialSelectedOptions;
 
   const ExpandableSelectionWidget({
     super.key,
@@ -17,7 +17,7 @@ class ExpandableSelectionWidget extends StatefulWidget {
     this.maxSelections = 3,
     this.onSelectionChanged,
     this.isDisabled = false,
-    this.initialSelectedOptions = const [], // Add this with default empty list
+    this.initialSelectedOptions = const [],
   });
 
   @override
@@ -34,7 +34,10 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
   @override
   void initState() {
     super.initState();
+    _initializeState();
+  }
 
+  void _initializeState() {
     // Initialize selected options with the provided initial values
     _selectedOptions = List<String>.from(widget.initialSelectedOptions);
 
@@ -62,16 +65,38 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
   void didUpdateWidget(ExpandableSelectionWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    // Update selections if initial options changed
-    if (oldWidget.initialSelectedOptions != widget.initialSelectedOptions) {
+    // Check if initial selected options have changed
+    if (!_listsEqual(oldWidget.initialSelectedOptions, widget.initialSelectedOptions)) {
       setState(() {
         _selectedOptions = List<String>.from(widget.initialSelectedOptions);
-        if (_selectedOptions.isNotEmpty && !_isExpanded) {
-          _isExpanded = true;
-          _animationController.forward();
+
+        // Update expansion state based on selections
+        final shouldExpand = _selectedOptions.isNotEmpty;
+        if (shouldExpand != _isExpanded) {
+          _isExpanded = shouldExpand;
+          if (_isExpanded) {
+            _animationController.forward();
+          } else {
+            _animationController.reverse();
+          }
         }
       });
     }
+
+    // Handle disabled state changes
+    if (oldWidget.isDisabled != widget.isDisabled && widget.isDisabled && _isExpanded) {
+      // If widget becomes disabled and is expanded, consider collapsing it
+      // or keep it expanded based on your UX preference
+    }
+  }
+
+  // Helper method to compare two lists
+  bool _listsEqual(List<String> list1, List<String> list2) {
+    if (list1.length != list2.length) return false;
+    for (int i = 0; i < list1.length; i++) {
+      if (list1[i] != list2[i]) return false;
+    }
+    return true;
   }
 
   @override
@@ -152,7 +177,9 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
                       Text(
                         widget.title,
                         style: TextStyle(
-                          color: isDisabled ? Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.4) : Theme.of(context).colorScheme.inverseSurface,
+                          color: isDisabled
+                              ? Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.4)
+                              : Theme.of(context).colorScheme.inverseSurface,
                           fontSize: 18,
                           fontWeight: FontWeight.w500,
                         ),
@@ -175,7 +202,9 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
                     duration: const Duration(milliseconds: 200),
                     child: Icon(
                       Icons.keyboard_arrow_down,
-                      color: isDisabled ? Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.4) : Theme.of(context).colorScheme.inverseSurface,
+                      color: isDisabled
+                          ? Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.4)
+                          : Theme.of(context).colorScheme.inverseSurface,
                       size: 28,
                     ),
                   ),
@@ -261,44 +290,6 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
                   fontWeight: FontWeight.w400,
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Example usage widget
-class ExampleUsage extends StatelessWidget {
-  const ExampleUsage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF1E1E1E),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF2D2D2D),
-        title: const Text('Expandable Selection Example'),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            ExpandableSelectionWidget(
-              title: 'Accounting & Consulting',
-              options: const [
-                'Personal & Professional Coaching',
-                'Accounting & Bookkeeping',
-                'Financial Planning',
-                'Recruiting & Human Resources',
-                'Management Consulting & Analysis',
-                'Other - Accounting & Consulting',
-              ],
-              initialSelectedOptions: const ['Accounting & Bookkeeping'], // Example initial selection
-              onSelectionChanged: (selectedOptions) {
-                print('Selected options: $selectedOptions');
-              },
             ),
           ],
         ),
