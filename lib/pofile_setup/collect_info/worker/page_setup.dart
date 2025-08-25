@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_education_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_experience_page.dart';
+import 'package:workie/pofile_setup/collect_info/worker/add_personal_details_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_skills_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_title_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/select_work_page.dart';
@@ -20,7 +22,7 @@ class ProfileSetup extends StatefulWidget {
 
 class _ProfileSetupState extends State<ProfileSetup> {
   int _selectedIndex = 0;
-  final int _maxIndex = 5;
+  final int _maxIndex = 6;
 
   bool _hasWorkSelection = false;
   bool _hasSkills = false;
@@ -39,9 +41,10 @@ class _ProfileSetupState extends State<ProfileSetup> {
   Future<void> _initializeHive() async {
     try {
       await HiveService.initHive();
-      print('Hive initialized successfully');
     } catch (e) {
-      print('Error initializing Hive: $e');
+      if (kDebugMode) {
+        print('Error initializing Hive: $e');
+      }
     }
   }
 
@@ -52,9 +55,10 @@ class _ProfileSetupState extends State<ProfileSetup> {
       setState(() {
         _hasWorkSelection = hasSelection;
       });
-      print('Existing work selection found: $hasSelection');
     } catch (e) {
-      print('Error checking existing work selection: $e');
+      if (kDebugMode) {
+        print('Error checking existing work selection: $e');
+      }
     }
   }
 
@@ -94,11 +98,15 @@ class _ProfileSetupState extends State<ProfileSetup> {
         }
         break;
       case 5:
-      // Education page - handle completion or navigation to next flow
-        _handleProfileCompletion();
-        return;
+      // Education page - Photo & Location button should navigate to AddPersonalDetailsPage
+        if (!_hasEducation) {
+          _showSnackBar('Please add at least one education to continue, or use the skip button.');
+          return;
+        }
+        // If education exists, allow the normal increment below (do not `return` here)
+        break;
       case 6:
-      // Overview page - final step
+      // AddPersonalDetailsPage - final step
         _handleProfileCompletion();
         return;
       default:
@@ -123,11 +131,15 @@ class _ProfileSetupState extends State<ProfileSetup> {
       // This is just for logging/confirmation
       final savedData = await HiveService.getWorkSelection();
       if (savedData != null) {
-        print('Work selection saved successfully: ${savedData.categoryTitle}');
-        print('Selected options: ${savedData.selectedOptions}');
+        if (kDebugMode) {
+          print('Work selection saved successfully: ${savedData.categoryTitle}');
+          print('Selected options: ${savedData.selectedOptions}');
+        }
       }
     } catch (e) {
-      print('Error confirming work selection save: $e');
+      if (kDebugMode) {
+        print('Error confirming work selection save: $e');
+      }
     }
   }
 
@@ -182,8 +194,8 @@ class _ProfileSetupState extends State<ProfileSetup> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4.0),
           child: LinearProgressIndicator(
-            value: (_selectedIndex + 1) / (_maxIndex + 1),
-            backgroundColor: Colors.grey.withValues(alpha: 0.3),
+            value: (_selectedIndex) / (_maxIndex + 1),
+            backgroundColor: _selectedIndex == 0? Colors.transparent : Colors.grey.withValues(alpha: 0.3),
             valueColor: AlwaysStoppedAnimation<Color>(
               Theme.of(context).colorScheme.primary,
             ),
@@ -229,6 +241,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
               });
             },
           ),
+          AddPersonalDetailsPage()
         ],
       ),
       bottomNavigationBar: IndexedStack(
@@ -260,7 +273,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
             onSkip: _skipNext,
           ),
           BottomNavigationWithSkip(
-            actionName: 'Write an Overview',
+            actionName: 'Photo & Location',
             onTapAction: _navigateNext,
             onBackAction: _navigateBack,
             onSkip: _skipNext,
