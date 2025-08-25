@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/adapters.dart';
 import 'package:provider/provider.dart';
 import 'package:workie/l10n/l10n.dart';
 import 'package:workie/screens/splash_screen.dart';
+import 'package:workie/services/hive_service.dart';
 import 'package:workie/themes/theme_provider.dart';
 import 'package:workie/providers/language_provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'generated/app_localizations.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Hive
+  await Hive.initFlutter();
+  // Initialize HiveService (registers adapters)
+  await HiveService.initHive();
 
   runApp(
       MultiProvider(
