@@ -4,10 +4,11 @@ import 'package:workie/pofile_setup/collect_info/worker/add_education_page.dart'
 import 'package:workie/pofile_setup/collect_info/worker/add_experience_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_skills_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_title_page.dart';
-import 'package:workie/pofile_setup/collect_info/worker/select_work_page.dart'; // Add this new page import
+import 'package:workie/pofile_setup/collect_info/worker/select_work_page.dart';
 import 'package:workie/widgets/bottom_navigation.dart';
 import 'package:workie/widgets/bottom_navigation_with_skip.dart';
 import 'package:workie/widgets/simple_bottom_navigation.dart';
+import '../../../services/hive_service.dart';
 import 'start_page.dart';
 
 class ProfileSetup extends StatefulWidget {
@@ -27,6 +28,36 @@ class _ProfileSetupState extends State<ProfileSetup> {
   bool _hasExperience = false;
   bool _hasEducation = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _initializeHive();
+    _checkForExistingWorkSelection();
+  }
+
+  // Initialize Hive database
+  Future<void> _initializeHive() async {
+    try {
+      await HiveService.initHive();
+      print('Hive initialized successfully');
+    } catch (e) {
+      print('Error initializing Hive: $e');
+    }
+  }
+
+  // Check if work selection already exists when page loads
+  Future<void> _checkForExistingWorkSelection() async {
+    try {
+      final hasSelection = await HiveService.hasWorkSelection();
+      setState(() {
+        _hasWorkSelection = hasSelection;
+      });
+      print('Existing work selection found: $hasSelection');
+    } catch (e) {
+      print('Error checking existing work selection: $e');
+    }
+  }
+
   void _navigateNext() {
     // Validation for each step
     switch (_selectedIndex) {
@@ -38,6 +69,8 @@ class _ProfileSetupState extends State<ProfileSetup> {
           _showSnackBar('Please select at least one work option to continue.');
           return;
         }
+        // Save work selection to Hive when "Add Skills" is pressed
+        _saveWorkSelectionOnContinue();
         break;
       case 2:
       // Add skills page validation
@@ -80,6 +113,21 @@ class _ProfileSetupState extends State<ProfileSetup> {
     } else {
       // Handle completion when reached the end
       _handleProfileCompletion();
+    }
+  }
+
+  // Save work selection when "Add Skills" is pressed
+  Future<void> _saveWorkSelectionOnContinue() async {
+    try {
+      // The work selection is already saved in SelectWorkPage's _onSelectionChanged
+      // This is just for logging/confirmation
+      final savedData = await HiveService.getWorkSelection();
+      if (savedData != null) {
+        print('Work selection saved successfully: ${savedData.categoryTitle}');
+        print('Selected options: ${savedData.selectedOptions}');
+      }
+    } catch (e) {
+      print('Error confirming work selection save: $e');
     }
   }
 

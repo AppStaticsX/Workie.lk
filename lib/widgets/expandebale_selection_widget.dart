@@ -7,6 +7,7 @@ class ExpandableSelectionWidget extends StatefulWidget {
   final int maxSelections;
   final Function(List<String>)? onSelectionChanged;
   final bool isDisabled;
+  final List<String> initialSelectedOptions; // Add this property
 
   const ExpandableSelectionWidget({
     super.key,
@@ -16,6 +17,7 @@ class ExpandableSelectionWidget extends StatefulWidget {
     this.maxSelections = 3,
     this.onSelectionChanged,
     this.isDisabled = false,
+    this.initialSelectedOptions = const [], // Add this with default empty list
   });
 
   @override
@@ -32,6 +34,15 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
   @override
   void initState() {
     super.initState();
+
+    // Initialize selected options with the provided initial values
+    _selectedOptions = List<String>.from(widget.initialSelectedOptions);
+
+    // If there are initial selections, expand the widget
+    if (_selectedOptions.isNotEmpty) {
+      _isExpanded = true;
+    }
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 200),
       vsync: this,
@@ -40,6 +51,27 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
       parent: _animationController,
       curve: Curves.easeInOut,
     );
+
+    // Start with expanded state if there are initial selections
+    if (_isExpanded) {
+      _animationController.value = 1.0;
+    }
+  }
+
+  @override
+  void didUpdateWidget(ExpandableSelectionWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Update selections if initial options changed
+    if (oldWidget.initialSelectedOptions != widget.initialSelectedOptions) {
+      setState(() {
+        _selectedOptions = List<String>.from(widget.initialSelectedOptions);
+        if (_selectedOptions.isNotEmpty && !_isExpanded) {
+          _isExpanded = true;
+          _animationController.forward();
+        }
+      });
+    }
   }
 
   @override
@@ -263,6 +295,7 @@ class ExampleUsage extends StatelessWidget {
                 'Management Consulting & Analysis',
                 'Other - Accounting & Consulting',
               ],
+              initialSelectedOptions: const ['Accounting & Bookkeeping'], // Example initial selection
               onSelectionChanged: (selectedOptions) {
                 print('Selected options: $selectedOptions');
               },
