@@ -30,16 +30,19 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
     try {
       final savedWorkSelection = await HiveService.getWorkSelection();
       if (savedWorkSelection != null) {
-        setState(() {
-          activeCategoryTitle = savedWorkSelection.categoryTitle;
-          categorySelections[savedWorkSelection.categoryTitle] = savedWorkSelection.selectedOptions;
-          totalSelectedCount = savedWorkSelection.selectedOptions.length;
-        });
+        // Use Future.microtask to ensure setState runs after build
+        Future.microtask(() {
+          setState(() {
+            activeCategoryTitle = savedWorkSelection.categoryTitle;
+            categorySelections[savedWorkSelection.categoryTitle] = savedWorkSelection.selectedOptions;
+            totalSelectedCount = savedWorkSelection.selectedOptions.length;
+          });
 
-        // Notify parent about existing selection
-        if (widget.onSelectionChanged != null) {
-          widget.onSelectionChanged!(totalSelectedCount > 0);
-        }
+          // Notify parent about existing selection
+          if (widget.onSelectionChanged != null) {
+            widget.onSelectionChanged!(totalSelectedCount > 0);
+          }
+        });
 
         print('Loaded saved work selection: ${savedWorkSelection.categoryTitle}');
         print('Loaded options: ${savedWorkSelection.selectedOptions}');
@@ -118,7 +121,7 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
             ),
             const SizedBox(height: 20),
             ExpandableSelectionWidget(
-              key: ValueKey('Accounting & Consulting'),
+              key: Key('Accounting & Consulting-${categorySelections['Accounting & Consulting']?.join(',') ?? ''}'),
               title: 'Accounting & Consulting',
               options: const [
                 'Personal & Professional Coaching',
@@ -136,8 +139,9 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
                 _onSelectionChanged('Accounting & Consulting', selectedOptions);
               },
             ),
+
             ExpandableSelectionWidget(
-              key: ValueKey('Admin Support'),
+              key: Key('Admin Support-${categorySelections['Admin Support']?.join(',') ?? ''}'),
               title: 'Admin Support',
               options: const [
                 'Virtual Assistant',
@@ -155,8 +159,9 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
                 _onSelectionChanged('Admin Support', selectedOptions);
               },
             ),
+
             ExpandableSelectionWidget(
-              key: ValueKey('Customer Service'),
+              key: Key('Customer Service-${categorySelections['Customer Service']?.join(',') ?? ''}'),
               title: 'Customer Service',
               options: const [
                 'Phone Support',
@@ -174,8 +179,9 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
                 _onSelectionChanged('Customer Service', selectedOptions);
               },
             ),
+
             ExpandableSelectionWidget(
-              key: ValueKey('Design & Creative'),
+              key: Key('Design & Creative-${categorySelections['Design & Creative']?.join(',') ?? ''}'),
               title: 'Design & Creative',
               options: const [
                 'Graphic Design',
@@ -193,8 +199,9 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
                 _onSelectionChanged('Design & Creative', selectedOptions);
               },
             ),
+
             ExpandableSelectionWidget(
-              key: ValueKey('Engineering & Architecture'),
+              key: Key('Engineering & Architecture-${categorySelections['Engineering & Architecture']?.join(',') ?? ''}'),
               title: 'Engineering & Architecture',
               options: const [
                 'Software Development',
