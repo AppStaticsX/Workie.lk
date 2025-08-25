@@ -1,4 +1,4 @@
-// Fixed hive_service.dart
+import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import '../hive_db/work_selection_model.dart';
 
@@ -21,10 +21,7 @@ class HiveService {
       if (_workSelectionBox == null || !_workSelectionBox!.isOpen) {
         _workSelectionBox = await Hive.openBox<WorkSelection>(_workSelectionBoxName);
       }
-
-      print('Hive initialized successfully');
     } catch (e) {
-      print('Error initializing Hive: $e');
       rethrow;
     }
   }
@@ -48,9 +45,7 @@ class HiveService {
       );
 
       await box.put(_workSelectionKey, workSelection);
-      print('Work selection saved: $categoryTitle with ${selectedOptions.length} options');
     } catch (e) {
-      print('Error saving work selection: $e');
       rethrow;
     }
   }
@@ -60,10 +55,8 @@ class HiveService {
     try {
       final box = await _getBox();
       final workSelection = box.get(_workSelectionKey);
-      print('Retrieved work selection: ${workSelection?.categoryTitle} with ${workSelection?.selectedOptions.length ?? 0} options');
       return workSelection;
     } catch (e) {
-      print('Error getting work selection: $e');
       return null;
     }
   }
@@ -73,10 +66,8 @@ class HiveService {
     try {
       final box = await _getBox();
       final hasData = box.containsKey(_workSelectionKey);
-      print('Has work selection: $hasData');
       return hasData;
     } catch (e) {
-      print('Error checking work selection: $e');
       return false;
     }
   }
@@ -86,9 +77,10 @@ class HiveService {
     try {
       final box = await _getBox();
       await box.delete(_workSelectionKey);
-      print('Work selection cleared');
     } catch (e) {
-      print('Error clearing work selection: $e');
+      if (kDebugMode) {
+        print('Error clearing work selection: $e');
+      }
     }
   }
 
@@ -109,14 +101,14 @@ class HiveService {
 
       if (activeCategory != null && selectedOptions.isNotEmpty) {
         await saveWorkSelection(activeCategory, selectedOptions);
-        print('Category selections saved for: $activeCategory');
       } else {
         // If no selections, clear the saved data
         await clearWorkSelection();
-        print('No selections found, cleared saved data');
       }
     } catch (e) {
-      print('Error saving category selections: $e');
+      if (kDebugMode) {
+        print('Error saving category selections: $e');
+      }
     }
   }
 
@@ -128,7 +120,9 @@ class HiveService {
         _workSelectionBox = null;
       }
     } catch (e) {
-      print('Error closing boxes: $e');
+      if (kDebugMode) {
+        print('Error closing boxes: $e');
+      }
     }
   }
 
@@ -136,16 +130,17 @@ class HiveService {
   static Future<void> debugPrintAllData() async {
     try {
       final box = await _getBox();
-      print('=== DEBUG: All data in work_selections box ===');
-      print('Keys: ${box.keys.toList()}');
 
       for (var key in box.keys) {
         final value = box.get(key);
-        print('Key: $key, Value: ${value?.categoryTitle}, Options: ${value?.selectedOptions}');
+        if (kDebugMode) {
+          print('Key: $key, Value: ${value?.categoryTitle}, Options: ${value?.selectedOptions}');
+        }
       }
-      print('=== END DEBUG ===');
     } catch (e) {
-      print('Error in debug print: $e');
+      if (kDebugMode) {
+        print('Error in debug print: $e');
+      }
     }
   }
 }
