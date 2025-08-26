@@ -1,5 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 
 class AddPersonalDetailsPage extends StatefulWidget {
   const AddPersonalDetailsPage({super.key});
@@ -9,6 +12,25 @@ class AddPersonalDetailsPage extends StatefulWidget {
 }
 
 class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
+
+  bool _isBirthDayEmpty = false;
+  bool _isStreetAddressEmpty = false;
+  bool _isCityEmpty = false;
+  bool _isStateOrProvinceEmpty = false;
+  bool _isPostalCodeEmpty = false;
+
+  TextEditingController birthDayController = TextEditingController();
+  TextEditingController streetAddressController = TextEditingController();
+  TextEditingController cityController = TextEditingController();
+  TextEditingController stateOrProvinceController = TextEditingController();
+  TextEditingController postalCodeController = TextEditingController();
+
+  FocusNode birthDayFocusNode = FocusNode();
+  FocusNode streetAddressFocusNode = FocusNode();
+  FocusNode cityFocusNode = FocusNode();
+  FocusNode stateOrProvinceFocusNode = FocusNode();
+  FocusNode postalCodeFocusNode = FocusNode();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,9 +65,313 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                       width: 120,
                     ),
                   ],
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton(
+                  onPressed: () {
+                  },
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(
+                      color: Color(0xFF4E6BF5),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 8.0),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          CupertinoIcons.add,
+                          color: Theme
+                              .of(context)
+                              .colorScheme
+                              .inverseSurface,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Upload Photo',
+                          style: TextStyle(
+                              fontSize: 14,
+                              color: Theme
+                                  .of(context)
+                                  .colorScheme
+                                  .inverseSurface
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
                 )
               ],
-            )
+            ),
+            const SizedBox(height: 36),
+            const Text(
+              'Date of Birth *',
+              style: TextStyle(
+                  fontSize: 16
+              ),
+            ),
+            const SizedBox(height: 4),
+            TextFormField(
+              onTap: () async {
+                // Unfocus the text field to prevent keyboard from showing
+                FocusScope.of(context).unfocus();
+
+                // Calculate date 18 years ago from today
+                final DateTime eighteenYearsAgo = DateTime(
+                  DateTime.now().year - 18,
+                  DateTime.now().month,
+                  DateTime.now().day,
+                );
+
+                // Show date picker
+                final DateTime? pickedDate = await showDatePicker(
+                  context: context,
+                  initialDate: eighteenYearsAgo, // Default to 18 years ago
+                  firstDate: DateTime(1900), // Adjust as needed
+                  lastDate: eighteenYearsAgo, // Must be at least 18 years old
+                  builder: (context, child) {
+                    return Theme(
+                      data: Theme.of(context).copyWith(
+                        colorScheme: Theme.of(context).colorScheme.copyWith(
+                          primary: Theme.of(context).colorScheme.primary,
+                          onPrimary: Theme.of(context).colorScheme.onPrimary,
+                        ),
+                      ),
+                      child: child!,
+                    );
+                  },
+                );
+
+                // If user picked a date, validate age and format it
+                if (pickedDate != null) {
+                  // Double-check age validation (though date picker already limits selection)
+                  final age = DateTime.now().difference(pickedDate).inDays / 365.25;
+
+                  if (age >= 18) {
+                    final formattedDate = "${pickedDate.year.toString().padLeft(4, '0')}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+                    birthDayController.text = formattedDate;
+
+                    // Update the empty state if needed
+                    if (_isBirthDayEmpty) {
+                      setState(() => _isBirthDayEmpty = false);
+                    }
+                  } else {
+                    // Show error message if somehow an invalid date was selected
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('You must be at least 18 years old'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              controller: birthDayController,
+              focusNode: birthDayFocusNode,
+              readOnly: true, // Prevent manual typing, only allow date picker
+              onChanged: (value) {
+                if (_isBirthDayEmpty && value.isNotEmpty) {
+                  setState(() => _isBirthDayEmpty = false);
+                }
+              },
+              decoration: InputDecoration(
+                prefixIcon: Icon(Iconsax.calendar_1_copy),
+                hintText: 'yyyy-mm-dd',
+                hintStyle: const TextStyle(
+                    color: Colors.grey
+                ),
+                filled: true,
+                fillColor: Theme.of(context).colorScheme.tertiary,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: Theme.of(context).colorScheme.outline,
+                    width: 1.5,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: _isBirthDayEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                    width: 1.5,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: _isBirthDayEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
+                    width: 2,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Street Address *',
+              style: TextStyle(
+                  fontSize: 16
+              ),
+            ),
+            const SizedBox(height: 4),
+            TextFormField(
+              controller: streetAddressController,
+              focusNode: streetAddressFocusNode,
+              onChanged: (value) {
+                if (_isStreetAddressEmpty && value.isNotEmpty) {
+                  setState(() => _isStreetAddressEmpty = false);
+                }
+              },
+              decoration: InputDecoration(
+                hintText: 'Ex: New York', // Also fix the hint text
+                hintStyle: const TextStyle(color: Colors.grey),
+                filled: true,
+                fillColor: Theme.of(context).colorScheme.tertiary,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: Theme.of(context).colorScheme.outline,
+                    width: 1.5,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: _isStreetAddressEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                    width: 1.5,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: _isStreetAddressEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
+                    width: 2,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Flexible(
+                  flex: 1,
+                  child: Row(
+                    children: [
+                      const Text(
+                        'City *',
+                        style: TextStyle(
+                            fontSize: 16
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 24),
+                Flexible(
+                  flex: 1,
+                  child: Row(
+                    children: [
+                      const Text(
+                        'State/Province *',
+                        style: TextStyle(
+                            fontSize: 16
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Expanded(  // Add this Expanded widget
+                  child: TextFormField(
+                    controller: cityController,
+                    focusNode: cityFocusNode,
+                    onChanged: (value) {
+                      if (_isCityEmpty && value.isNotEmpty) {
+                        setState(() => _isCityEmpty = false);
+                      }
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'Ex: New York', // Also fix the hint text
+                      hintStyle: const TextStyle(color: Colors.grey),
+                      filled: true,
+                      fillColor: Theme.of(context).colorScheme.tertiary,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.outline,
+                          width: 1.5,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: _isCityEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                          width: 1.5,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: _isCityEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 24), // Add spacing between fields
+                Expanded(  // Add the State/Province field
+                  child: TextFormField(
+                    controller: stateOrProvinceController,
+                    focusNode: stateOrProvinceFocusNode,
+                    onChanged: (value) {
+                      if (_isStateOrProvinceEmpty && value.isNotEmpty) {
+                        setState(() => _isStateOrProvinceEmpty = false);
+                      }
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'Ex: California',
+                      hintStyle: const TextStyle(color: Colors.grey),
+                      filled: true,
+                      fillColor: Theme.of(context).colorScheme.tertiary,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.outline,
+                          width: 1.5,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: _isStateOrProvinceEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                          width: 1.5,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: _isStateOrProvinceEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
