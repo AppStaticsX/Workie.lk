@@ -122,7 +122,6 @@ class _ProfileSetupState extends State<ProfileSetup> {
       if (savedData != null) {
         if (kDebugMode) {
           print('Work selection saved successfully: ${savedData.categoryTitle}');
-          print('Selected options: ${savedData.selectedOptions}');
         }
       }
     } catch (e) {

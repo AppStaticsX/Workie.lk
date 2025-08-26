@@ -106,15 +106,6 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
             certificateFileName = fileName;
             _isFileSaving = false;
           });
-
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Certificate saved successfully!'),
-                backgroundColor: Colors.green,
-              ),
-            );
-          }
         } else {
           setState(() {
             _isFileSaving = false;
