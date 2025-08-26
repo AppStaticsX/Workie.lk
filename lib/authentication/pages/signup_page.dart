@@ -330,10 +330,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
             ),
           ],
         ),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        behavior: SnackBarBehavior.fixed,
         duration: Duration(seconds: durationInSeconds),
       ),
     );

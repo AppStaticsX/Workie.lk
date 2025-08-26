@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:pinput/pinput.dart';
 
 class AddPersonalDetailsPage extends StatefulWidget {
   const AddPersonalDetailsPage({super.key});
@@ -264,7 +265,7 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                   child: Row(
                     children: [
                       const Text(
-                        'City *',
+                        'City / Town *',
                         style: TextStyle(
                             fontSize: 16
                         ),
@@ -278,7 +279,7 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                   child: Row(
                     children: [
                       const Text(
-                        'State/Province *',
+                        'State / Province *',
                         style: TextStyle(
                             fontSize: 16
                         ),
@@ -372,6 +373,163 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            const Text(
+              'ZIP / Postal Code *',
+              style: TextStyle(
+                  fontSize: 16
+              ),
+            ),
+            const SizedBox(height: 4),
+            Pinput(
+              controller: postalCodeController,
+              focusNode: postalCodeFocusNode,
+              length: 5, // Adjust based on your postal code length requirements
+              onChanged: (value) {
+                if (_isPostalCodeEmpty && value.isNotEmpty) {
+                  setState(() => _isPostalCodeEmpty = false);
+                }
+              },
+              defaultPinTheme: PinTheme(
+                width: 44,
+                height: 44,
+                textStyle: TextStyle(
+                  fontSize: 20,
+                  color: Theme.of(context).colorScheme.inverseSurface,
+                  fontWeight: FontWeight.w600,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.tertiary,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _isPostalCodeEmpty
+                        ? Colors.red
+                        : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                    width: 1.5,
+                  ),
+                ),
+              ),
+              focusedPinTheme: PinTheme(
+                width: 44,
+                height: 44,
+                textStyle: TextStyle(
+                  fontSize: 20,
+                  color: Theme.of(context).colorScheme.inverseSurface,
+                  fontWeight: FontWeight.w600,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.tertiary,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _isPostalCodeEmpty
+                        ? Colors.red
+                        : Theme.of(context).colorScheme.inverseSurface,
+                    width: 2,
+                  ),
+                ),
+              ),
+              errorPinTheme: PinTheme(
+                width: 44,
+                height: 44,
+                textStyle: const TextStyle(
+                  fontSize: 20,
+                  color: Colors.black,
+                  fontWeight: FontWeight.w600,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.tertiary,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.red,
+                    width: 1.5,
+                  ),
+                ),
+              ),
+              pinputAutovalidateMode: PinputAutovalidateMode.onSubmit,
+              showCursor: true,
+              cursor: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 9),
+                    width: 22,
+                    height: 1,
+                    color: Theme.of(context).colorScheme.inverseSurface,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Phone *',
+              style: TextStyle(
+                  fontSize: 16
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Container(
+                  height: 48,
+                  width: 54,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.tertiary,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                    )
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(6.0),
+                    child: SvgPicture.asset(
+                      'assets/icon/android_compatible_flag.svg',
+                      height: 24,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: TextFormField(
+                    controller: cityController,
+                    focusNode: cityFocusNode,
+                    onChanged: (value) {
+                      if (_isCityEmpty && value.isNotEmpty) {
+                        setState(() => _isCityEmpty = false);
+                      }
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'Ex: 712211251',
+                      hintStyle: const TextStyle(color: Colors.grey),
+                      filled: true,
+                      fillColor: Theme.of(context).colorScheme.tertiary,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.outline,
+                          width: 1.5,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: _isCityEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                          width: 1.5,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: _isCityEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 36)
           ],
         ),
       ),
