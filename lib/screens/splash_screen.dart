@@ -158,15 +158,24 @@ class _SplashScreenState extends State<SplashScreen> {
               height: 150,
               width: 150,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             // Optional: Add a loading text
             const Text(
-              'Loading...',
+              'WORKIE.LK',
               style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
+                fontWeight: FontWeight.bold,
+                height: 1.1,
+                fontSize: 34,
               ),
             ),
+            Text(
+              'EMPOWERING PEOPLE',
+              style: TextStyle(
+                letterSpacing: 4.6,
+                fontSize: 10,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            )
           ],
         ),
       ),
