@@ -57,7 +57,6 @@ class _InitPageState extends State<InitPage> {
                     'Answer a few questions and start building your profile.',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontFamily: 'Lato',
-                      height: 1.3
                     )
                   ),
                 )
@@ -85,7 +84,6 @@ class _InitPageState extends State<InitPage> {
                     'Verify your profile for make clients can put trust on you.',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontFamily: 'Lato',
-                      height: 1.3
                     )
                   ),
                 )
