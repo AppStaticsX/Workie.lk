@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:io';
 import 'package:workie/models/education_model.dart';
@@ -51,6 +52,11 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
     if (widget.initialData != null) {
       _populateFields(widget.initialData!);
     }
+  }
+
+  void _dismissKeyboard() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    SystemChannels.textInput.invokeMethod('TextInput.hide');
   }
 
   void _populateFields(EducationModel education) {

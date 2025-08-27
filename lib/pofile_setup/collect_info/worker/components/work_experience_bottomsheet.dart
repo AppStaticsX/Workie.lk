@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:workie/models/work_experience_model.dart';
 
 class WorkExperienceBottomsheet extends StatefulWidget {
@@ -47,6 +48,11 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
     if (widget.initialData != null) {
       _populateFields(widget.initialData!);
     }
+  }
+
+  void _dismissKeyboard() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    SystemChannels.textInput.invokeMethod('TextInput.hide');
   }
 
   void _populateFields(WorkExperienceModel experience) {
@@ -190,7 +196,10 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
               )
           ),
           IconButton(
-              onPressed: widget.closeBottomSheet,
+              onPressed: () {
+                widget.closeBottomSheet();
+                _dismissKeyboard();
+              },
               icon: const Icon(
                 Icons.close,
                 size: 28,
@@ -658,6 +667,8 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
     return InkWell(
       onTap: (){
         _showMonthPicker(onMonthSelected);
+        _dismissKeyboard();
+
       },
       child: Container(
         height: 44,
@@ -697,6 +708,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
     return InkWell(
       onTap: () {
         _showYearPicker(onYearSelected);
+        _dismissKeyboard();
       },
       child: Container(
         height: 44,
@@ -707,7 +719,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
                 width: 1.5,
                 color: isError
                     ? Colors.red
-                    : Theme.of(context).colorScheme.primary.withOpacity(0.2)
+                    : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)
             )
         ),
         child: Row(
@@ -838,6 +850,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
         TextButton(
             onPressed: () {
               Navigator.pop(context);
+              _dismissKeyboard();
             },
             child: Text(
                 'Cancel',
@@ -848,7 +861,10 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
         ),
         const SizedBox(width: 24),
         ElevatedButton(
-          onPressed: _handleSave,
+          onPressed: () {
+            _handleSave();
+            _dismissKeyboard();
+          },
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF4E6BF5),
             padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
