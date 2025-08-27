@@ -881,7 +881,7 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
           onPressed: _isFileSaving ? null : _handleSave,
           style: ElevatedButton.styleFrom(
             backgroundColor: _isFileSaving ? Colors.grey : const Color(0xFF4E6BF5),
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(10)),
             ),

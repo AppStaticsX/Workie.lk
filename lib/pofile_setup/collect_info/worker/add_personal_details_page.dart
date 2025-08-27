@@ -4,6 +4,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:pinput/pinput.dart';
 
+import 'components/profile_pic_bottomsheet.dart';
+
 class AddPersonalDetailsPage extends StatefulWidget {
   const AddPersonalDetailsPage({super.key});
 
@@ -17,18 +19,21 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
   bool _isCityEmpty = false;
   bool _isStateOrProvinceEmpty = false;
   bool _isPostalCodeEmpty = false;
+  bool _isPhoneNumberEmpty = false;
 
   TextEditingController birthDayController = TextEditingController();
   TextEditingController streetAddressController = TextEditingController();
   TextEditingController cityController = TextEditingController();
   TextEditingController stateOrProvinceController = TextEditingController();
   TextEditingController postalCodeController = TextEditingController();
+  TextEditingController phoneNumberController = TextEditingController();
 
   FocusNode birthDayFocusNode = FocusNode();
   FocusNode streetAddressFocusNode = FocusNode();
   FocusNode cityFocusNode = FocusNode();
   FocusNode stateOrProvinceFocusNode = FocusNode();
   FocusNode postalCodeFocusNode = FocusNode();
+  FocusNode phoneNumberFocusNode = FocusNode();
 
   @override
   Widget build(BuildContext context) {
@@ -87,15 +92,41 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SvgPicture.asset(
-              'assets/icon/undraw_male-avatar_zkzx.svg',
-              width: 120,
+            GestureDetector(
+              onTap: () {
+                showModalBottomSheet(
+                    isScrollControlled: true,
+                    isDismissible: false,
+                    context: context,
+                    builder: (context) => ProfilePicBottomsheet(
+                      closeBottomSheet: () {
+                        Navigator.pop(context);
+                      },
+                      //onSave: _addWorkExperience,
+                    )
+                );
+              },
+              child: SvgPicture.asset(
+                'assets/icon/undraw_male-avatar_zkzx.svg',
+                width: 120,
+              ),
             ),
           ],
         ),
         const SizedBox(height: 12),
         OutlinedButton(
           onPressed: () {
+            showModalBottomSheet(
+                isScrollControlled: true,
+                isDismissible: false,
+                context: context,
+                builder: (context) => ProfilePicBottomsheet(
+                  closeBottomSheet: () {
+                    Navigator.pop(context);
+                  },
+                  //onSave: _addWorkExperience,
+                )
+            );
           },
           style: OutlinedButton.styleFrom(
             side: const BorderSide(
@@ -527,11 +558,11 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
             const SizedBox(width: 8),
             Flexible(
               child: TextFormField(
-                controller: cityController,
-                focusNode: cityFocusNode,
+                controller: phoneNumberController,
+                focusNode: phoneNumberFocusNode,
                 onChanged: (value) {
-                  if (_isCityEmpty && value.isNotEmpty) {
-                    setState(() => _isCityEmpty = false);
+                  if (_isPhoneNumberEmpty && value.isNotEmpty) {
+                    setState(() => _isPhoneNumberEmpty = false);
                   }
                 },
                 decoration: InputDecoration(
@@ -550,14 +581,14 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: _isCityEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                      color: _isPhoneNumberEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
                       width: 1.5,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: _isCityEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
+                      color: _isPhoneNumberEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
                       width: 2,
                     ),
                   ),
