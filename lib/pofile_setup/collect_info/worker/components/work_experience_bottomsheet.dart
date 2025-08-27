@@ -197,8 +197,8 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
           ),
           IconButton(
               onPressed: () {
-                widget.closeBottomSheet();
                 _dismissKeyboard();
+                widget.closeBottomSheet();
               },
               icon: const Icon(
                 Icons.close,
@@ -849,8 +849,8 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
       children: [
         TextButton(
             onPressed: () {
-              Navigator.pop(context);
               _dismissKeyboard();
+              Navigator.pop(context);
             },
             child: Text(
                 'Cancel',

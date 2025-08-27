@@ -257,7 +257,10 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
               )
           ),
           IconButton(
-              onPressed: widget.closeBottomSheet,
+              onPressed: () {
+                _dismissKeyboard();
+                widget.closeBottomSheet();
+              },
               icon: const Icon(
                 Icons.close,
                 size: 28,
@@ -789,6 +792,7 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
     return InkWell(
       onTap: () {
         _showYearPicker(onYearSelected);
+        _dismissKeyboard();
       },
       child: Container(
         height: 44,
@@ -873,6 +877,7 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
       children: [
         TextButton(
             onPressed: () {
+              _dismissKeyboard();
               Navigator.pop(context);
             },
             child: Text(
@@ -884,7 +889,10 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
         ),
         const SizedBox(width: 24),
         ElevatedButton(
-          onPressed: _isFileSaving ? null : _handleSave,
+          onPressed: _isFileSaving ? null : () {
+            _handleSave();
+            _dismissKeyboard();
+          },
           style: ElevatedButton.styleFrom(
             backgroundColor: _isFileSaving ? Colors.grey : const Color(0xFF4E6BF5),
             padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
