@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
@@ -182,9 +183,9 @@ class _ProfileSetupState extends State<ProfileSetup> {
         backgroundColor: const Color(0xFF4E6BF5),
         surfaceTintColor: Colors.transparent,
         leading: const Icon(
-          Iconsax.user_copy,
+          CupertinoIcons.person_crop_circle_badge_plus,
           color: Colors.white,
-          size: 26,
+          size: 36,
         ),
         title: const Text('Create & Verify Your Profile',
           style: TextStyle(
@@ -197,7 +198,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
             value: (_selectedIndex) / (_maxIndex + 1),
             backgroundColor: _selectedIndex == 0? Colors.transparent : Colors.grey.withValues(alpha: 0.3),
             valueColor: AlwaysStoppedAnimation<Color>(
-              Theme.of(context).colorScheme.primary,
+              Theme.of(context).colorScheme.inverseSurface,
             ),
           ),
         ),
