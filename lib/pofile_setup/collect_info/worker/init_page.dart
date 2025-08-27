@@ -32,7 +32,6 @@ class _InitPageState extends State<InitPage> {
               'Hey, Are you ready for your next big opportunities?',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
-                fontFamily: 'Lato'
               )
             ),
             const SizedBox(height: 44),
@@ -56,7 +55,6 @@ class _InitPageState extends State<InitPage> {
                   child: Text(
                     'Answer a few questions and start building your profile.',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontFamily: 'Lato',
                     )
                   ),
                 )
@@ -83,7 +81,6 @@ class _InitPageState extends State<InitPage> {
                   child: Text(
                     'Verify your profile for make clients can put trust on you.',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontFamily: 'Lato',
                     )
                   ),
                 )
@@ -110,7 +107,6 @@ class _InitPageState extends State<InitPage> {
                   child: Text(
                     'You are good to go. 🚀',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontFamily: 'Lato'
                     )
                   ),
                 )
@@ -130,8 +126,6 @@ class _InitPageState extends State<InitPage> {
                     'It only takes 5-10 minutes and you can edit it later. We\'ll save as you go.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey,
-                      fontFamily: 'Lato Black'
                     )
                   ),
                 ),
@@ -158,7 +152,6 @@ class _InitPageState extends State<InitPage> {
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
                   color: Colors.white,
-                  letterSpacing: 1.5,
                 ),
               ),
           ),

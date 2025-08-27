@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lottie/lottie.dart';
@@ -89,7 +90,9 @@ class _SplashScreenState extends State<SplashScreen> {
 
     } catch (e) {
       // Network error or other issues - assume not authenticated
-      print('Auth check error: $e');
+      if (kDebugMode) {
+        print('Auth check error: $e');
+      }
       return false;
     }
   }

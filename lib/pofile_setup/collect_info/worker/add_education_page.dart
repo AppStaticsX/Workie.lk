@@ -186,7 +186,7 @@ class _AddEducationPageState extends State<AddEducationPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      experience.school,
+                      experience.course,
                       style: Theme
                           .of(context)
                           .textTheme
@@ -197,7 +197,7 @@ class _AddEducationPageState extends State<AddEducationPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '@${experience.course} | ${experience.fieldOfStudy}',
+                      '@${experience.school} | ${experience.fieldOfStudy}',
                       style: Theme
                           .of(context)
                           .textTheme
