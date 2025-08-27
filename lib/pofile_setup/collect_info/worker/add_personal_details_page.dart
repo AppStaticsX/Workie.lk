@@ -73,7 +73,7 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
       children: [
         Text(
           'A few last details, then you can check and publish your profile.',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
