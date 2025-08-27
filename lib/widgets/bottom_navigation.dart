@@ -18,7 +18,7 @@ class BottomNavigation extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface
+        color: Theme.of(context).colorScheme.surface,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -28,7 +28,7 @@ class BottomNavigation extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: Theme.of(context).colorScheme.tertiary,
+                color: const Color(0xFF4E6BF5),
                 width: 2.5
               )
             ),
