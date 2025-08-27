@@ -179,13 +179,18 @@ class _ProfileSetupState extends State<ProfileSetup> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
+        backgroundColor: const Color(0xFF4E6BF5),
         surfaceTintColor: Colors.transparent,
         leading: const Icon(
           Iconsax.user_copy,
+          color: Colors.white,
           size: 26,
         ),
-        title: const Text('Create & Verify Your Profile'),
+        title: const Text('Create & Verify Your Profile',
+          style: TextStyle(
+            color: Colors.white
+          ),
+        ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4.0),
           child: LinearProgressIndicator(

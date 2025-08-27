@@ -797,8 +797,12 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
     showCupertinoDialog(
       context: context,
       builder: (BuildContext context) {
-        int selectedYear = DateTime.now().year;
-        int initialIndex = 50; // Start from current year
+        final currentYear = DateTime.now().year;
+        int selectedYear = currentYear; // Initialize with current year
+        final startYear = currentYear - 50;
+        final endYear = currentYear + 5; // Extended range to include future years
+        final totalYears = endYear - startYear + 1;
+        final initialIndex = 50; // Current year is at index 50
 
         return CupertinoAlertDialog(
           title: const Text('Select Year'),
@@ -810,10 +814,10 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
                 initialItem: initialIndex,
               ),
               onSelectedItemChanged: (int index) {
-                selectedYear = DateTime.now().year - 50 + index;
+                selectedYear = startYear + index;
               },
-              children: List.generate(51, (index) {
-                int year = DateTime.now().year - 50 + index;
+              children: List.generate(totalYears, (index) {
+                int year = startYear + index;
                 return Center(
                   child: Text(
                     year.toString(),

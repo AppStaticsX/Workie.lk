@@ -30,7 +30,7 @@ class BottomNavigationWithSkip extends StatelessWidget {
             decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                    color: Theme.of(context).colorScheme.tertiary,
+                    color: const Color(0xFF4E6BF5),
                     width: 2.5
                 )
             ),
