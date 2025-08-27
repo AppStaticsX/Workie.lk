@@ -53,6 +53,8 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
             const SizedBox(height: 30),
             _buildStreetAddressField(context),
             const SizedBox(height: 16),
+            _buildAptOrSuiteField(context),
+            const SizedBox(height: 16),
             _buildCityAndStateFields(context),
             const SizedBox(height: 16),
             _buildPostalCodeField(context),
@@ -273,6 +275,56 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
       children: [
         const Text(
           'Street Address *',
+          style: TextStyle(fontSize: 16),
+        ),
+        const SizedBox(height: 4),
+        TextFormField(
+          controller: streetAddressController,
+          focusNode: streetAddressFocusNode,
+          onChanged: (value) {
+            if (_isStreetAddressEmpty && value.isNotEmpty) {
+              setState(() => _isStreetAddressEmpty = false);
+            }
+          },
+          decoration: InputDecoration(
+            hintText: 'Ex: New York', // Also fix the hint text
+            hintStyle: const TextStyle(color: Colors.grey),
+            filled: true,
+            fillColor: Theme.of(context).colorScheme.tertiary,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.outline,
+                width: 1.5,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: _isStreetAddressEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                width: 1.5,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: _isStreetAddressEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
+                width: 2,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAptOrSuiteField(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Apartment / Suite',
           style: TextStyle(fontSize: 16),
         ),
         const SizedBox(height: 4),
