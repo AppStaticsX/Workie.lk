@@ -35,10 +35,10 @@ class DashedPhotoPicker extends StatefulWidget {
   });
 
   @override
-  State<DashedPhotoPicker> createState() => _DashedPhotoPickerState();
+  State<DashedPhotoPicker> createState() => DashedPhotoPickerState();
 }
 
-class _DashedPhotoPickerState extends State<DashedPhotoPicker>
+class DashedPhotoPickerState extends State<DashedPhotoPicker>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
@@ -189,6 +189,18 @@ class _DashedPhotoPickerState extends State<DashedPhotoPicker>
         _errorMessage = 'Failed to validate image: ${e.toString()}';
       });
     }
+  }
+
+  // Add this public method
+  void clearImage() {
+    setState(() {
+      _selectedImage = null;
+      _webImageBytes = null;
+      _errorMessage = null;
+    });
+    widget.hasImage?.call(false);
+    widget.onImageSelected?.call(null);
+    widget.onFileSelected?.call('');
   }
 
   Widget _buildImageDisplay() {

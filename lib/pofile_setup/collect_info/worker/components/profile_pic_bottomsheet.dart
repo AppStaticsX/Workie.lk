@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:workie/widgets/dashed_photo_picker.dart';
 
@@ -16,6 +17,7 @@ class ProfilePicBottomsheet extends StatefulWidget {
 class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
 
   bool _hasImage = false;
+  final GlobalKey<DashedPhotoPickerState> _photoPickerKey = GlobalKey<DashedPhotoPickerState>();
 
   @override
   void dispose() {
@@ -79,6 +81,7 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
                 children: [
                   const SizedBox(height: 16),
                   DashedPhotoPicker(
+                    key: _photoPickerKey,
                     hasImage: (hasImage) {
                       setState(() {
                         _hasImage = hasImage;
@@ -89,9 +92,9 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
                     borderColor: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 16),
-                  !_hasImage
-                      ? _buildImageLimit()
-                      : _buildAlertText(context),
+                  _hasImage
+                      ? _buildImageDeleteButton()
+                      : _buildImageLimit(),
                   const SizedBox(height: 24),
                   _buildAlertText(context),
                   const SizedBox(height: 20),
@@ -116,6 +119,39 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
       style: TextStyle(
           fontSize: 16,
           color: Colors.grey
+      ),
+    );
+  }
+
+  Widget _buildImageDeleteButton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: TextButton(
+          onPressed: () {
+            _photoPickerKey.currentState?.clearImage();
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(
+                  CupertinoIcons.delete,
+                  size: 22,
+                  color: const Color(0xFF4E6BF5),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Delete current Image',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: const Color(0xFF4E6BF5),
+                  ),
+                )
+              ],
+            ),
+          )
       ),
     );
   }
