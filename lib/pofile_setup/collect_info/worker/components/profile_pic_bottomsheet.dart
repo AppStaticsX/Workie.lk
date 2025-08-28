@@ -14,6 +14,14 @@ class ProfilePicBottomsheet extends StatefulWidget {
 }
 
 class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
+
+  bool _hasImage = false;
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -71,12 +79,19 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
                 children: [
                   const SizedBox(height: 16),
                   DashedPhotoPicker(
+                    hasImage: (hasImage) {
+                      setState(() {
+                        _hasImage = hasImage;
+                      });
+                    },
                     backgroundColor: Colors.transparent,
                     iconColor: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.5),
                     borderColor: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 16),
-                  _buildImageLimit(),
+                  !_hasImage
+                      ? _buildImageLimit()
+                      : _buildAlertText(context),
                   const SizedBox(height: 24),
                   _buildAlertText(context),
                   const SizedBox(height: 20),

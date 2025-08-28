@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -11,7 +10,7 @@ class DashedPhotoPicker extends StatefulWidget {
   final VoidCallback? onTap;
   final Function(String)? onFileSelected;
   final Function(File?)? onImageSelected; // New callback for selected image
-  final Function(bool) hasImage;
+  final Function(bool)? hasImage;
   final double size;
   final Color backgroundColor;
   final Color borderColor;
@@ -32,7 +31,7 @@ class DashedPhotoPicker extends StatefulWidget {
     this.textColor = Colors.grey,
     this.uploadTextColor = const Color(0xFF4E6BF5),
     this.errorTextColor = Colors.red,
-    required this.hasImage,
+    this.hasImage,
   });
 
   @override
@@ -97,6 +96,7 @@ class _DashedPhotoPickerState extends State<DashedPhotoPicker>
       if (image != null) {
         await _validateAndSetImage(image);
       }
+
     } catch (e) {
       setState(() {
         _errorMessage = 'Failed to pick image: ${e.toString()}';
@@ -114,6 +114,7 @@ class _DashedPhotoPickerState extends State<DashedPhotoPicker>
         setState(() {
           _errorMessage = 'Image size must be less than 5MB. Current size: ${(fileSize / (1024 * 1024)).toStringAsFixed(1)}MB';
         });
+        widget.hasImage?.call(false);
         return;
       }
 
@@ -142,8 +143,9 @@ class _DashedPhotoPickerState extends State<DashedPhotoPicker>
 
         if (width < 250 || height < 250) {
           setState(() {
-            _errorMessage = 'Image dimensions must be at least 250x250 pixels. Current size: ${width}x${height}';
+            _errorMessage = 'Image dimensions must be at least 250x250 pixels. Current size: ${width}x$height';
           });
+          widget.hasImage?.call(false);
           return;
         }
 
@@ -153,6 +155,7 @@ class _DashedPhotoPickerState extends State<DashedPhotoPicker>
           _errorMessage = null;
         });
 
+        widget.hasImage?.call(true);
         widget.onFileSelected?.call(image.path);
         widget.onImageSelected?.call(null); // Web doesn't use File
 
@@ -166,7 +169,7 @@ class _DashedPhotoPickerState extends State<DashedPhotoPicker>
 
         if (width < 250 || height < 250) {
           setState(() {
-            _errorMessage = 'Image dimensions must be at least 250x250 pixels. Current size: ${width}x${height}';
+            _errorMessage = 'Image dimensions must be at least 250x250 pixels. Current size: ${width}x$height';
           });
           return;
         }
@@ -177,6 +180,7 @@ class _DashedPhotoPickerState extends State<DashedPhotoPicker>
           _errorMessage = null;
         });
 
+        widget.hasImage?.call(true);
         widget.onFileSelected?.call(image.path);
         widget.onImageSelected?.call(file);
       }
