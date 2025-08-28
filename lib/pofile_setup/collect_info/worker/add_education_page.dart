@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/pofile_setup/collect_info/worker/components/education_bottomsheet.dart';
+import 'package:workie/values/color.dart';
 import '../../../models/education_model.dart';
 
 class AddEducationPage extends StatefulWidget {
@@ -79,10 +80,7 @@ class _AddEducationPageState extends State<AddEducationPage> {
                   .textTheme
                   .bodyLarge
                   ?.copyWith(
-                  color: Theme
-                      .of(context)
-                      .colorScheme
-                      .inverseSurface,
+                  color: AppColors.textSilver,
                 height: 1.3
               ),
             ),

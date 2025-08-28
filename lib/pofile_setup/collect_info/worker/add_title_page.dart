@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:workie/values/color.dart';
 import 'package:workie/widgets/simple_textfeild.dart';
 
 class AddTitlePage extends StatefulWidget {
@@ -56,7 +58,7 @@ class _AddTitlePageState extends State<AddTitlePage> {
             Text(
               'Clients see this first, so make it clear. Describe the work you do in your own words.',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.inverseSurface,
+                  color: AppColors.textSilver,
                 height: 1.3
               ),
             ),
@@ -70,7 +72,7 @@ class _AddTitlePageState extends State<AddTitlePage> {
             ),
             const SizedBox(height: 8),
             SimpleTextfield(
-              focusBorderColor: Colors.white,
+              focusBorderColor: Theme.of(context).colorScheme.inverseSurface,
                 paddingHorizontal: 0,
                 controller: _professionController,
                 hintText: 'Ex: Skilled Carpenter for Custom Furniture & Wood Work',

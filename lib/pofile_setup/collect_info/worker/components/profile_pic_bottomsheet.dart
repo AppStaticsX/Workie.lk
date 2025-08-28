@@ -70,7 +70,11 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 16),
-                  DashedPhotoPicker(),
+                  DashedPhotoPicker(
+                    backgroundColor: Colors.transparent,
+                    iconColor: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.5),
+                    borderColor: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.5),
+                  ),
                   const SizedBox(height: 16),
                   _buildImageLimit(),
                   const SizedBox(height: 24),
@@ -93,7 +97,7 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
 
   Text _buildImageLimit() {
     return Text(
-      '360x480 Min / 5 MB Max',
+      '250x250 Min / 5 MB Max',
       style: TextStyle(
           fontSize: 16,
           color: Colors.grey

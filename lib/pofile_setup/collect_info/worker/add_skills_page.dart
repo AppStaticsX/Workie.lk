@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workie/values/color.dart';
 
 class AddSkillsPage extends StatefulWidget {
   final ValueChanged<bool>? onSkillsChanged; // <-- Add this callback
@@ -92,7 +93,7 @@ class _AddSkillsPageState extends State<AddSkillsPage> {
             Text(
               'Your skills show clients what jobs you can do and help us suggest work for you. You can add, remove, or type new skills anytime.',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.inverseSurface,
+                  color: AppColors.textSilver,
                 height: 1.3
               ),
             ),

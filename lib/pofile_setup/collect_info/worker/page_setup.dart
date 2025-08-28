@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_education_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_experience_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_personal_details_page.dart';
@@ -174,6 +175,11 @@ class _ProfileSetupState extends State<ProfileSetup> {
     _showSnackBar('Profile setup completed!');
   }
 
+  void _dismissKeyboard() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    SystemChannels.textInput.invokeMethod('TextInput.hide');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -197,7 +203,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
             value: (_selectedIndex) / (_maxIndex + 1),
             backgroundColor: _selectedIndex == 0? Colors.transparent : Colors.grey.withValues(alpha: 0.3),
             valueColor: AlwaysStoppedAnimation<Color>(
-              Theme.of(context).colorScheme.inverseSurface,
+              Colors.white,
             ),
           ),
         ),
@@ -268,7 +274,10 @@ class _ProfileSetupState extends State<ProfileSetup> {
           ),
           BottomNavigationWithSkip(
             actionName: 'Add Education',
-            onTapAction: _navigateNext,
+            onTapAction: () {
+              _navigateNext();
+              _dismissKeyboard();
+              },
             onBackAction: _navigateBack,
             onSkip: _skipNext,
           ),

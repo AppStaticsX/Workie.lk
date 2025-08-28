@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/models/work_experience_model.dart';
 import 'package:workie/pofile_setup/collect_info/worker/components/work_experience_bottomsheet.dart';
+import 'package:workie/values/color.dart';
 
 class AddExperiencePage extends StatefulWidget {
   final Function(bool)? onExperienceChanged;
@@ -67,7 +68,7 @@ class _AddExperiencePageState extends State<AddExperiencePage> {
             Text(
               'Workers who add their past jobs get more work. If you are just starting, that’s fine — you can still make a strong profile. Just move to the next page.',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.inverseSurface,
+                  color: AppColors.textSilver,
                 height: 1.3
               ),
             ),

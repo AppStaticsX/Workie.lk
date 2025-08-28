@@ -1,26 +1,38 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class DashedPhotoPicker extends StatefulWidget {
   final VoidCallback? onTap;
   final Function(String)? onFileSelected;
+  final Function(File?)? onImageSelected; // New callback for selected image
+  final Function(bool) hasImage;
   final double size;
   final Color backgroundColor;
   final Color borderColor;
   final Color iconColor;
   final Color textColor;
   final Color uploadTextColor;
+  final Color errorTextColor;
 
   const DashedPhotoPicker({
     super.key,
     this.onTap,
     this.onFileSelected,
+    this.onImageSelected,
     this.size = 300,
-    this.backgroundColor = const Color(0xFF2A2A2A),
-    this.borderColor = Colors.white,
-    this.iconColor = Colors.white,
+    required this.backgroundColor,
+    required this.borderColor,
+    required this.iconColor,
     this.textColor = Colors.grey,
-    this.uploadTextColor = const Color(0xFF4CAF50),
+    this.uploadTextColor = const Color(0xFF4E6BF5),
+    this.errorTextColor = Colors.red,
+    required this.hasImage,
   });
 
   @override
@@ -32,6 +44,10 @@ class _DashedPhotoPickerState extends State<DashedPhotoPicker>
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   bool _isHovered = false;
+  String? _errorMessage;
+  File? _selectedImage;
+  Uint8List? _webImageBytes;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -67,82 +83,256 @@ class _DashedPhotoPickerState extends State<DashedPhotoPicker>
     _animationController.reverse();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: _handleTapDown,
-      onTapUp: _handleTapUp,
-      onTapCancel: _handleTapCancel,
-      onTap: widget.onTap,
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _isHovered = true),
-        onExit: (_) => setState(() => _isHovered = false),
-        cursor: SystemMouseCursors.click,
-        child: AnimatedBuilder(
-          animation: _scaleAnimation,
-          builder: (context, child) {
-            return Transform.scale(
-              scale: _scaleAnimation.value,
-              child: Container(
-                width: widget.size,
-                height: widget.size,
-                decoration: BoxDecoration(
-                  color: widget.backgroundColor,
-                  shape: BoxShape.circle,
-                ),
-                child: CustomPaint(
-                  painter: DashedCirclePainter(
-                    color: widget.borderColor,
-                    strokeWidth: 2,
-                    dashLength: 8,
-                    gapLength: 6,
-                  ),
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // User Icon
-                        Icon(
-                          CupertinoIcons.person_crop_circle,
-                          size: 60,
-                          color: widget.iconColor,
-                        ),
-                        const SizedBox(height: 20),
-                        // Upload Text
-                        RichText(
-                          textAlign: TextAlign.center,
-                          text: TextSpan(
-                            children: [
-                              TextSpan(
-                                text: 'Upload',
-                                style: TextStyle(
-                                  color: widget.uploadTextColor,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w500,
-                                  decoration: TextDecoration.underline,
-                                  decorationColor: widget.uploadTextColor,
-                                ),
-                              ),
-                              TextSpan(
-                                text: ' or drop\nimage here',
-                                style: TextStyle(
-                                  color: widget.textColor,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+  Future<void> _pickImage() async {
+    try {
+      setState(() {
+        _errorMessage = null;
+      });
+
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 100,
+      );
+
+      if (image != null) {
+        await _validateAndSetImage(image);
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to pick image: ${e.toString()}';
+      });
+    }
+  }
+
+  Future<void> _validateAndSetImage(XFile image) async {
+    try {
+      // Check file size (5MB limit)
+      final int fileSize = await image.length();
+      const int maxSizeInBytes = 5 * 1024 * 1024; // 5MB
+
+      if (fileSize > maxSizeInBytes) {
+        setState(() {
+          _errorMessage = 'Image size must be less than 5MB. Current size: ${(fileSize / (1024 * 1024)).toStringAsFixed(1)}MB';
+        });
+        return;
+      }
+
+      // Get image dimensions
+      final Uint8List imageBytes = await image.readAsBytes();
+      final Image imageWidget = Image.memory(imageBytes);
+
+      // For web platform
+      if (kIsWeb) {
+        // We need to decode the image to get dimensions on web
+        final imageProvider = MemoryImage(imageBytes);
+        final ImageStream stream = imageProvider.resolve(const ImageConfiguration());
+        final completer = Completer<ImageInfo>();
+        late ImageStreamListener listener;
+
+        listener = ImageStreamListener((ImageInfo info, bool _) {
+          completer.complete(info);
+          stream.removeListener(listener);
+        });
+
+        stream.addListener(listener);
+        final ImageInfo imageInfo = await completer.future;
+
+        final int width = imageInfo.image.width;
+        final int height = imageInfo.image.height;
+
+        if (width < 250 || height < 250) {
+          setState(() {
+            _errorMessage = 'Image dimensions must be at least 250x250 pixels. Current size: ${width}x${height}';
+          });
+          return;
+        }
+
+        setState(() {
+          _webImageBytes = imageBytes;
+          _selectedImage = null;
+          _errorMessage = null;
+        });
+
+        widget.onFileSelected?.call(image.path);
+        widget.onImageSelected?.call(null); // Web doesn't use File
+
+      } else {
+        // For mobile platforms
+        final File file = File(image.path);
+        final decodedImage = await decodeImageFromList(imageBytes);
+
+        final int width = decodedImage.width;
+        final int height = decodedImage.height;
+
+        if (width < 250 || height < 250) {
+          setState(() {
+            _errorMessage = 'Image dimensions must be at least 250x250 pixels. Current size: ${width}x${height}';
+          });
+          return;
+        }
+
+        setState(() {
+          _selectedImage = file;
+          _webImageBytes = null;
+          _errorMessage = null;
+        });
+
+        widget.onFileSelected?.call(image.path);
+        widget.onImageSelected?.call(file);
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to validate image: ${e.toString()}';
+      });
+    }
+  }
+
+  Widget _buildImageDisplay() {
+    if (kIsWeb && _webImageBytes != null) {
+      return ClipOval(
+        child: Image.memory(
+          _webImageBytes!,
+          width: widget.size,
+          height: widget.size,
+          fit: BoxFit.cover,
+        ),
+      );
+    } else if (_selectedImage != null) {
+      return ClipOval(
+        child: Image.file(
+          _selectedImage!,
+          width: widget.size,
+          height: widget.size,
+          fit: BoxFit.cover,
+        ),
+      );
+    }
+    return const SizedBox.shrink();
+  }
+
+  Widget _buildPlaceholderContent() {
+    return Container(
+      width: widget.size,
+      height: widget.size,
+      decoration: BoxDecoration(
+        color: widget.backgroundColor,
+        shape: BoxShape.circle,
+      ),
+      child: CustomPaint(
+        painter: DashedCirclePainter(
+          color: widget.borderColor,
+          strokeWidth: 2,
+          dashLength: 8,
+          gapLength: 6,
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // User Icon
+              Icon(
+                CupertinoIcons.person_crop_circle,
+                size: 60,
+                color: widget.iconColor,
+              ),
+              const SizedBox(height: 20),
+              // Upload Text
+              RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'Upload',
+                      style: TextStyle(
+                        color: widget.uploadTextColor,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w500,
+                        decoration: TextDecoration.underline,
+                        decorationColor: widget.uploadTextColor,
+                      ),
                     ),
-                  ),
+                    TextSpan(
+                      text: ' or drop\nimage here',
+                      style: TextStyle(
+                        color: widget.textColor,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            );
-          },
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool hasImage = _selectedImage != null || _webImageBytes != null;
+
+    return Column(
+      children: [
+        GestureDetector(
+          onTapDown: _handleTapDown,
+          onTapUp: _handleTapUp,
+          onTapCancel: _handleTapCancel,
+          onTap: () {
+            widget.onTap?.call();
+            _pickImage();
+          },
+          child: MouseRegion(
+            onEnter: (_) => setState(() => _isHovered = true),
+            onExit: (_) => setState(() => _isHovered = false),
+            cursor: SystemMouseCursors.click,
+            child: AnimatedBuilder(
+              animation: _scaleAnimation,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: _scaleAnimation.value,
+                  child: Stack(
+                    children: [
+                      if (hasImage) _buildImageDisplay() else _buildPlaceholderContent(),
+                      if (hasImage)
+                        Positioned(
+                          bottom: 10,
+                          right: 10,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: widget.uploadTextColor,
+                              shape: BoxShape.circle,
+                            ),
+                            padding: const EdgeInsets.all(8),
+                            child: const Icon(
+                              CupertinoIcons.camera,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        if (_errorMessage != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Text(
+              _errorMessage!,
+              style: TextStyle(
+                color: widget.errorTextColor,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+      ],
     );
   }
 }

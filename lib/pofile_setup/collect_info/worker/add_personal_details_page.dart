@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:pinput/pinput.dart';
+import 'package:workie/values/color.dart';
 
 import 'components/profile_pic_bottomsheet.dart';
 
@@ -72,7 +73,7 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Almost done! Add a few last details, then check and publish your profile.',
+          'Almost done! Finish a few details and publish.',
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.bold,
             height: 1.2
@@ -82,8 +83,9 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
         Text(
           'Add a clear photo so clients can trust you. We need a bit of personal information to keep things safe.',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: Theme.of(context).colorScheme.inverseSurface,
-            height: 1.3
+            //color: Theme.of(context).colorScheme.inverseSurface,
+            height: 1.3,
+            color: AppColors.textSilver
           ),
         ),
       ],
