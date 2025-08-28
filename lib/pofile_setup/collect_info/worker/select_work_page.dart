@@ -125,18 +125,20 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             Text(
-              'Great, so what kind of work are you here to do?',
+              'Which kind of jobs are you looking for here?',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
+                height: 1.2
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'Don\'t worry, you can change these choices later on.',
+              'No problem, you can update these details later.',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.inverseSurface
+                  color: Theme.of(context).colorScheme.inverseSurface,
+                height: 1.3
               ),
             ),
             const SizedBox(height: 12),
@@ -144,97 +146,97 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
             const SizedBox(height: 20),
 
             ExpandableSelectionWidget(
-              title: 'Accounting & Consulting',
+              title: 'Masonry & Construction Work',
               options: const [
-                'Personal & Professional Coaching',
-                'Accounting & Bookkeeping',
-                'Financial Planning',
-                'Recruiting & Human Resources',
-                'Management Consulting & Analysis',
-                'Other - Accounting & Consulting',
+                'Brick & Block Work',
+                'Concrete Slabs / Foundations',
+                'Plastering & Finishing',
+                'Boundary Walls & Garden Walls',
+                'Renovation & Repair Masonry',
+                'Other - Masonry & Construction',
               ],
               minSelections: 1,
               maxSelections: 3,
-              isDisabled: activeCategoryTitle != null && activeCategoryTitle != 'Accounting & Consulting',
-              selectedOptions: categorySelections['Accounting & Consulting'] ?? [],
+              isDisabled: activeCategoryTitle != null && activeCategoryTitle != 'Masonry & Construction Work',
+              selectedOptions: categorySelections['Masonry & Construction Work'] ?? [],
               onSelectionChanged: (selectedOptions) {
-                _onSelectionChanged('Accounting & Consulting', selectedOptions);
+                _onSelectionChanged('Masonry & Construction Work', selectedOptions);
               },
             ),
 
             ExpandableSelectionWidget(
-              title: 'Admin Support',
+              title: 'Carpentry & Wood Work',
               options: const [
-                'Virtual Assistant',
-                'Data Entry',
-                'Web Research',
-                'Transcription',
-                'Customer Support',
-                'Other - Admin Support',
+                'Door & Window Fitting',
+                'Furniture Making & Repair',
+                'Roof & Ceiling Wood Work',
+                'Partitions & Cupboards',
+                'Polishing & Finishing',
+                'Other - Carpentry & Wood Work',
               ],
               minSelections: 1,
               maxSelections: 3,
-              isDisabled: activeCategoryTitle != null && activeCategoryTitle != 'Admin Support',
-              selectedOptions: categorySelections['Admin Support'] ?? [],
+              isDisabled: activeCategoryTitle != null && activeCategoryTitle != 'Carpentry & Wood Work',
+              selectedOptions: categorySelections['Carpentry & Wood Work'] ?? [],
               onSelectionChanged: (selectedOptions) {
-                _onSelectionChanged('Admin Support', selectedOptions);
+                _onSelectionChanged('Carpentry & Wood Work', selectedOptions);
               },
             ),
 
             ExpandableSelectionWidget(
-              title: 'Customer Service',
+              title: 'Welding & Metal Fabrication',
               options: const [
-                'Phone Support',
-                'Email Support',
-                'Live Chat Support',
-                'Technical Support',
-                'Social Media Support',
-                'Other - Customer Service',
+                'Gates & Grills',
+                'Steel & Iron Structures',
+                'Aluminium Fabrication',
+                'Repair Welding',
+                'Roofing Frames',
+                'Other - Welding & Metal Fabrication',
               ],
               minSelections: 1,
               maxSelections: 3,
-              isDisabled: activeCategoryTitle != null && activeCategoryTitle != 'Customer Service',
-              selectedOptions: categorySelections['Customer Service'] ?? [],
+              isDisabled: activeCategoryTitle != null && activeCategoryTitle != 'Welding & Metal Fabrication',
+              selectedOptions: categorySelections['Welding & Metal Fabrication'] ?? [],
               onSelectionChanged: (selectedOptions) {
-                _onSelectionChanged('Customer Service', selectedOptions);
+                _onSelectionChanged('Welding & Metal Fabrication', selectedOptions);
               },
             ),
 
             ExpandableSelectionWidget(
-              title: 'Design & Creative',
+              title: 'Painting & Finishing Work',
               options: const [
-                'Graphic Design',
-                'Web Design',
-                'Logo Design',
-                'Video Editing',
-                'Photography',
-                'Other - Design & Creative',
+                'Wall & Ceiling Painting',
+                'Interior Painting',
+                'Exterior Painting',
+                'Polishing & Varnishing',
+                'Decorative Painting',
+                'Other - Painting & Finishing',
               ],
               minSelections: 1,
               maxSelections: 3,
-              isDisabled: activeCategoryTitle != null && activeCategoryTitle != 'Design & Creative',
-              selectedOptions: categorySelections['Design & Creative'] ?? [],
+              isDisabled: activeCategoryTitle != null && activeCategoryTitle != 'Painting & Finishing Work',
+              selectedOptions: categorySelections['Painting & Finishing Work'] ?? [],
               onSelectionChanged: (selectedOptions) {
-                _onSelectionChanged('Design & Creative', selectedOptions);
+                _onSelectionChanged('Painting & Finishing Work', selectedOptions);
               },
             ),
 
             ExpandableSelectionWidget(
-              title: 'Engineering & Architecture',
+              title: 'Tile & Flooring Work',
               options: const [
-                'Software Development',
-                'Web Development',
-                'Mobile App Development',
-                'DevOps & Cloud',
-                'Data Science',
-                'Other - Engineering & Architecture',
+                'Floor Tiling',
+                'Bathroom & Kitchen Tiling',
+                'Wall Tiling',
+                'Tile Repair & Replacement',
+                'Marble / Granite Flooring',
+                'Other - Tile & Flooring Work',
               ],
               minSelections: 1,
               maxSelections: 3,
-              isDisabled: activeCategoryTitle != null && activeCategoryTitle != 'Engineering & Architecture',
-              selectedOptions: categorySelections['Engineering & Architecture'] ?? [],
+              isDisabled: activeCategoryTitle != null && activeCategoryTitle != 'Tile & Flooring Work',
+              selectedOptions: categorySelections['Tile & Flooring Work'] ?? [],
               onSelectionChanged: (selectedOptions) {
-                _onSelectionChanged('Engineering & Architecture', selectedOptions);
+                _onSelectionChanged('Tile & Flooring Work', selectedOptions);
               },
             ),
 

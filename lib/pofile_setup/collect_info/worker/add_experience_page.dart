@@ -55,18 +55,20 @@ class _AddExperiencePageState extends State<AddExperiencePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             Text(
-              'If you have relevant work experience, add it here.',
+              'Write about your past work experience here.',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
+                height: 1.2
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'Workers who add their experience are twice as likely to win work. But if you\'re just starting out, you can still create a great profile. just head on to the next page.',
+              'Workers who add their past jobs get more work. If you are just starting, that’s fine — you can still make a strong profile. Just move to the next page.',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.inverseSurface
+                  color: Theme.of(context).colorScheme.inverseSurface,
+                height: 1.3
               ),
             ),
             const SizedBox(height: 32),

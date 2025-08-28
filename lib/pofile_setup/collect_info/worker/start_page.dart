@@ -26,16 +26,17 @@ class _WorkerCollectInfoStartPage extends State<WorkerCollectInfoStartPage> {
             ),
             const SizedBox(height: 30),
             Text(
-              'How would you like to tell us about yourself?',
+              'Tell us a little about yourself',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'We need to get a sense of your education, experience and skills. It\'s quickest to import your information - you can edit it before your profile goes live.',
+              'We need to know your skills, past work, and education. The fastest way is to add your details here. Don’t worry, you can update or edit them anytime before your profile is shown to others.',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.inverseSurface
+                color: Theme.of(context).colorScheme.inverseSurface,
+                height: 1.3
               ),
             ),
             const SizedBox(height: 36),

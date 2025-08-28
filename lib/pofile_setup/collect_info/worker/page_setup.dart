@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_education_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_experience_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_personal_details_page.dart';

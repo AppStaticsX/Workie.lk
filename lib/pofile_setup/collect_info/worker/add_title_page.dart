@@ -44,23 +44,25 @@ class _AddTitlePageState extends State<AddTitlePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             Text(
-              'Got it. Now, add a title to tell the world what you do.',
+              'Now, add a title to show the work you do.',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
+                height: 1.2
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'It\'s the very first thing clients see, so make it count. Stand out by describing your expertise in your own word.',
+              'Clients see this first, so make it clear. Describe the work you do in your own words.',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.inverseSurface
+                  color: Theme.of(context).colorScheme.inverseSurface,
+                height: 1.3
               ),
             ),
             const SizedBox(height: 32),
             Text(
-              'Your professional role',
+              'Your Work Title',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: Theme.of(context).colorScheme.inverseSurface,
                 fontWeight: FontWeight.bold
@@ -71,7 +73,7 @@ class _AddTitlePageState extends State<AddTitlePage> {
               focusBorderColor: Colors.white,
                 paddingHorizontal: 0,
                 controller: _professionController,
-                hintText: 'Example: Professional Carpenter Specializing in Custom Furniture & Woodcraft',
+                hintText: 'Ex: Skilled Carpenter for Custom Furniture & Wood Work',
                 obscureText: false,
                 maxLines: 3,
             ),

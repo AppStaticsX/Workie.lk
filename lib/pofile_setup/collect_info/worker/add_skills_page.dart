@@ -80,18 +80,20 @@ class _AddSkillsPageState extends State<AddSkillsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             Text(
-              'Nearly there! What work are you here to do?',
+              'Nearly there! Add the work skills you know',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
+                height: 1.2
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'Your skills show clients what you can offer, and help us choose which jobs to recommend to you. Add or remove the ones we\'ve suggested, or start typing to pick more. It\'s up to you.',
+              'Your skills show clients what jobs you can do and help us suggest work for you. You can add, remove, or type new skills anytime.',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.inverseSurface
+                  color: Theme.of(context).colorScheme.inverseSurface,
+                height: 1.3
               ),
             ),
             const SizedBox(height: 32),

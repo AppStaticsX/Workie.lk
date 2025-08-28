@@ -59,20 +59,21 @@ class _AddEducationPageState extends State<AddEducationPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             Text(
-              'Clients like to know what you know - add your education here.',
+              'Tell clients about your education here.',
               style: Theme
                   .of(context)
                   .textTheme
                   .headlineMedium
                   ?.copyWith(
                 fontWeight: FontWeight.bold,
+                height: 1.2
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'You don\'t have to have a degree/diploma. Adding any relevant education helps make your profile more visible.',
+              'No degree/diploma or certificate? No problem. Any training or education you add will help clients notice your profile.',
               style: Theme
                   .of(context)
                   .textTheme
@@ -81,7 +82,8 @@ class _AddEducationPageState extends State<AddEducationPage> {
                   color: Theme
                       .of(context)
                       .colorScheme
-                      .inverseSurface
+                      .inverseSurface,
+                height: 1.3
               ),
             ),
             const SizedBox(height: 32),

@@ -44,7 +44,7 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             _buildHeaderSection(context),
             const SizedBox(height: 32),
             _buildProfilePhotoSection(context),
@@ -72,16 +72,18 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'A few last details, then you can check and publish your profile.',
+          'Almost done! Add a few last details, then check and publish your profile.',
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.bold,
+            height: 1.2
           ),
         ),
         const SizedBox(height: 12),
         Text(
-          'A professional photo helps you build trust with your clients. To keep things safe and simple, they\'ll pay you through us - which is why we need your personal information.',
+          'Add a clear photo so clients can trust you. We need a bit of personal information to keep things safe.',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
             color: Theme.of(context).colorScheme.inverseSurface,
+            height: 1.3
           ),
         ),
       ],
