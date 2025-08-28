@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:workie/values/color.dart';
 
@@ -109,7 +110,7 @@ class _AddSkillsPageState extends State<AddSkillsPage> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.4),
+                  color: Theme.of(context).colorScheme.inverseSurface,
                   width: 2,
                 ),
                 borderRadius: BorderRadius.circular(16),
@@ -123,12 +124,12 @@ class _AddSkillsPageState extends State<AddSkillsPage> {
                     children: selectedSkills.map((skill) {
                       return Chip(
                         label: Text(skill),
-                        labelStyle: const TextStyle(color: Colors.white),
+                        labelStyle: TextStyle(color: Theme.of(context).colorScheme.inverseSurface),
                         backgroundColor: Colors.transparent,
                         shape: StadiumBorder(
-                          side: BorderSide(color: Colors.white, width: 1.5),
+                          side: BorderSide(color: Theme.of(context).colorScheme.inverseSurface, width: 1.5),
                         ),
-                        deleteIcon: const Icon(Icons.close, color: Colors.white),
+                        deleteIcon: Icon(Icons.close, color: Theme.of(context).colorScheme.inverseSurface),
                         onDeleted: () => _removeSkill(skill),
                       );
                     }).toList(),
@@ -138,11 +139,22 @@ class _AddSkillsPageState extends State<AddSkillsPage> {
                       padding: const EdgeInsets.only(top: 8.0),
                       child: TextField(
                         controller: _skillController,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: const InputDecoration(
+                        style: TextStyle(color: Theme.of(context).colorScheme.inverseSurface),
+                        decoration: InputDecoration(
                           hintText: 'Enter skills here',
-                          hintStyle: TextStyle(color: Colors.white54),
+                          hintStyle: const TextStyle(color: Colors.grey),
                           border: InputBorder.none,
+                          suffixIcon: IconButton(
+                              onPressed:() {
+                                _onSkillInput(
+                                    _skillController.text.trim()
+                                  );
+                                },
+                              icon: Icon(
+                                  Icons.send,
+                                color: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.4),
+                              )
+                          )
                         ),
                         onSubmitted: _onSkillInput,
                         textInputAction: TextInputAction.done,
@@ -180,18 +192,18 @@ class _AddSkillsPageState extends State<AddSkillsPage> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.white, width: 1.5),
+                      border: Border.all(color: Theme.of(context).colorScheme.inverseSurface, width: 1.5),
                       borderRadius: BorderRadius.circular(24),
                       color: Colors.transparent,
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.add, color: Colors.white, size: 18),
+                        Icon(Icons.add, color: Theme.of(context).colorScheme.inverseSurface, size: 18),
                         const SizedBox(width: 6),
                         Text(
                           skill,
-                          style: const TextStyle(color: Colors.white),
+                          style: TextStyle(color: Theme.of(context).colorScheme.inverseSurface),
                         ),
                       ],
                     ),
