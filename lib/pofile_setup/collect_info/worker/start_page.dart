@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:workie/values/color.dart';
 
 class WorkerCollectInfoStartPage extends StatefulWidget {
   const WorkerCollectInfoStartPage({super.key,});
@@ -35,7 +36,7 @@ class _WorkerCollectInfoStartPage extends State<WorkerCollectInfoStartPage> {
             Text(
               'We need to know your skills, past work, and education. The fastest way is to add your details here. Don’t worry, you can update or edit them anytime before your profile is shown to others.',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.inverseSurface,
+                color: AppColors.textSilver,
                 height: 1.3
               ),
             ),

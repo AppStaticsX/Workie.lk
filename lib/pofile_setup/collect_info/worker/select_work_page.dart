@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:workie/values/color.dart';
 import '../../../services/hive_service.dart';
 import '../../../widgets/expandebale_selection_widget.dart';
 
@@ -137,7 +138,7 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
             Text(
               'No problem, you can update these details later.',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.inverseSurface,
+                  color: AppColors.textSilver,
                 height: 1.3
               ),
             ),
