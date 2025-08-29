@@ -54,25 +54,6 @@ flutter:
    - assets/icon/profession/
    - assets/icon/profession/mono/
 
-  fonts:
-    - family: Lato
-      fonts:
-        - asset: assets/font/Lato-Regular.ttf
-        - asset: assets/font/Lato-Bold.ttf
-
-    - family: Lato Black
-      fonts:
-        - asset: assets/font/Lato-Black.ttf
-
-    - family: Lato Light
-      fonts:
-        - asset: assets/font/Lato-Light.ttf
-
-    - family: Lato Thin
-      fonts:
-        - asset: assets/font/Lato-Thin.ttf
-
-
 # Flutter launcher icons
 flutter_icons:
   android: "ic_launcher"
