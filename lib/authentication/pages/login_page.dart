@@ -155,7 +155,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
 
     if (result['success'] == true) {
       // Login successful
-      _showCustomToast('Login successful!', Iconsax.tick_circle);
+      //_showCustomToast('Login successful!', Iconsax.tick_circle);
       _navigateToRoleSelection();
 
     } else {
@@ -281,7 +281,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
   }
 
   Future<void> _navigateToRoleSelection() async {
-    await Future.delayed(const Duration(seconds: 3));
     if (mounted) {
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
