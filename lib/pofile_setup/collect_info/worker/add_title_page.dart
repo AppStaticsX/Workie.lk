@@ -77,7 +77,7 @@ class _AddTitlePageState extends State<AddTitlePage> {
                 controller: _professionController,
                 hintText: 'Ex: Skilled Carpenter for Custom Furniture & Wood Work',
                 obscureText: false,
-                maxLines: 3,
+                maxLines: 2,
             ),
             const SizedBox(height: 4),
             Row(

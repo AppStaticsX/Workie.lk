@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/values/color.dart';
 
 class AddSkillsPage extends StatefulWidget {
@@ -151,7 +152,7 @@ class _AddSkillsPageState extends State<AddSkillsPage> {
                                   );
                                 },
                               icon: Icon(
-                                  Icons.send,
+                                  Iconsax.save_add,
                                 color: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.4),
                               )
                           )

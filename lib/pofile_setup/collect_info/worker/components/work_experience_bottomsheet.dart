@@ -190,7 +190,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-              'Add Work Experience',
+              'Add Your Work Experience',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold
               )
@@ -253,7 +253,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Title *',
+          'Your Job Title *',
           style: TextStyle(
               fontSize: 16
           ),
@@ -268,7 +268,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
             }
           },
           decoration: InputDecoration(
-            hintText: 'Ex: Carpenter specialize in Cupboard Making',
+            hintText: 'Ex: Mason skilled in house foundation work',
             hintStyle: TextStyle(
               color: Colors.grey
             ),
@@ -316,7 +316,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
-              'Title is required',
+              'Job title is required',
               style: TextStyle(
                 color: Colors.red,
                 fontSize: 12,
@@ -332,7 +332,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Company *',
+          'Where You Worked *',
           style: TextStyle(
               fontSize: 16
           ),
@@ -347,7 +347,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
             }
           },
           decoration: InputDecoration(
-            hintText: 'Ex: WooddieCraft Pvt. LTD',
+            hintText: 'Ex: Organization or Company',
             hintStyle: TextStyle(
                 color: Colors.grey
             ),
@@ -395,7 +395,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
-              'Company is required',
+              'Workplace is required',
               style: TextStyle(
                 color: Colors.red,
                 fontSize: 12,
@@ -411,7 +411,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Location *',
+          'Workplace Location *',
           style: TextStyle(
               fontSize: 16
           ),
@@ -426,7 +426,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
             }
           },
           decoration: InputDecoration(
-            hintText: 'Ex: Ambalangoda',
+            hintText: 'Ex: Colombo, Galle, Kandy',
             hintStyle: TextStyle(
                 color: Colors.grey
             ),
@@ -474,7 +474,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
-              'Location is required',
+              'Workplace location is required',
               style: TextStyle(
                 color: Colors.red,
                 fontSize: 12,
@@ -491,7 +491,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
         _buildCustomCheckbox(),
         const SizedBox(width: 12),
         Text(
-          'I am currently working in this role',
+          'I am currently working in here.',
           style: Theme.of(context).textTheme.bodyLarge,
         )
       ],
@@ -524,7 +524,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Start Date *',
+          'Work Started *',
           style: TextStyle(
               fontSize: 16
           ),
@@ -594,7 +594,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'End Date *',
+          'Work Ended *',
           style: TextStyle(
               fontSize: 16
           ),
