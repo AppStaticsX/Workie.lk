@@ -182,7 +182,7 @@ class _TitleSection extends StatelessWidget {
     return Column(
       children: [
         Text(
-          'Who are you?',
+          'What describes',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 48,
@@ -191,8 +191,8 @@ class _TitleSection extends StatelessWidget {
             height: 1.2
           ),
         ),
-        /*Text(
-          'looking for?',
+        Text(
+          'you best?',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 48,
@@ -200,12 +200,12 @@ class _TitleSection extends StatelessWidget {
             color: Colors.white,
             height: 1.2
           ),
-        ),*/
+        ),
         const SizedBox(height: 20),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 40.0),
           child: Text(
-            'Choose an option to get started. You can add another account at any time.',
+            'Pick an option to continue. You can always switch or add another later.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 18,
@@ -238,7 +238,7 @@ class _BottomButtonsSection extends StatelessWidget {
           Expanded(
             child: _RoleButton(
               role: 'employer',
-              title: 'I\'m a client',
+              title: 'I\'m a Client',
               isSelected: selectedRole == 'employer',
               onTap: () => onRoleSelected('employer'),
             ),
@@ -247,7 +247,7 @@ class _BottomButtonsSection extends StatelessWidget {
           Expanded(
             child: _RoleButton(
               role: 'job_seeker',
-              title: 'I\'m a job-seeker',
+              title: 'I\'m a Worker',
               isSelected: selectedRole == 'job_seeker',
               onTap: () => onRoleSelected('job_seeker'),
             ),
@@ -281,7 +281,7 @@ class _RoleButton extends StatelessWidget {
         height: 60,
         decoration: BoxDecoration(
           color: isSelected ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(15),
           border: Border.all(
             color: Colors.white,
             width: 2,
@@ -324,7 +324,7 @@ class _ContinueButton extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF4E6BF5),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
+              borderRadius: BorderRadius.circular(15),
             ),
             elevation: 0,
           ),
@@ -333,17 +333,18 @@ class _ContinueButton extends StatelessWidget {
             children: [
               if (isSaving)
                 Transform.scale(
-                  scale: 0.6,
+                  scale: 0.45, // Makes it half the size
                   child: Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
+                    padding: const EdgeInsets.only(right: 4.0),
                     child: CircularProgressIndicator(
-                      strokeWidth: 3,
+                      strokeWidth: 9,
                       color: Colors.white,
+                      strokeCap: StrokeCap.square,
                     ),
                   ),
                 ),
               Text(
-                'Continue',
+                'Let\'s Continue',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
