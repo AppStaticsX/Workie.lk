@@ -88,24 +88,45 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
               children: [
                 const Spacer(flex: 2),
                 // Title section - now closer to bottom
-                const _TitleSection(),
-                const SizedBox(height: 40),
-                // Bottom buttons section
-                _BottomButtonsSection(
-                  selectedRole: selectedRole,
-                  onRoleSelected: _onRoleSelected,
-                ),
-                const SizedBox(height: 30),
-                // Continue button
-                _ContinueButton(
-                  onPressed: () {
-                    setState(() {
-                      _isSaving = true;
-                    });
-                    _navigateToHomePage();
-                    _saveUserRole(selectedRole);
-                  },
-                  isSaving: _isSaving,
+                Container(
+                  padding: EdgeInsets.only(top: 36),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(50),
+                      topRight: Radius.circular(50)
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        spreadRadius: 1,
+                        blurRadius: 25,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      const _TitleSection(),
+                      const SizedBox(height: 24),
+                      // Bottom buttons section
+                      _BottomButtonsSection(
+                        selectedRole: selectedRole,
+                        onRoleSelected: _onRoleSelected,
+                      ),
+                      const SizedBox(height: 30),
+                      // Continue button
+                      _ContinueButton(
+                        onPressed: () {
+                          setState(() {
+                            _isSaving = true;
+                          });
+                          _navigateToHomePage();
+                          _saveUserRole(selectedRole);
+                        },
+                        isSaving: _isSaving,
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 30),
               ],
@@ -185,7 +206,7 @@ class _TitleSection extends StatelessWidget {
           'What describes',
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 48,
+            fontSize: 36,
             fontWeight: FontWeight.bold,
             color: Colors.white,
             height: 1.2
@@ -195,13 +216,13 @@ class _TitleSection extends StatelessWidget {
           'you best?',
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 48,
+            fontSize: 36,
             fontWeight: FontWeight.bold,
             color: Colors.white,
             height: 1.2
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 10),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 40.0),
           child: Text(
