@@ -1,12 +1,7 @@
-import 'package:flame_lottie/flame_lottie.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:video_player/video_player.dart';
 import 'package:workie/pofile_setup/collect_info/worker/init_page.dart';
-import 'package:workie/screens/main_screen.dart';
-import 'package:workie/values/color.dart';
-import '../values/dimension.dart';
 
 class SelectRoleScreen extends StatefulWidget {
   const SelectRoleScreen({super.key});
@@ -18,6 +13,39 @@ class SelectRoleScreen extends StatefulWidget {
 class _SelectRoleScreenState extends State<SelectRoleScreen> {
   String selectedRole = 'job_seeker'; // 'job_seeker' or 'employer'
   bool _isSaving = false;
+  VideoPlayerController? _videoController;
+  bool _isVideoInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeVideo();
+  }
+
+  // Initialize video player
+  Future<void> _initializeVideo() async {
+    try {
+      _videoController = VideoPlayerController.asset('assets/video/background.mp4');
+      await _videoController!.initialize();
+
+      // Set video to loop and play
+      _videoController!.setLooping(true);
+      _videoController!.play();
+
+      setState(() {
+        _isVideoInitialized = true;
+      });
+    } catch (e) {
+      print('Error initializing video: $e');
+      // Video failed to load, you can show a fallback image here
+    }
+  }
+
+  @override
+  void dispose() {
+    _videoController?.dispose();
+    super.dispose();
+  }
 
   // Navigate to Role Selection
   _navigateToHomePage() async {
@@ -40,59 +68,106 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
 
   void _onRoleSelected(String role) {
     setState(() {
-      selectedRole = (selectedRole == role ? null : role)!;
+      selectedRole = role;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: TextButton(
-              onPressed: () => Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => const MainScreen()),
-              ),
-              child: const Text(
-                'SKIP',
-                style: TextStyle(
-                  fontWeight: FontWeight.normal,
-                  letterSpacing: 2,
+      body: Stack(
+        children: [
+          // Video background
+          _VideoBackground(
+            controller: _videoController,
+            isInitialized: _isVideoInitialized,
+          ),
+          // Content overlay
+          SafeArea(
+            child: Column(
+              children: [
+                const Spacer(flex: 2),
+                // Title section - now closer to bottom
+                const _TitleSection(),
+                const SizedBox(height: 40),
+                // Bottom buttons section
+                _BottomButtonsSection(
+                  selectedRole: selectedRole,
+                  onRoleSelected: _onRoleSelected,
                 ),
-              ),
+                const SizedBox(height: 30),
+                // Continue button
+                _ContinueButton(
+                  onPressed: () {
+                    setState(() {
+                      _isSaving = true;
+                    });
+                    _navigateToHomePage();
+                    _saveUserRole(selectedRole);
+                  },
+                  isSaving: _isSaving,
+                ),
+                const SizedBox(height: 30),
+              ],
             ),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Center(
-          child: Column(
-            children: [
-              SizedBox(height: MediaQuery.of(context).size.height * 0.02),
-              const _TitleSection(),
-              const SizedBox(height: 48),
-              _RoleSelectionSection(
-                selectedRole: selectedRole,
-                onRoleSelected: _onRoleSelected,
-              ),
-              SizedBox(height: MediaQuery.of(context).size.height * 0.05),
-              _ContinueButton(
-                onPressed: () {
-                  setState(() {
-                    _isSaving = true;
-                  });
-                  _navigateToHomePage();
-                  _saveUserRole(selectedRole);
-                }, isSaving: _isSaving,
-              ),
-            ],
+    );
+  }
+}
+
+// Video background widget
+class _VideoBackground extends StatelessWidget {
+  final VideoPlayerController? controller;
+  final bool isInitialized;
+
+  const _VideoBackground({
+    required this.controller,
+    required this.isInitialized,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: double.infinity,
+      child: Stack(
+        children: [
+          // Fallback background color while video loads
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: Colors.black,
           ),
-        ),
+          // Video player
+          if (isInitialized && controller != null)
+            SizedBox(
+              width: double.infinity,
+              height: double.infinity,
+              child: FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width: controller!.value.size.width,
+                  height: controller!.value.size.height,
+                  child: VideoPlayer(controller!),
+                ),
+              ),
+            ),
+          // Dark overlay gradient
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withValues(alpha: 0.3),
+                  Colors.black.withValues(alpha: 0.7),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -106,70 +181,37 @@ class _TitleSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'What are you ',
-              style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold
-              ),
-            ),
-            Text(
-              'Looking',
-              style: TextStyle(
-                  fontSize: 28,
-                  color: const Color(0xFF4E6BF5),
-                  fontWeight: FontWeight.bold
-              ),
-            ),
-            Text(
-              ' for?',
-              style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 54.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SvgPicture.asset(
-                'assets/icon/undraw_reading-time_gcvc.svg',
-                width: 150,
-                height: 150,
-              ),
-              /*Lottie.asset(
-                Theme.of(context).brightness == Brightness.dark
-                  ? 'assets/animation/lottie_empty_state_search_gigs_dark.json'
-                  : 'assets/animation/lottie_empty_state_search_gigs.json',
-                width: 220,
-                height: 180
-              )*/
-              /*SvgPicture.asset(
-                'assets/icon/undraw_predictive-analytics_6vi1.svg',
-                width: 120,
-                height: 120,
-              ),
-              SvgPicture.asset(
-                'assets/icon/undraw_business-deal_nx2n.svg',
-                width: 120,
-                height: 120,
-              )*/
-            ],
+        Text(
+          'Who are you?',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 48,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            height: 1.2
           ),
         ),
-        const SizedBox(height: 24),
-        Text(
+        /*Text(
+          'looking for?',
           textAlign: TextAlign.center,
-          'Are you looking for a New Job or\nlooking for New Employee?',
           style: TextStyle(
-              fontSize: 18
+            fontSize: 48,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            height: 1.2
+          ),
+        ),*/
+        const SizedBox(height: 20),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 40.0),
+          child: Text(
+            'Choose an option to get started. You can add another account at any time.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 18,
+              color: Colors.white.withValues(alpha: 0.9),
+              height: 1.4,
+            ),
           ),
         ),
       ],
@@ -177,12 +219,12 @@ class _TitleSection extends StatelessWidget {
   }
 }
 
-// Role selection cards section
-class _RoleSelectionSection extends StatelessWidget {
+// Bottom buttons section
+class _BottomButtonsSection extends StatelessWidget {
   final String selectedRole;
   final Function(String) onRoleSelected;
 
-  const _RoleSelectionSection({
+  const _BottomButtonsSection({
     required this.selectedRole,
     required this.onRoleSelected,
   });
@@ -194,26 +236,20 @@ class _RoleSelectionSection extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: _RoleCard(
-              role: 'job_seeker',
-              title: 'Find Jobs',
-              description: 'It\'s easy to find your jobs here with us.',
-              iconAsset: Iconsax.briefcase_copy,
-              iconPadding: 16.0,
-              isSelected: selectedRole == 'job_seeker',
-              onTap: () => onRoleSelected('job_seeker'),
+            child: _RoleButton(
+              role: 'employer',
+              title: 'I\'m a client',
+              isSelected: selectedRole == 'employer',
+              onTap: () => onRoleSelected('employer'),
             ),
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: _RoleCard(
-              role: 'employer',
-              title: 'Hire Workers',
-              description: 'It\'s easy to find skilled workers here with us.',
-              iconAsset: Iconsax.user_copy,
-              iconPadding: 18.0,
-              isSelected: selectedRole == 'employer',
-              onTap: () => onRoleSelected('employer'),
+            child: _RoleButton(
+              role: 'job_seeker',
+              title: 'I\'m a job-seeker',
+              isSelected: selectedRole == 'job_seeker',
+              onTap: () => onRoleSelected('job_seeker'),
             ),
           ),
         ],
@@ -222,22 +258,16 @@ class _RoleSelectionSection extends StatelessWidget {
   }
 }
 
-// Individual role card
-class _RoleCard extends StatelessWidget {
+// Individual role button
+class _RoleButton extends StatelessWidget {
   final String role;
   final String title;
-  final String description;
-  final IconData iconAsset;
-  final double iconPadding;
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _RoleCard({
+  const _RoleButton({
     required this.role,
     required this.title,
-    required this.description,
-    required this.iconAsset,
-    required this.iconPadding,
     required this.isSelected,
     required this.onTap,
   });
@@ -248,147 +278,26 @@ class _RoleCard extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
+        height: 60,
         decoration: BoxDecoration(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          color: isSelected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(30),
           border: Border.all(
-            color: isSelected ? const Color(0xFF4E6BF5) : const Color(0xFF4E6BF5).withValues(alpha: 0.5),
-            width: isSelected ? 3 : 2,
+            color: Colors.white,
+            width: 2,
           ),
-          boxShadow: isSelected ? [
-            BoxShadow(
-              color: const Color(0xFF4E6BF5).withValues(alpha: 0),
-              blurRadius: 15,
-              offset: const Offset(0, 6),
-            ),
-          ] : [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 12),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _RoleIcon(
-                iconAsset: iconAsset,
-                iconPadding: iconPadding,
-                isSelected: isSelected,
-              ),
-              const SizedBox(height: 16),
-              _RoleTitle(
-                title: title,
-                isSelected: isSelected,
-              ),
-              const SizedBox(height: 4),
-              _RoleDescription(
-                description: description,
-                isSelected: isSelected,
-              ),
-              if (isSelected) ...[
-                const SizedBox(height: 12),
-                const _SelectionIndicator(),
-              ],
-            ],
+        child: Center(
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: isSelected ? Colors.black : Colors.white,
+            ),
           ),
         ),
       ),
-    );
-  }
-}
-
-// Role card icon
-class _RoleIcon extends StatelessWidget {
-  final IconData iconAsset;
-  final double iconPadding;
-  final bool isSelected;
-
-  const _RoleIcon({
-    required this.iconAsset,
-    required this.iconPadding,
-    required this.isSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      width: 80,
-      height: 80,
-      decoration: BoxDecoration(
-        color: isSelected ? const Color(0xFF4E6BF5) : const Color(0xFF4E6BF5).withValues(alpha: 0.8),
-        shape: BoxShape.circle,
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(iconPadding),
-        child: Icon(iconAsset, size: 36),
-      ),
-    );
-  }
-}
-
-// Role card title
-class _RoleTitle extends StatelessWidget {
-  final String title;
-  final bool isSelected;
-
-  const _RoleTitle({
-    required this.title,
-    required this.isSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      textAlign: TextAlign.center,
-      title,
-      style: TextStyle(
-        fontSize: 16,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-        color: isSelected ? const Color(0xFF4E6BF5) : Theme.of(context).colorScheme.inversePrimary,
-      ),
-    );
-  }
-}
-
-// Role card description
-class _RoleDescription extends StatelessWidget {
-  final String description;
-  final bool isSelected;
-
-  const _RoleDescription({
-    required this.description,
-    required this.isSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      description,
-      textAlign: TextAlign.center,
-      style: TextStyle(
-        fontWeight: FontWeight.normal,
-        fontSize: 13,
-        color: isSelected ? const Color(0xFF4E6BF5) : AppColors.textSilver,
-      ),
-    );
-  }
-}
-
-// Selection indicator (checkmark)
-class _SelectionIndicator extends StatelessWidget {
-  const _SelectionIndicator();
-
-  @override
-  Widget build(BuildContext context) {
-    return Icon(
-      Iconsax.tick_circle,
-      color: Colors.green,
-      size: 30,
     );
   }
 }
@@ -397,7 +306,7 @@ class _SelectionIndicator extends StatelessWidget {
 class _ContinueButton extends StatelessWidget {
   final VoidCallback onPressed;
   final bool isSaving;
-  
+
   const _ContinueButton({
     required this.onPressed,
     required this.isSaving
@@ -406,40 +315,39 @@ class _ContinueButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppDimension.paddingDefault * 3),
+      padding: const EdgeInsets.symmetric(horizontal: 30),
       child: SizedBox(
         width: double.infinity,
-        height: 50,
+        height: 55,
         child: ElevatedButton(
           onPressed: onPressed,
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF4E6BF5),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
+              borderRadius: BorderRadius.circular(30),
             ),
+            elevation: 0,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (isSaving)
                 Transform.scale(
-                  scale: 0.45, // Makes it half the size
+                  scale: 0.6,
                   child: Padding(
-                    padding: const EdgeInsets.only(right: 4.0),
+                    padding: const EdgeInsets.only(right: 8.0),
                     child: CircularProgressIndicator(
-                      strokeWidth: 9,
+                      strokeWidth: 3,
                       color: Colors.white,
-                      strokeCap: StrokeCap.square,
                     ),
                   ),
                 ),
               Text(
                 'Continue',
                 style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    letterSpacing: 2
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
                 ),
               ),
             ],

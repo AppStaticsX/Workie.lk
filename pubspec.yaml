@@ -34,6 +34,7 @@ dependencies:
   path: ^1.9.1
   hive: ^2.2.3
   hive_flutter: ^1.1.0
+  video_player: ^2.10.0
 
 dev_dependencies:
   flutter_test:
@@ -49,6 +50,7 @@ flutter:
 # Image, Animations, Audios, Videos
   assets:
    - assets/icon/
+   - assets/video/
    - assets/animation/
    - assets/image/
    - assets/icon/profession/

@@ -679,7 +679,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
                 width: 1.5,
                 color: isError
                     ? Colors.red
-                    : Theme.of(context).colorScheme.primary.withOpacity(0.2)
+                    : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)
             )
         ),
         child: Row(
