@@ -21,21 +21,24 @@ class SimpleBottomNavigation extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          ElevatedButton(
-            onPressed: onTapAction,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4E6BF5),
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
+          SizedBox(
+            height: 50,
+            child: ElevatedButton(
+              onPressed: onTapAction,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4E6BF5),
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                ),
               ),
-            ),
-            child: Text(
-              actionName,
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-                fontSize: 15,
+              child: Text(
+                actionName,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 16,
+                ),
               ),
             ),
           ),
