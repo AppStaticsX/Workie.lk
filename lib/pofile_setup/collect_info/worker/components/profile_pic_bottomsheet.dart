@@ -17,6 +17,7 @@ class ProfilePicBottomsheet extends StatefulWidget {
 class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
 
   bool _hasImage = false;
+  double _imgScale = 1.5;
   final GlobalKey<DashedPhotoPickerState> _photoPickerKey = GlobalKey<DashedPhotoPickerState>();
 
   @override
@@ -90,8 +91,13 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
                     backgroundColor: Colors.transparent,
                     iconColor: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.5),
                     borderColor: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.5),
+                    fit: BoxFit.none,
+                    scale: _imgScale,
                   ),
                   const SizedBox(height: 16),
+                  _hasImage
+                      ? _buildImageScaler()
+                      : const SizedBox(height: 16),
                   _hasImage
                       ? _buildImageDeleteButton()
                       : _buildImageLimit(),
@@ -119,6 +125,23 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
       style: TextStyle(
           fontSize: 16,
           color: Colors.grey
+      ),
+    );
+  }
+
+  Widget _buildImageScaler() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32.0),
+      child: Slider(
+          value: 0,
+          min: 0,
+          max: 1.5,
+          divisions: 15,
+          onChanged: (double value) {
+            setState(() {
+              value++;
+            });
+          }
       ),
     );
   }

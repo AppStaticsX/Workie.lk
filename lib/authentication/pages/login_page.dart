@@ -283,35 +283,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
   Future<void> _navigateToRoleSelection() async {
     if (mounted) {
       Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => const SelectRoleScreen(),
-          transitionDuration: const Duration(milliseconds: 700),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            var slideAnimation = Tween<Offset>(
-              begin: const Offset(0.0, 1.0),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeOutCubic,
-            ));
-
-            var scaleAnimation = Tween<double>(
-              begin: 0.8,
-              end: 1.0,
-            ).animate(CurvedAnimation(
-              parent: animation,
-              curve: const Interval(0.2, 1.0, curve: Curves.easeOutBack),
-            ));
-
-            return SlideTransition(
-              position: slideAnimation,
-              child: ScaleTransition(
-                scale: scaleAnimation,
-                child: child,
-              ),
-            );
-          },
-        ),
+        MaterialPageRoute(builder: (context) => const SelectRoleScreen()),
       );
     }
     setState(() {

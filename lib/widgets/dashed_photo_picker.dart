@@ -18,6 +18,8 @@ class DashedPhotoPicker extends StatefulWidget {
   final Color textColor;
   final Color uploadTextColor;
   final Color errorTextColor;
+  final BoxFit fit;
+  final double scale;
 
   const DashedPhotoPicker({
     super.key,
@@ -32,6 +34,8 @@ class DashedPhotoPicker extends StatefulWidget {
     this.uploadTextColor = const Color(0xFF4E6BF5),
     this.errorTextColor = Colors.red,
     this.hasImage,
+    required this.fit,
+    required this.scale,
   });
 
   @override
@@ -210,7 +214,8 @@ class DashedPhotoPickerState extends State<DashedPhotoPicker>
           _webImageBytes!,
           width: widget.size,
           height: widget.size,
-          fit: BoxFit.cover,
+          fit: widget.fit,
+          scale: widget.scale,
         ),
       );
     } else if (_selectedImage != null) {
@@ -219,7 +224,8 @@ class DashedPhotoPickerState extends State<DashedPhotoPicker>
           _selectedImage!,
           width: widget.size,
           height: widget.size,
-          fit: BoxFit.cover,
+          fit: widget.fit,
+          scale: widget.scale,
         ),
       );
     }
