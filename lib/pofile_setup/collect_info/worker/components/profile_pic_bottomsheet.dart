@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/widgets/dashed_photo_picker.dart';
 
 class ProfilePicBottomsheet extends StatefulWidget {
@@ -102,8 +103,8 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
                     mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            CupertinoIcons.zoom_in,
-                            size: 30,
+                            Iconsax.search_zoom_in_1_copy,
+                            size: 28,
                             color: Theme.of(context).colorScheme.inverseSurface,
                           ),
                           _buildImageScaler(),
@@ -113,7 +114,9 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
                                   _imgAngle = _imgAngle + 90;
                                 });
                               },
-                              icon: Icon(CupertinoIcons.restart)
+                              icon: Icon(
+                                Iconsax.refresh
+                              )
                           )
                         ],
                       )

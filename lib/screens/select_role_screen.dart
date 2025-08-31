@@ -47,8 +47,16 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
     super.dispose();
   }
 
-  // Navigate to Role Selection
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_videoController != null && _isVideoInitialized) {
+      _videoController!.play();
+    }
+  }
+
   _navigateToHomePage() async {
+
     await Future.delayed(const Duration(seconds: 3));
     if (mounted) {
       Navigator.of(context).push(
@@ -58,6 +66,7 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
     setState(() {
       _isSaving = false;
     });
+    _videoController?.pause();
   }
 
   // Save string to SharedPreferences

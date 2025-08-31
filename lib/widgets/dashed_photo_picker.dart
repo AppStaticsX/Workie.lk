@@ -214,7 +214,7 @@ class DashedPhotoPickerState extends State<DashedPhotoPicker>
     if (kIsWeb && _webImageBytes != null) {
       return ClipOval(
         child: Transform.rotate(
-          angle: widget.angle * (pi / 180), // Convert degrees to radians
+          angle: widget.angle * (pi / 180),
           child: Image.memory(
             _webImageBytes!,
             width: widget.size,
@@ -227,7 +227,7 @@ class DashedPhotoPickerState extends State<DashedPhotoPicker>
     } else if (_selectedImage != null) {
       return ClipOval(
         child: Transform.rotate(
-          angle: widget.angle * (pi / 180), // Convert degrees to radians
+          angle: widget.angle * (pi / 180),
           child: Image.file(
             _selectedImage!,
             width: widget.size,
