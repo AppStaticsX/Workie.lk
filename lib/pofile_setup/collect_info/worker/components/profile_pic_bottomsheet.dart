@@ -17,7 +17,8 @@ class ProfilePicBottomsheet extends StatefulWidget {
 class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
 
   bool _hasImage = false;
-  double _imgScale = 1.5;
+  double _imgScale = 0;
+  double _imgAngle = 0;
   final GlobalKey<DashedPhotoPickerState> _photoPickerKey = GlobalKey<DashedPhotoPickerState>();
 
   @override
@@ -93,10 +94,29 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
                     borderColor: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.5),
                     fit: BoxFit.none,
                     scale: _imgScale,
+                    angle: _imgAngle,
                   ),
                   const SizedBox(height: 16),
                   _hasImage
-                      ? _buildImageScaler()
+                      ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            CupertinoIcons.zoom_in,
+                            size: 30,
+                            color: Theme.of(context).colorScheme.inverseSurface,
+                          ),
+                          _buildImageScaler(),
+                          IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _imgAngle = _imgAngle + 90;
+                                });
+                              },
+                              icon: Icon(CupertinoIcons.restart)
+                          )
+                        ],
+                      )
                       : const SizedBox(height: 16),
                   _hasImage
                       ? _buildImageDeleteButton()
@@ -130,19 +150,18 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
   }
 
   Widget _buildImageScaler() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32.0),
-      child: Slider(
-        value: _imgScale,
-        min: 1.0,
-        max: 1.5,
-        divisions: 15,
-        onChanged: (double value) {
-          setState(() {
-            _imgScale = value;
-          });
-        },
-      ),
+    return Slider(
+      value: _imgScale,
+      min: 0.0,
+      max: 1.4,
+      thumbColor: const Color(0xFF4E6BF5),
+      activeColor: const Color(0xFF4E6BF5),
+      inactiveColor: Theme.of(context).colorScheme.tertiary,
+      onChanged: (double value) {
+        setState(() {
+          _imgScale = value;
+        });
+      },
     );
   }
 

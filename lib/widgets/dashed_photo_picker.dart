@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -20,6 +21,7 @@ class DashedPhotoPicker extends StatefulWidget {
   final Color errorTextColor;
   final BoxFit fit;
   final double scale;
+  final double angle;
 
   const DashedPhotoPicker({
     super.key,
@@ -36,6 +38,7 @@ class DashedPhotoPicker extends StatefulWidget {
     this.hasImage,
     required this.fit,
     required this.scale,
+    required this.angle,
   });
 
   @override
@@ -210,22 +213,28 @@ class DashedPhotoPickerState extends State<DashedPhotoPicker>
   Widget _buildImageDisplay() {
     if (kIsWeb && _webImageBytes != null) {
       return ClipOval(
-        child: Image.memory(
-          _webImageBytes!,
-          width: widget.size,
-          height: widget.size,
-          fit: widget.fit,
-          scale: widget.scale,
+        child: Transform.rotate(
+          angle: widget.angle * (pi / 180), // Convert degrees to radians
+          child: Image.memory(
+            _webImageBytes!,
+            width: widget.size,
+            height: widget.size,
+            fit: widget.fit,
+            scale: 1.5 - widget.scale,
+          ),
         ),
       );
     } else if (_selectedImage != null) {
       return ClipOval(
-        child: Image.file(
-          _selectedImage!,
-          width: widget.size,
-          height: widget.size,
-          fit: widget.fit,
-          scale: widget.scale,
+        child: Transform.rotate(
+          angle: widget.angle * (pi / 180), // Convert degrees to radians
+          child: Image.file(
+            _selectedImage!,
+            width: widget.size,
+            height: widget.size,
+            fit: widget.fit,
+            scale: 1.5 - widget.scale,
+          ),
         ),
       );
     }
@@ -319,8 +328,8 @@ class DashedPhotoPickerState extends State<DashedPhotoPicker>
                       if (hasImage) _buildImageDisplay() else _buildPlaceholderContent(),
                       if (hasImage)
                         Positioned(
-                          bottom: 10,
-                          right: 10,
+                          bottom: 24,
+                          right: 16,
                           child: Container(
                             decoration: BoxDecoration(
                               color: widget.uploadTextColor,
@@ -330,7 +339,7 @@ class DashedPhotoPickerState extends State<DashedPhotoPicker>
                             child: const Icon(
                               CupertinoIcons.camera,
                               color: Colors.white,
-                              size: 20,
+                              size: 24,
                             ),
                           ),
                         ),
