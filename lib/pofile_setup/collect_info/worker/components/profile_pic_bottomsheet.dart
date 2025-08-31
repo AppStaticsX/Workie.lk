@@ -133,18 +133,19 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32.0),
       child: Slider(
-          value: 0,
-          min: 0,
-          max: 1.5,
-          divisions: 15,
-          onChanged: (double value) {
-            setState(() {
-              value++;
-            });
-          }
+        value: _imgScale,
+        min: 1.0,
+        max: 1.5,
+        divisions: 15,
+        onChanged: (double value) {
+          setState(() {
+            _imgScale = value;
+          });
+        },
       ),
     );
   }
+
 
   Widget _buildImageDeleteButton() {
     return Padding(
