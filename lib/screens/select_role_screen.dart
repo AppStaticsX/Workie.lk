@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
+import 'package:workie/pofile_setup/collect_info/client/add_personal_details_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/init_page.dart';
 
 class SelectRoleScreen extends StatefulWidget {
@@ -36,7 +38,9 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
         _isVideoInitialized = true;
       });
     } catch (e) {
-      print('Error initializing video: $e');
+      if (kDebugMode) {
+        print('Error initializing video: $e');
+      }
       // Video failed to load, you can show a fallback image here
     }
   }
@@ -58,9 +62,14 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
   _navigateToHomePage() async {
 
     await Future.delayed(const Duration(seconds: 3));
-    if (mounted) {
+    if (mounted && selectedRole == 'job_seeker') {
       Navigator.of(context).push(
           MaterialPageRoute(builder: (context) => const InitPage())
+      );
+    } else if (mounted && selectedRole == 'employer') {
+      // Navigate to employer page
+      Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => const AddPersonalDetailsPage())
       );
     }
     setState(() {
@@ -73,6 +82,14 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
   Future<void> _saveUserRole(String value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('USER_ROLE', value);
+  }
+
+  Future<void> _retrieveUserRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    final role = prefs.getString('USER_ROLE') ?? 'job_seeker';
+    setState(() {
+      selectedRole = role;
+    });
   }
 
   void _onRoleSelected(String role) {
@@ -131,6 +148,7 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
                           });
                           _navigateToHomePage();
                           _saveUserRole(selectedRole);
+                          _retrieveUserRole();
                         },
                         isSaving: _isSaving,
                       ),
