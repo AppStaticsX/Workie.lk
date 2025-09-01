@@ -85,8 +85,43 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
             _buildPostalCodeField(context),
             const SizedBox(height: 30),
             _buildPhoneField(context),
+            const SizedBox(height: 36),
+            _buildBottomActionButton(),
             const SizedBox(height: 36)
+
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomActionButton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 0),
+      child: SizedBox(
+        width: double.infinity,
+        height: 50,
+        child: ElevatedButton(
+          onPressed: () {
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF4E6BF5),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Save Profile',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -209,7 +244,7 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
             }
           },
           decoration: InputDecoration(
-            hintText: 'Ex: XXXXXXXXXV', // Also fix the hint text
+            hintText: 'Ex: XXXXXXXXXV',
             hintStyle: const TextStyle(color: Colors.grey),
             filled: true,
             fillColor: Theme.of(context).colorScheme.tertiary,
