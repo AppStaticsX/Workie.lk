@@ -219,8 +219,8 @@ class DashedPhotoPickerState extends State<DashedPhotoPicker>
             _webImageBytes!,
             width: widget.size,
             height: widget.size,
-            fit: widget.fit,
-            scale: 1.5 - widget.scale,
+            fit: BoxFit.fitWidth,
+            scale: 3.0 - widget.scale,
           ),
         ),
       );
@@ -232,8 +232,8 @@ class DashedPhotoPickerState extends State<DashedPhotoPicker>
             _selectedImage!,
             width: widget.size,
             height: widget.size,
-            fit: widget.fit,
-            scale: 1.5 - widget.scale,
+            fit: BoxFit.none,
+            scale: 3.0 - widget.scale,
           ),
         ),
       );

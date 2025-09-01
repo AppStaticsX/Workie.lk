@@ -186,7 +186,7 @@ class _SplashScreenState extends State<SplashScreen> {
         height: 80,
         color: Colors.transparent,
         child: Lottie.asset(
-          'assets/animation/Loading.json',
+          'assets/animation/src_assets_images_loading.json',
         ),
       ),
     );

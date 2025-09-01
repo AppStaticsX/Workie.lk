@@ -20,6 +20,8 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
   bool _isStateOrProvinceEmpty = false;
   bool _isPostalCodeEmpty = false;
   bool _isPhoneNumberEmpty = false;
+  bool _isNICEmpty = false;
+  bool _isApartmentOrSuiteEmpty = false;
 
   TextEditingController birthDayController = TextEditingController();
   TextEditingController streetAddressController = TextEditingController();
@@ -27,6 +29,8 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
   TextEditingController stateOrProvinceController = TextEditingController();
   TextEditingController postalCodeController = TextEditingController();
   TextEditingController phoneNumberController = TextEditingController();
+  TextEditingController nicController = TextEditingController();
+  TextEditingController apartmentOrSuiteController = TextEditingController();
 
   FocusNode birthDayFocusNode = FocusNode();
   FocusNode streetAddressFocusNode = FocusNode();
@@ -34,6 +38,8 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
   FocusNode stateOrProvinceFocusNode = FocusNode();
   FocusNode postalCodeFocusNode = FocusNode();
   FocusNode phoneNumberFocusNode = FocusNode();
+  FocusNode nicFocusNode = FocusNode();
+  FocusNode apartmentOrSuiteFocusNode = FocusNode();
 
   @override
   Widget build(BuildContext context) {
@@ -43,9 +49,9 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
         backgroundColor: const Color(0xFF4E6BF5),
         surfaceTintColor: Colors.transparent,
         leading: const Icon(
-          Iconsax.user_copy,
+          CupertinoIcons.person_crop_circle_fill_badge_plus,
           color: Colors.white,
-          size: 26,
+          size: 32,
         ),
         title: const Text('Create Your Profile',
           style: TextStyle(
@@ -66,6 +72,8 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
             const SizedBox(height: 32),
             _buildProfilePhotoSection(context),
             const SizedBox(height: 36),
+            _buildNICField(context),
+            const SizedBox(height: 16),
             _buildBirthDateField(context),
             const SizedBox(height: 30),
             _buildStreetAddressField(context),
@@ -180,6 +188,56 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
           ),
         )
       ],
+    );
+  }
+
+  Widget _buildNICField(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'NIC Number *',
+          style: TextStyle(fontSize: 16),
+        ),
+        const SizedBox(height: 4),
+        TextFormField(
+          controller: nicController,
+          focusNode: nicFocusNode,
+          onChanged: (value) {
+            if (_isNICEmpty && value.isNotEmpty) {
+              setState(() => _isNICEmpty = false);
+            }
+          },
+          decoration: InputDecoration(
+            hintText: 'Ex: XXXXXXXXXV', // Also fix the hint text
+            hintStyle: const TextStyle(color: Colors.grey),
+            filled: true,
+            fillColor: Theme.of(context).colorScheme.tertiary,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.outline,
+                width: 1.5,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: _isNICEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                width: 1.5,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: _isNICEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
+                width: 2,
+              ),
+            ),
+          ),
+        ),
+      ]
     );
   }
 
@@ -349,11 +407,11 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
         ),
         const SizedBox(height: 4),
         TextFormField(
-          controller: streetAddressController,
-          focusNode: streetAddressFocusNode,
+          controller: apartmentOrSuiteController,
+          focusNode: apartmentOrSuiteFocusNode,
           onChanged: (value) {
-            if (_isStreetAddressEmpty && value.isNotEmpty) {
-              setState(() => _isStreetAddressEmpty = false);
+            if (_isApartmentOrSuiteEmpty && value.isNotEmpty) {
+              setState(() => _isApartmentOrSuiteEmpty = false);
             }
           },
           decoration: InputDecoration(
@@ -372,14 +430,14 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: _isStreetAddressEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                color: _isApartmentOrSuiteEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
                 width: 1.5,
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: _isStreetAddressEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
+                color: _isApartmentOrSuiteEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
                 width: 2,
               ),
             ),

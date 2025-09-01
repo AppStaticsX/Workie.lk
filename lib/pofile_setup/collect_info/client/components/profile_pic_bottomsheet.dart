@@ -18,7 +18,7 @@ class ProfilePicBottomsheet extends StatefulWidget {
 class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
 
   bool _hasImage = false;
-  double _imgScale = 0;
+  double _imgScale = 1.5;
   double _imgAngle = 0;
   final GlobalKey<DashedPhotoPickerState> _photoPickerKey = GlobalKey<DashedPhotoPickerState>();
 
@@ -30,7 +30,7 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.height * 0.75,
+      height: MediaQuery.of(context).size.height * 0.8,
       padding: const EdgeInsets.symmetric(horizontal: 24),
       decoration: const BoxDecoration(
           borderRadius: BorderRadius.only(
@@ -155,8 +155,8 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
   Widget _buildImageScaler() {
     return Slider(
       value: _imgScale,
-      min: 0.0,
-      max: 1.4,
+      min: 0,
+      max: 3.0,
       thumbColor: const Color(0xFF4E6BF5),
       activeColor: const Color(0xFF4E6BF5),
       inactiveColor: Theme.of(context).colorScheme.tertiary,
