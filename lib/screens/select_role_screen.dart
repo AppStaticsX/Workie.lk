@@ -285,15 +285,23 @@ class _BottomButtonsSection extends StatelessWidget {
         children: [
           Expanded(
             child: _RoleButton(
+              tlRadius: 36,
+              blRadius: 36,
+              trRadius: 0,
+              brRadius: 0,
               role: 'employer',
               title: 'I\'m a Client',
               isSelected: selectedRole == 'employer',
               onTap: () => onRoleSelected('employer'),
             ),
           ),
-          const SizedBox(width: 16),
+          //const SizedBox(width: 16),
           Expanded(
             child: _RoleButton(
+              tlRadius: 0,
+              blRadius: 0,
+              trRadius: 36,
+              brRadius: 36,
               role: 'job_seeker',
               title: 'I\'m a Worker',
               isSelected: selectedRole == 'job_seeker',
@@ -312,12 +320,20 @@ class _RoleButton extends StatelessWidget {
   final String title;
   final bool isSelected;
   final VoidCallback onTap;
+  final double tlRadius;
+  final double trRadius;
+  final double blRadius;
+  final double brRadius;
 
   const _RoleButton({
     required this.role,
     required this.title,
     required this.isSelected,
     required this.onTap,
+    required this.tlRadius,
+    required this.trRadius,
+    required this.blRadius,
+    required this.brRadius,
   });
 
   @override
@@ -329,7 +345,12 @@ class _RoleButton extends StatelessWidget {
         height: 52,
         decoration: BoxDecoration(
           color: isSelected ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(tlRadius),
+            topRight: Radius.circular(trRadius),
+            bottomLeft: Radius.circular(blRadius),
+            bottomRight: Radius.circular(brRadius)
+          ),
           border: Border.all(
             color: Colors.white,
             width: 2,

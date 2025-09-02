@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 
@@ -9,7 +8,7 @@ class ExpandableSelectionWidget extends StatefulWidget {
   final int maxSelections;
   final Function(List<String>)? onSelectionChanged;
   final bool isDisabled;
-  final List<String> selectedOptions; // Changed from initialSelectedOptions to selectedOptions
+  final List<String> selectedOptions;
 
   const ExpandableSelectionWidget({
     super.key,
@@ -19,7 +18,7 @@ class ExpandableSelectionWidget extends StatefulWidget {
     this.maxSelections = 3,
     this.onSelectionChanged,
     this.isDisabled = false,
-    this.selectedOptions = const [], // This is now the current selected options, not initial
+    this.selectedOptions = const [],
   });
 
   @override
@@ -31,12 +30,17 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
   bool _isExpanded = false;
   late AnimationController _animationController;
   late Animation<double> _expandAnimation;
+  bool _hasBeenManuallyCollapsed = false; // Track if user manually collapsed
 
   @override
   void initState() {
     super.initState();
     _initializeAnimation();
-    _updateExpansionState();
+    // Only auto-expand on initial load if there are selections
+    if (widget.selectedOptions.isNotEmpty) {
+      _isExpanded = true;
+      _animationController.forward();
+    }
   }
 
   void _initializeAnimation() {
@@ -50,22 +54,31 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
     );
   }
 
-  void _updateExpansionState() {
-    final shouldExpand = widget.selectedOptions.isNotEmpty;
-    if (shouldExpand != _isExpanded) {
-      _isExpanded = shouldExpand;
-      if (_isExpanded) {
-        _animationController.forward();
-      } else {
-        _animationController.reverse();
-      }
-    }
-  }
-
   @override
   void didUpdateWidget(ExpandableSelectionWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _updateExpansionState();
+
+    // Only auto-expand if:
+    // 1. Widget was previously empty and now has selections, AND
+    // 2. User hasn't manually collapsed it before
+    final wasEmpty = oldWidget.selectedOptions.isEmpty;
+    final nowHasSelections = widget.selectedOptions.isNotEmpty;
+
+    if (wasEmpty && nowHasSelections && !_hasBeenManuallyCollapsed) {
+      setState(() {
+        _isExpanded = true;
+        _animationController.forward();
+      });
+    }
+
+    // Auto-collapse if selections become empty (but don't mark as manually collapsed)
+    if (widget.selectedOptions.isEmpty && _isExpanded) {
+      setState(() {
+        _isExpanded = false;
+        _animationController.reverse();
+        _hasBeenManuallyCollapsed = false; // Reset the manual collapse flag
+      });
+    }
   }
 
   @override
@@ -81,8 +94,10 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
       _isExpanded = !_isExpanded;
       if (_isExpanded) {
         _animationController.forward();
+        _hasBeenManuallyCollapsed = false; // Reset flag when manually expanded
       } else {
         _animationController.reverse();
+        _hasBeenManuallyCollapsed = true; // Mark as manually collapsed
       }
     });
   }
@@ -199,7 +214,7 @@ class _ExpandableSelectionWidgetState extends State<ExpandableSelectionWidget>
                     ),
                   ),
                   const SizedBox(height: 16),
-                  ...widget.options.map((option) => _buildOptionItem(option)).toList(),
+                  ...widget.options.map((option) => _buildOptionItem(option))//.toList(),
                 ],
               ),
             ),

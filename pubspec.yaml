@@ -55,7 +55,6 @@ flutter:
    - assets/image/
    - assets/icon/profession/
    - assets/icon/profession/mono/
-   - assets/font/
 
   #fonts:
    #- family: Raleway SemiBold

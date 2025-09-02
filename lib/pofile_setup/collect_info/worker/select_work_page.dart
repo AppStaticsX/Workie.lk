@@ -16,14 +16,8 @@ class SelectWorkPage extends StatefulWidget {
 // Updated _loadSavedData method for select_work_page.dart
 
 class _SelectWorkPageState extends State<SelectWorkPage> {
-  // Track which category has selections and total selected count
-  String? activeCategoryTitle;
-  int totalSelectedCount = 0;
-
-  // Track selections for each category
+  // Track selections for multiple categories (up to 2)
   Map<String, List<String>> categorySelections = {};
-
-  // Add loading state
   bool _isLoading = true;
 
   @override
@@ -32,7 +26,6 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
     _loadSavedData();
   }
 
-  // Load saved data from Hive when page initializes
   Future<void> _loadSavedData() async {
     try {
       setState(() {
@@ -42,22 +35,16 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
       final savedWorkSelection = await HiveService.getWorkSelection();
 
       if (savedWorkSelection != null) {
-
-        // Clear existing selections first
         categorySelections.clear();
 
-        // Set the loaded data
         setState(() {
-          activeCategoryTitle = savedWorkSelection.categoryTitle;
           categorySelections[savedWorkSelection.categoryTitle] =
           List<String>.from(savedWorkSelection.selectedOptions);
-          totalSelectedCount = savedWorkSelection.selectedOptions.length;
           _isLoading = false;
         });
 
-        // Notify parent about existing selection
         if (widget.onSelectionChanged != null) {
-          widget.onSelectionChanged!(totalSelectedCount > 0);
+          widget.onSelectionChanged!(categorySelections.isNotEmpty);
         }
       } else {
         setState(() {
@@ -72,31 +59,21 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
   }
 
   void _onSelectionChanged(String categoryTitle, List<String> selectedOptions) {
-
     setState(() {
-      // Clear all other category selections (since only one can be active)
-      categorySelections.clear();
-
-      // Set the new selections
       if (selectedOptions.isNotEmpty) {
         categorySelections[categoryTitle] = selectedOptions;
-        activeCategoryTitle = categoryTitle;
-        totalSelectedCount = selectedOptions.length;
       } else {
-        activeCategoryTitle = null;
-        totalSelectedCount = 0;
+        categorySelections.remove(categoryTitle);
       }
     });
-    // Notify parent if at least one selection exists
+
     if (widget.onSelectionChanged != null) {
-      widget.onSelectionChanged!(totalSelectedCount > 0);
+      widget.onSelectionChanged!(categorySelections.isNotEmpty);
     }
 
-    // Save to Hive whenever selection changes
     _saveToHive();
   }
 
-  // Save current selections to Hive
   Future<void> _saveToHive() async {
     try {
       await HiveService.saveCategorySelections(categorySelections);
@@ -109,13 +86,10 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Show loading indicator while data is being loaded
     if (_isLoading) {
       return Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
-        body: const Center(
-          child: CircularProgressIndicator(),
-        ),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -130,16 +104,16 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
             Text(
               'Which kind of jobs are you looking for here?',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                height: 1.2
+                  fontWeight: FontWeight.bold,
+                  height: 1.2
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'No problem, you can update these details later.',
+              'You can select up to 2 categories. No problem, you can update these details later.',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: AppColors.textSilver,
-                height: 1.3
+                  height: 1.3
               ),
             ),
             const SizedBox(height: 12),
@@ -158,7 +132,9 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
               ],
               minSelections: 1,
               maxSelections: 3,
-              isDisabled: activeCategoryTitle != null && activeCategoryTitle != 'Masonry & Construction Work',
+              // Disable if 2 categories are already selected AND this isn't one of them
+              isDisabled: categorySelections.length >= 2 &&
+                  !categorySelections.containsKey('Masonry & Construction Work'),
               selectedOptions: categorySelections['Masonry & Construction Work'] ?? [],
               onSelectionChanged: (selectedOptions) {
                 _onSelectionChanged('Masonry & Construction Work', selectedOptions);
@@ -177,7 +153,8 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
               ],
               minSelections: 1,
               maxSelections: 3,
-              isDisabled: activeCategoryTitle != null && activeCategoryTitle != 'Carpentry & Wood Work',
+              isDisabled: categorySelections.length >= 2 &&
+                  !categorySelections.containsKey('Carpentry & Wood Work'),
               selectedOptions: categorySelections['Carpentry & Wood Work'] ?? [],
               onSelectionChanged: (selectedOptions) {
                 _onSelectionChanged('Carpentry & Wood Work', selectedOptions);
@@ -196,7 +173,8 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
               ],
               minSelections: 1,
               maxSelections: 3,
-              isDisabled: activeCategoryTitle != null && activeCategoryTitle != 'Welding & Metal Fabrication',
+              isDisabled: categorySelections.length >= 2 &&
+                  !categorySelections.containsKey('Welding & Metal Fabrication'),
               selectedOptions: categorySelections['Welding & Metal Fabrication'] ?? [],
               onSelectionChanged: (selectedOptions) {
                 _onSelectionChanged('Welding & Metal Fabrication', selectedOptions);
@@ -215,7 +193,8 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
               ],
               minSelections: 1,
               maxSelections: 3,
-              isDisabled: activeCategoryTitle != null && activeCategoryTitle != 'Painting & Finishing Work',
+              isDisabled: categorySelections.length >= 2 &&
+                  !categorySelections.containsKey('Painting & Finishing Work'),
               selectedOptions: categorySelections['Painting & Finishing Work'] ?? [],
               onSelectionChanged: (selectedOptions) {
                 _onSelectionChanged('Painting & Finishing Work', selectedOptions);
@@ -234,7 +213,8 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
               ],
               minSelections: 1,
               maxSelections: 3,
-              isDisabled: activeCategoryTitle != null && activeCategoryTitle != 'Tile & Flooring Work',
+              isDisabled: categorySelections.length >= 2 &&
+                  !categorySelections.containsKey('Tile & Flooring Work'),
               selectedOptions: categorySelections['Tile & Flooring Work'] ?? [],
               onSelectionChanged: (selectedOptions) {
                 _onSelectionChanged('Tile & Flooring Work', selectedOptions);
