@@ -1,8 +1,12 @@
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:pinput/pinput.dart';
+import 'package:workie/screens/main_screen.dart';
 import 'package:workie/values/color.dart';
 import 'components/profile_pic_bottomsheet.dart';
 
@@ -14,6 +18,9 @@ class AddPersonalDetailsPage extends StatefulWidget {
 }
 
 class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
+  File? _profileImage;
+  Uint8List? _profileImageBytes;
+
   bool _isBirthDayEmpty = false;
   bool _isStreetAddressEmpty = false;
   bool _isCityEmpty = false;
@@ -22,6 +29,7 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
   bool _isPhoneNumberEmpty = false;
   bool _isNICEmpty = false;
   bool _isApartmentOrSuiteEmpty = false;
+  bool _isProfileImage = false;
 
   TextEditingController birthDayController = TextEditingController();
   TextEditingController streetAddressController = TextEditingController();
@@ -40,6 +48,37 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
   FocusNode phoneNumberFocusNode = FocusNode();
   FocusNode nicFocusNode = FocusNode();
   FocusNode apartmentOrSuiteFocusNode = FocusNode();
+
+  void _validateInputs() {
+    setState(() {
+      _isBirthDayEmpty = birthDayController.text.isEmpty;
+      _isStreetAddressEmpty = streetAddressController.text.isEmpty;
+      _isCityEmpty = cityController.text.isEmpty;
+      _isStateOrProvinceEmpty = stateOrProvinceController.text.isEmpty;
+      _isPostalCodeEmpty = postalCodeController.text.isEmpty;
+      _isPhoneNumberEmpty = phoneNumberController.text.isEmpty;
+      _isNICEmpty = nicController.text.isEmpty;
+      _isProfileImage = _profileImage == null || _profileImageBytes == null;
+      // Apartment/Suite is optional, so we don't validate it
+
+      if (_isBirthDayEmpty ||
+          _isStreetAddressEmpty ||
+          _isCityEmpty ||
+          _isStateOrProvinceEmpty ||
+          _isPostalCodeEmpty ||
+          _isPhoneNumberEmpty ||
+          _isNICEmpty ||
+          _isProfileImage) {
+      } else {
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const MainScreen()
+            )
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -103,6 +142,13 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
         height: 50,
         child: ElevatedButton(
           onPressed: () {
+            _validateInputs();
+            /*Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const MainScreen()
+                )
+            );*/
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF4E6BF5),
@@ -167,13 +213,65 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                       closeBottomSheet: () {
                         Navigator.pop(context);
                       },
-                      //onSave: _addWorkExperience,
+                      onImageAttached: (file, bytes) {
+                        setState(() {
+                          _profileImage = file;
+                          _profileImageBytes = bytes;
+                        });
+                      },
                     )
                 );
               },
-              child: SvgPicture.asset(
-                'assets/icon/undraw_male-avatar_zkzx.svg',
-                width: 120,
+              child: _profileImage != null || _profileImageBytes != null
+                  ? ClipOval(
+                child: SizedBox(
+                  width: 150,
+                  height: 150,
+                  child: kIsWeb && _profileImageBytes != null
+                      ? Image.memory(
+                    _profileImageBytes!,
+                    fit: BoxFit.cover,
+                  )
+                      : _profileImage != null
+                      ? Image.file(
+                    _profileImage!,
+                    fit: BoxFit.cover,
+                  )
+                      : Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: _isProfileImage
+                                  ? Colors.white
+                                  : Colors.red,
+                              width: 2
+                            )
+                          ),
+                        child:
+                        SvgPicture
+                            .asset(
+                              'assets/icon/undraw_male-avatar_zkzx.svg',
+                                  width: 120,
+                        ),
+                      ),
+                ),
+              )
+                  : Container(
+                decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                        color: _isProfileImage
+                            ? Colors.white
+                            : Colors.red,
+                        width: 2
+                    )
+                ),
+                child:
+                SvgPicture
+                    .asset(
+                  'assets/icon/undraw_male-avatar_zkzx.svg',
+                  width: 120,
+                ),
               ),
             ),
           ],
@@ -212,7 +310,9 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Upload Photo',
+                  _profileImage != null || _profileImageBytes != null
+                      ? 'Change Photo'
+                      : 'Add Photo',
                   style: TextStyle(
                       fontSize: 14,
                       color: Theme.of(context).colorScheme.inverseSurface
@@ -230,9 +330,18 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'NIC Number *',
-          style: TextStyle(fontSize: 16),
+        Row(
+          children: [
+            const Text(
+              'NIC Number *',
+              style: TextStyle(fontSize: 16),
+            ),
+            if (_isNICEmpty)
+              const Text(
+                '  (Required)',
+                style: TextStyle(fontSize: 12, color: Colors.red),
+              ),
+          ],
         ),
         const SizedBox(height: 4),
         TextFormField(
@@ -280,9 +389,18 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Date of Birth *',
-          style: TextStyle(fontSize: 16),
+        Row(
+          children: [
+            const Text(
+              'Date of Birth *',
+              style: TextStyle(fontSize: 16),
+            ),
+            if (_isBirthDayEmpty)
+              const Text(
+                '  (Required)',
+                style: TextStyle(fontSize: 12, color: Colors.red),
+              ),
+          ],
         ),
         const SizedBox(height: 4),
         TextFormField(
@@ -386,9 +504,18 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Street Address *',
-          style: TextStyle(fontSize: 16),
+        Row(
+          children: [
+            const Text(
+              'Street Address *',
+              style: TextStyle(fontSize: 16),
+            ),
+            if (_isStreetAddressEmpty)
+              const Text(
+                '  (Required)',
+                style: TextStyle(fontSize: 12, color: Colors.red),
+              ),
+          ],
         ),
         const SizedBox(height: 4),
         TextFormField(
@@ -436,9 +563,18 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Apartment / Suite',
-          style: TextStyle(fontSize: 16),
+        Row(
+          children: [
+            const Text(
+              'Apartment / Suite',
+              style: TextStyle(fontSize: 16),
+            ),
+            if (_isApartmentOrSuiteEmpty || !_isApartmentOrSuiteEmpty)
+              Text(
+                '  (Optional)',
+                style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.inverseSurface),
+              ),
+          ],
         ),
         const SizedBox(height: 4),
         TextFormField(
@@ -495,6 +631,11 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                     'City / Town *',
                     style: TextStyle(fontSize: 16),
                   ),
+                  if (_isCityEmpty)
+                    const Text(
+                      '  (Required)',
+                      style: TextStyle(fontSize: 12, color: Colors.red),
+                    ),
                 ],
               ),
             ),
@@ -504,9 +645,14 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
               child: Row(
                 children: [
                   const Text(
-                    'State / Province *',
+                    'Province *',
                     style: TextStyle(fontSize: 16),
                   ),
+                  if (_isStateOrProvinceEmpty)
+                    const Text(
+                      '  (Required)',
+                      style: TextStyle(fontSize: 12, color: Colors.red),
+                    ),
                 ],
               ),
             ),
@@ -604,9 +750,18 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'ZIP / Postal Code *',
-          style: TextStyle(fontSize: 16),
+        Row(
+          children: [
+            const Text(
+              'ZIP / Postal Code *',
+              style: TextStyle(fontSize: 16),
+            ),
+            if (_isPostalCodeEmpty)
+              const Text(
+                '  (Required)',
+                style: TextStyle(fontSize: 12, color: Colors.red),
+              ),
+          ],
         ),
         const SizedBox(height: 4),
         Pinput(
@@ -695,9 +850,18 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Phone *',
-          style: TextStyle(fontSize: 16),
+        Row(
+          children: [
+            const Text(
+              'Phone *',
+              style: TextStyle(fontSize: 16),
+            ),
+            if (_isPhoneNumberEmpty)
+              const Text(
+                '  (Required)',
+                style: TextStyle(fontSize: 12, color: Colors.red),
+              ),
+          ],
         ),
         const SizedBox(height: 4),
         Row(
