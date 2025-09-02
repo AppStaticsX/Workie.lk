@@ -183,7 +183,7 @@ class _SplashScreenState extends State<SplashScreen> {
         ),
       ),
       bottomNavigationBar: BottomAppBar(
-        height: 80,
+        height: 100,
         color: Colors.transparent,
         child: Lottie.asset(
           'assets/animation/src_assets_images_loading.json',
@@ -192,62 +192,3 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 }
-
-// Placeholder for your main app screen - replace with your actual implementation
-/*class MainAppScreen extends StatelessWidget {
-  const MainAppScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Welcome Back!'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              // Handle logout
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.remove('auth_token');
-              await prefs.remove('USER_ID');
-
-              // Navigate back to onboarding
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const OnboardingScreen()),
-              );
-            },
-          ),
-        ],
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.check_circle,
-              size: 100,
-              color: Colors.green,
-            ),
-            SizedBox(height: 20),
-            Text(
-              'You are logged in!',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 10),
-            Text(
-              'Replace this screen with your main app content',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}*/

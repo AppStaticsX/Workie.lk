@@ -190,7 +190,7 @@ class _PostCardModelState extends State<PostCardModel> {
             text: TextSpan(
               style: TextStyle(
                 color: Theme.of(context).colorScheme.inversePrimary,
-                fontSize: 14,
+                fontSize: 15,
                 height: 1.4,
               ),
               children: [
@@ -209,7 +209,7 @@ class _PostCardModelState extends State<PostCardModel> {
                   _isExpanded ? '...less' : '...more',
                   style: TextStyle(
                     color: Colors.grey.shade600,
-                    fontSize: 14,
+                    fontSize: 15,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
