@@ -3,7 +3,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:pinput/pinput.dart';
 import 'package:workie/screens/main_screen.dart';
@@ -58,7 +57,10 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
       _isPostalCodeEmpty = postalCodeController.text.isEmpty;
       _isPhoneNumberEmpty = phoneNumberController.text.isEmpty;
       _isNICEmpty = nicController.text.isEmpty;
-      _isProfileImage = _profileImage == null || _profileImageBytes == null;
+      setState(() {
+        _isProfileImage = _profileImage == null || _profileImageBytes == null;
+      });
+
       // Apartment/Suite is optional, so we don't validate it
 
       if (_isBirthDayEmpty ||
@@ -125,10 +127,23 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
             const SizedBox(height: 30),
             _buildPhoneField(context),
             const SizedBox(height: 36),
-            _buildBottomActionButton(),
-            const SizedBox(height: 36)
 
           ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.only(
+              topRight: Radius.circular(15),
+              topLeft: Radius.circular(15)
+            )
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16),
+            child: _buildBottomActionButton(),
+          )
         ),
       ),
     );
@@ -143,12 +158,12 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
         child: ElevatedButton(
           onPressed: () {
             _validateInputs();
-            /*Navigator.pushReplacement(
+            Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
                     builder: (context) => const MainScreen()
                 )
-            );*/
+            );
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF4E6BF5),
@@ -241,8 +256,8 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: _isProfileImage
-                                  ? Colors.white
+                              color: !_isProfileImage
+                                  ? Colors.transparent
                                   : Colors.red,
                               width: 2
                             )
@@ -260,8 +275,8 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                 decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                        color: _isProfileImage
-                            ? Colors.white
+                        color: !_isProfileImage
+                            ? Colors.transparent
                             : Colors.red,
                         width: 2
                     )

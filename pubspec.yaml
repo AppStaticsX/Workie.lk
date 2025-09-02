@@ -55,6 +55,12 @@ flutter:
    - assets/image/
    - assets/icon/profession/
    - assets/icon/profession/mono/
+   - assets/font/
+
+  fonts:
+   - family: Raleway SemiBold
+     fonts:
+       - asset: 'assets/font/Raleway-SemiBold.ttf'
 
 # Flutter launcher icons
 flutter_icons:
