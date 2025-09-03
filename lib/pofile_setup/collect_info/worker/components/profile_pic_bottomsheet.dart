@@ -1,14 +1,19 @@
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/widgets/dashed_photo_picker.dart';
+import 'dart:typed_data';
 
 class ProfilePicBottomsheet extends StatefulWidget {
   final VoidCallback closeBottomSheet;
+  final Function(File?, Uint8List?)? onImageAttached;
 
   const ProfilePicBottomsheet({
     super.key,
-    required this.closeBottomSheet
+    required this.closeBottomSheet,
+    this.onImageAttached,
   });
 
   @override
@@ -18,8 +23,11 @@ class ProfilePicBottomsheet extends StatefulWidget {
 class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
 
   bool _hasImage = false;
-  double _imgScale = 0;
+  double _imgScale = 1.5;
   double _imgAngle = 0;
+  File? _selectedImage;
+  Uint8List? _webImageBytes;
+
   final GlobalKey<DashedPhotoPickerState> _photoPickerKey = GlobalKey<DashedPhotoPickerState>();
 
   @override
@@ -90,6 +98,28 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
                         _hasImage = hasImage;
                       });
                     },
+                    onImageSelected: (file) {
+                      _selectedImage = file;
+                    },
+                    onFileSelected: (path) {
+                      // Store web bytes using a safer approach
+                      Future.delayed(Duration(milliseconds: 100), () {
+                        if (mounted && _photoPickerKey.currentState != null) {
+                          final state = _photoPickerKey.currentState!;
+                          setState(() {
+                            if (kIsWeb) {
+                              // Access the private field safely
+                              try {
+                                _webImageBytes = (state as dynamic)._webImageBytes;
+                              } catch (e) {
+                                // Fallback - could also use reflection or make field public
+                                print('Could not access web image bytes: $e');
+                              }
+                            }
+                          });
+                        }
+                      });
+                    },
                     backgroundColor: Colors.transparent,
                     iconColor: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.5),
                     borderColor: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.5),
@@ -155,8 +185,8 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
   Widget _buildImageScaler() {
     return Slider(
       value: _imgScale,
-      min: 0.0,
-      max: 1.4,
+      min: 0,
+      max: 3.0,
       thumbColor: const Color(0xFF4E6BF5),
       activeColor: const Color(0xFF4E6BF5),
       inactiveColor: Theme.of(context).colorScheme.tertiary,
@@ -278,7 +308,11 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
         ),
         const SizedBox(width: 24),
         ElevatedButton(
-          onPressed: (){},
+          onPressed: _hasImage ? () {
+            // Pass image data to parent and close
+            widget.onImageAttached?.call(_selectedImage, _webImageBytes);
+            widget.closeBottomSheet();
+          } : null,
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF4E6BF5),
             padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),

@@ -233,7 +233,7 @@ class _TitleSection extends StatelessWidget {
           'What describes',
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 36,
+            fontSize: 32,
             fontWeight: FontWeight.bold,
             color: Colors.white,
             height: 1.2
@@ -243,7 +243,7 @@ class _TitleSection extends StatelessWidget {
           'you best?',
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 36,
+            fontSize: 32,
             fontWeight: FontWeight.bold,
             color: Colors.white,
             height: 1.2

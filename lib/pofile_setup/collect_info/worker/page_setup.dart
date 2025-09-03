@@ -22,6 +22,7 @@ class ProfileSetup extends StatefulWidget {
 }
 
 class _ProfileSetupState extends State<ProfileSetup> {
+  final GlobalKey<AddPersonalDetailsPageState> _personalDetailsKey = GlobalKey();
   int _selectedIndex = 0;
   final int _maxIndex = 6;
 
@@ -97,6 +98,11 @@ class _ProfileSetupState extends State<ProfileSetup> {
         }
         break;
       case 6:
+        bool isValid = _personalDetailsKey.currentState?.validateInputs() ?? false;
+        if (!isValid) {
+          _showSnackBar('Please fill all required personal details to continue.');
+          return;
+        }
         _handleProfileCompletion();
         return;
       default:
@@ -247,7 +253,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
               });
             },
           ),
-          const AddPersonalDetailsPage(),
+          AddPersonalDetailsPage(key: _personalDetailsKey),
         ],
       ),
       bottomNavigationBar: IndexedStack(
