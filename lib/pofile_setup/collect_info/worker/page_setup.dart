@@ -198,10 +198,10 @@ class _ProfileSetupState extends State<ProfileSetup> {
           color: Colors.white,
           size: 36,
         ),
-        title: const Text('Create & Verify Your Profile',
-          style: TextStyle(
-            color: Colors.white
-          ),
+        title: Text('Create & Verify Your Profile',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold
+          )
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4.0),

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/pofile_setup/collect_info/worker/page_setup.dart';
@@ -18,14 +19,14 @@ class _InitPageState extends State<InitPage> {
         backgroundColor: const Color(0xFF4E6BF5),
         surfaceTintColor: Colors.transparent,
         leading: const Icon(
-          Iconsax.user_copy,
+          CupertinoIcons.person_crop_circle_badge_plus,
           color: Colors.white,
-          size: 26,
+          size: 36,
         ),
-        title: const Text('Create & Verify Your Profile',
-          style: TextStyle(
-            color: Colors.white
-          ),
+        title: Text('Create & Verify Your Profile',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold
+            )
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4.0), child: const SizedBox(),

@@ -92,12 +92,12 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
         leading: const Icon(
           CupertinoIcons.person_crop_circle_fill_badge_plus,
           color: Colors.white,
-          size: 32,
+          size: 36,
         ),
-        title: const Text('Create Your Profile',
-          style: TextStyle(
-              color: Colors.white
-          ),
+        title: Text('Create Your Profile',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold
+          )
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4.0), child: const SizedBox(),
