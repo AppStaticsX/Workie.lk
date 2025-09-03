@@ -52,19 +52,14 @@ class _MainScreenState extends State<MainScreen> {
           const ProfileTabPage(),
         ],
       ), // Display the selected page
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-            border: Border.all(
-                color: Colors.grey.withValues(alpha: 0.2),
-                width: 0.5
-            ),
-            borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24)
-            )
-        ),
+      bottomNavigationBar: SafeArea(
         child: Container(
-          padding: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+              borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24)
+              )
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [

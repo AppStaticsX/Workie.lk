@@ -256,49 +256,51 @@ class _ProfileSetupState extends State<ProfileSetup> {
           AddPersonalDetailsPage(key: _personalDetailsKey),
         ],
       ),
-      bottomNavigationBar: IndexedStack(
-        index: _selectedIndex,
-        children: [
-          SimpleBottomNavigation(
-            actionName: 'Let\'s Continue',
-            onTapAction: _navigateNext,
-          ),
-          BottomNavigation(
-            actionName: 'Add Skills',
-            onTapAction: _navigateNext,
-            onBackAction: _navigateBack,
-          ),
-          BottomNavigation(
-            actionName: 'Add Profile Title',
-            onTapAction: _navigateNext,
-            onBackAction: _navigateBack,
-          ),
-          BottomNavigation(
-            actionName: 'Add Experience',
-            onTapAction: _navigateNext,
-            onBackAction: _navigateBack,
-          ),
-          BottomNavigationWithSkip(
-            actionName: 'Add Education',
-            onTapAction: () {
-              _navigateNext();
-              _dismissKeyboard();
-              },
-            onBackAction: _navigateBack,
-            onSkip: _skipNext,
-          ),
-          BottomNavigationWithSkip(
-            actionName: 'Add Personal Info',
-            onTapAction: _navigateNext,
-            onBackAction: _navigateBack,
-            onSkip: _skipNext,
-          ),
-          BottomNavigation(
-            actionName: 'Complete Profile',
-            onTapAction: _navigateNext,
-            onBackAction: _navigateBack,
-          ),
-        ],
+      bottomNavigationBar: SafeArea(
+        child: IndexedStack(
+          index: _selectedIndex,
+          children: [
+            SimpleBottomNavigation(
+              actionName: 'Let\'s Continue',
+              onTapAction: _navigateNext,
+            ),
+            BottomNavigation(
+              actionName: 'Add Skills',
+              onTapAction: _navigateNext,
+              onBackAction: _navigateBack,
+            ),
+            BottomNavigation(
+              actionName: 'Add Profile Title',
+              onTapAction: _navigateNext,
+              onBackAction: _navigateBack,
+            ),
+            BottomNavigation(
+              actionName: 'Add Experience',
+              onTapAction: _navigateNext,
+              onBackAction: _navigateBack,
+            ),
+            BottomNavigationWithSkip(
+              actionName: 'Add Education',
+              onTapAction: () {
+                _navigateNext();
+                _dismissKeyboard();
+                },
+              onBackAction: _navigateBack,
+              onSkip: _skipNext,
+            ),
+            BottomNavigationWithSkip(
+              actionName: 'Add Personal Info',
+              onTapAction: _navigateNext,
+              onBackAction: _navigateBack,
+              onSkip: _skipNext,
+            ),
+            BottomNavigation(
+              actionName: 'Complete Profile',
+              onTapAction: _navigateNext,
+              onBackAction: _navigateBack,
+            ),
+          ],
+        ),
       ),
     );
   }
