@@ -30,7 +30,7 @@ class LocationService {
       List<Placemark> placemarks = await placemarkFromCoordinates(latitude, longitude);
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
-        return '${place.locality}, ${place.administrativeArea}, ${place.country}';
+        return '${place.locality}, ${place.country}';
       }
       return 'Unknown location';
     } catch (e) {
