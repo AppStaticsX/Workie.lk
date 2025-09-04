@@ -159,14 +159,14 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
                     ),
                   ),
                   const SizedBox(width: 8),
-                  InkWell(
+                  /*InkWell(
                     customBorder: const CircleBorder(),
                     child: const Icon(
                       Iconsax.arrow_down_1_copy,
                       size: 20,
                       color: Color(0xFFFFD542),
                     ),
-                  )
+                  )*/
                 ],
               )
             ],
