@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/models/post_model.dart';
@@ -158,15 +159,32 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
                         fontWeight: FontWeight.bold
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  /*InkWell(
+                  const SizedBox(width: 4),
+                  _isUpdatingLocation
+                      ? SizedBox(
+                        width: 28,
+                        height: 24,
+                        child: Transform.scale(
+                          scale: 0.45, // Makes it half the size
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 4.0),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 9,
+                              color: Colors.white,
+                              strokeCap: StrokeCap.square,
+                            ),
+                          ),
+                        ),
+                      )
+                      : InkWell(
+                    onTap: _getLocation,
                     customBorder: const CircleBorder(),
                     child: const Icon(
-                      Iconsax.arrow_down_1_copy,
-                      size: 20,
+                      Iconsax.arrow_right_3_copy,
+                      size: 18,
                       color: Color(0xFFFFD542),
                     ),
-                  )*/
+                  )
                 ],
               )
             ],
