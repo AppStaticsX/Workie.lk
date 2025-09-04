@@ -3,6 +3,7 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/models/post_model.dart';
 import 'package:workie/widgets/custom_icon_button.dart';
 import 'package:workie/widgets/custom_textfield.dart';
+import '../services/location_service.dart';
 import '../widgets/circular_category_bar.dart';
 
 class HomeTabPage extends StatefulWidget {
@@ -17,6 +18,9 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
   final ScrollController _scrollController = ScrollController();
   late AnimationController _animationController;
   late Animation<double> _animation;
+
+  String _currentLoction = '';
+  bool _isUpdatingLocation = false;
 
   bool _isCategoryBarVisible = true;
   double _lastScrollOffset = 0.0;
@@ -45,6 +49,8 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
 
     // Add scroll listener
     _scrollController.addListener(_onScroll);
+
+    _getLocation();
   }
 
   @override
@@ -53,6 +59,19 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
     _scrollController.dispose();
     _animationController.dispose();
     super.dispose();
+  }
+
+  void _getLocation() async {
+    setState(() {
+      _isUpdatingLocation = true;
+    });
+
+    String areaName = await LocationService.getCurrentAreaName();
+
+    setState(() {
+      _currentLoction = areaName;
+      _isUpdatingLocation = false;
+    });
   }
 
   void _onScroll() {
@@ -129,8 +148,10 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
                 children: [
                   const Icon(Iconsax.location, color: Color(0xFFFFD542)),
                   const SizedBox(width: 4),
-                  const Text(
-                    'New York, USA',
+                  Text(
+                    _isUpdatingLocation
+                        ? 'Updating...'
+                        : _currentLoction,
                     style: TextStyle(
                         fontSize: 17,
                         color: Colors.white,
