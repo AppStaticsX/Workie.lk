@@ -67,10 +67,10 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
       _isUpdatingLocation = true;
     });
 
-    String areaName = await LocationService.getCurrentAreaName();
+    String? areaName = await LocationService.getCurrentAreaName(context);
 
     setState(() {
-      _currentLoction = areaName;
+      _currentLoction = areaName ?? 'Location Permission Denied.';
       _isUpdatingLocation = false;
     });
   }
@@ -169,7 +169,7 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
                           child: Padding(
                             padding: const EdgeInsets.only(right: 4.0),
                             child: CircularProgressIndicator(
-                              strokeWidth: 9,
+                              strokeWidth: 8,
                               color: Colors.white,
                               strokeCap: StrokeCap.square,
                             ),

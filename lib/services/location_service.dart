@@ -1,27 +1,147 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
 class LocationService {
-  // Get current position
-  static Future<Position> getCurrentPosition() async {
+  // Show alert dialog for location services
+  static Future<void> _showLocationServiceDialog(BuildContext context) async {
+    return showCupertinoDialog<void>(
+      context: context,
+      barrierDismissible: false, // User must tap button
+      builder: (BuildContext context) {
+        return CupertinoAlertDialog(
+          title: const Text('Location Services Disabled'),
+          content: const Text(
+            'Location services are currently disabled. Please enable them in your device settings to use this feature.',
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Open Settings'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                Geolocator.openLocationSettings();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Show alert dialog for permission denied
+  static Future<void> _showPermissionDeniedDialog(BuildContext context) async {
+    return showCupertinoDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return CupertinoAlertDialog(
+          title: const Text('Location Permission Required'),
+          content: const Text(
+            'This app needs location permission to work properly. Please grant location access.',
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Grant Permission'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Show alert dialog for permanently denied permissions
+  static Future<void> _showPermanentlyDeniedDialog(BuildContext context) async {
+    return showCupertinoDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return CupertinoAlertDialog(
+          title: const Text('Location Permission Permanently Denied'),
+          content: const Text(
+            'Location permissions are permanently denied. Please enable them manually in app settings.',
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Open App Settings'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                Geolocator.openAppSettings();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Get current position with context for dialogs
+  static Future<Position?> getCurrentPosition(BuildContext context) async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      throw Exception('Location services are disabled.');
+      await _showLocationServiceDialog(context);
+      return null;
     }
 
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
+      await _showPermissionDeniedDialog(context);
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        throw Exception('Location permissions are denied');
+        return null;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      throw Exception('Location permissions are permanently denied');
+      await _showPermanentlyDeniedDialog(context);
+      return null;
     }
 
-    return await Geolocator.getCurrentPosition();
+    try {
+      return await Geolocator.getCurrentPosition();
+    } catch (e) {
+      // Show Cupertino error dialog for any other location errors
+      await showCupertinoDialog<void>(
+        context: context,
+        builder: (BuildContext context) {
+          return CupertinoAlertDialog(
+            title: const Text('Location Error'),
+            content: Text('Failed to get location: ${e.toString()}'),
+            actions: <CupertinoDialogAction>[
+              CupertinoDialogAction(
+                isDefaultAction: true,
+                child: const Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+      return null;
+    }
   }
 
   // Get area name from coordinates
@@ -38,63 +158,16 @@ class LocationService {
     }
   }
 
-  // Combined function to get current area name
-  static Future<String> getCurrentAreaName() async {
+  // Combined function to get current area name with context
+  static Future<String?> getCurrentAreaName(BuildContext context) async {
     try {
-      Position position = await getCurrentPosition();
+      Position? position = await getCurrentPosition(context);
+      if (position == null) {
+        return null; // User cancelled or permission denied
+      }
       return await getAreaName(position.latitude, position.longitude);
     } catch (e) {
       return 'Error: ${e.toString()}';
     }
   }
 }
-
-/*// Usage Example Widget
-class LocationWidget extends StatefulWidget {
-  @override
-  _LocationWidgetState createState() => _LocationWidgetState();
-}
-
-class _LocationWidgetState extends State<LocationWidget> {
-  String _areaName = 'Tap to get location';
-  bool _isLoading = false;
-
-  void _getLocation() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    String areaName = await LocationService.getCurrentAreaName();
-
-    setState(() {
-      _areaName = areaName;
-      _isLoading = false;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Current Location')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              _areaName,
-              style: TextStyle(fontSize: 18),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _isLoading ? null : _getLocation,
-              child: _isLoading
-                  ? CircularProgressIndicator()
-                  : Text('Get Current Location'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}*/
