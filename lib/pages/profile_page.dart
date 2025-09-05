@@ -9,7 +9,8 @@ class ProfileTabPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: const Color(0xFF4E6BF5),
+        surfaceTintColor: const Color(0xFF4E6BF5),
         elevation: 0,
         leading: Icon(Iconsax.user_copy, size: 26),
         title: Text(
