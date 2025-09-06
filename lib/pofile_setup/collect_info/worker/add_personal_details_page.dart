@@ -16,8 +16,8 @@ class AddPersonalDetailsPage extends StatefulWidget {
 }
 
 class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
-  File? _profileImage;
-  Uint8List? _profileImageBytes;
+  File? profileImage;
+  Uint8List? profileImageBytes;
 
   bool _isBirthDayEmpty = false;
   bool _isStreetAddressEmpty = false;
@@ -52,7 +52,7 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
       _isStateOrProvinceEmpty = stateOrProvinceController.text.isEmpty;
       _isPostalCodeEmpty = postalCodeController.text.isEmpty;
       _isPhoneNumberEmpty = phoneNumberController.text.isEmpty;
-      _isProfileImage = _profileImage == null && _profileImageBytes == null;
+      _isProfileImage = profileImage == null && profileImageBytes == null;
     });
 
     // Return the validation result
@@ -140,26 +140,26 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                       },
                       onImageAttached: (file, bytes) {
                         setState(() {
-                          _profileImage = file;
-                          _profileImageBytes = bytes;
+                          profileImage = file;
+                          profileImageBytes = bytes;
                         });
                       },
                     )
                 );
               },
-              child: _profileImage != null || _profileImageBytes != null
+              child: profileImage != null || profileImageBytes != null
                   ? ClipOval(
                 child: SizedBox(
                   width: 150,
                   height: 150,
-                  child: kIsWeb && _profileImageBytes != null
+                  child: kIsWeb && profileImageBytes != null
                       ? Image.memory(
-                    _profileImageBytes!,
+                    profileImageBytes!,
                     fit: BoxFit.cover,
                   )
-                      : _profileImage != null
+                      : profileImage != null
                       ? Image.file(
-                    _profileImage!,
+                    profileImage!,
                     fit: BoxFit.cover,
                   )
                       : Container(
@@ -235,7 +235,7 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  _profileImage != null || _profileImageBytes != null
+                  profileImage != null || profileImageBytes != null
                       ? 'Change Photo'
                       : 'Add Photo',
                   style: TextStyle(

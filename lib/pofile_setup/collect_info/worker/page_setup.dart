@@ -12,6 +12,7 @@ import 'package:workie/widgets/bottom_navigation.dart';
 import 'package:workie/widgets/bottom_navigation_with_skip.dart';
 import 'package:workie/widgets/simple_bottom_navigation.dart';
 import '../../../services/hive_service.dart';
+import '../../../services/profile_service.dart';
 import 'start_page.dart';
 
 class ProfileSetup extends StatefulWidget {
@@ -177,8 +178,139 @@ class _ProfileSetupState extends State<ProfileSetup> {
     );
   }
 
-  void _handleProfileCompletion() {
-    _showSnackBar('Profile setup completed!');
+  Future<void> _testBackendConnection() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Testing backend connection...'),
+            ],
+          ),
+        );
+      },
+    );
+
+    try {
+      final healthResult = await ProfileService.testServerHealth();
+      final mediaResult = await ProfileService.testMediaRoute();
+
+      Navigator.of(context).pop(); // Close loading dialog
+
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Backend Test Results'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Health Check: ${healthResult['success'] ? 'Success' : 'Failed'}'),
+                if (!healthResult['success'])
+                  Text('Error: ${healthResult['message']}'),
+                const SizedBox(height: 8),
+                Text('Media Route: ${mediaResult['success'] ? 'Success' : 'Failed'}'),
+                if (!mediaResult['success'])
+                  Text('Error: ${mediaResult['message']}'),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      Navigator.of(context).pop(); // Close loading dialog
+      _showSnackBar('Test failed: $e');
+    }
+  }
+
+// Update the _handleProfileCompletion method
+  Future<void> _handleProfileCompletion() async {
+    final personalDetailsState = _personalDetailsKey.currentState;
+    if (personalDetailsState == null) return;
+
+    // Check if user has selected an image
+    if (personalDetailsState.profileImage == null && personalDetailsState.profileImageBytes == null) {
+      _showSnackBar('Please select a profile picture to continue.');
+      return;
+    }
+
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Uploading profile picture...'),
+            ],
+          ),
+        );
+      },
+    );
+
+    try {
+      // Generate filename for the image
+      final fileName = 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      if (kDebugMode) {
+        print('Starting profile picture upload...');
+      }
+
+      // Upload only the profile picture
+      final result = await ProfileService.uploadProfilePicture(
+        imageFile: personalDetailsState.profileImage,
+        imageBytes: personalDetailsState.profileImageBytes,
+        fileName: fileName,
+      );
+
+      // Hide loading indicator
+      Navigator.of(context).pop();
+
+      if (result['success']) {
+        _showSnackBar('Profile picture uploaded successfully!');
+
+        // Navigate to next screen or main app
+        // Navigator.pushReplacement(
+        //   context,
+        //   MaterialPageRoute(builder: (context) => MainDashboard()),
+        // );
+      } else {
+        // Show detailed error message
+        String errorMessage = result['message'] ?? 'Failed to upload profile picture';
+        if (result['statusCode'] != null) {
+          errorMessage += ' (Status: ${result['statusCode']})';
+        }
+        _showSnackBar(errorMessage);
+
+        if (kDebugMode) {
+          print('Profile picture upload failed: $result');
+        }
+      }
+    } catch (e) {
+      // Hide loading indicator
+      Navigator.of(context).pop();
+
+      if (kDebugMode) {
+        print('Profile picture upload error: $e');
+      }
+      _showSnackBar('An error occurred while uploading your profile picture');
+    }
   }
 
   void _dismissKeyboard() {

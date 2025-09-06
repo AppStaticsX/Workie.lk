@@ -1,12 +1,50 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
 import '../services/auth_service.dart';
 
 class ProfileService {
-  static const String baseUrl = 'https://workie-lk-backend.onrender.com/api'; // Using your existing backend URL
+  static const String baseUrl = 'https://workie-lk-backend.onrender.com/api';
+
+  // Test if the backend server is running
+  static Future<Map<String, dynamic>> testServerHealth() async {
+    try {
+      final dio = Dio();
+      dio.options.connectTimeout = const Duration(seconds: 10);
+      dio.options.receiveTimeout = const Duration(seconds: 10);
+
+      final response = await dio.get('$baseUrl/health');
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': response.data};
+      } else {
+        return {'success': false, 'message': 'Server returned ${response.statusCode}'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Health check failed: $e'};
+    }
+  }
+
+  // Test media route specifically
+  static Future<Map<String, dynamic>> testMediaRoute() async {
+    try {
+      final dio = Dio();
+      dio.options.connectTimeout = const Duration(seconds: 10);
+      dio.options.receiveTimeout = const Duration(seconds: 10);
+
+      final response = await dio.get('$baseUrl/media/test');
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': response.data};
+      } else {
+        return {'success': false, 'message': 'Media route returned ${response.statusCode}'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Media route test failed: $e'};
+    }
+  }
 
   // Upload profile picture to Cloudinary via your backend
   static Future<Map<String, dynamic>> uploadProfilePicture({
@@ -15,46 +53,94 @@ class ProfileService {
     required String fileName,
   }) async {
     try {
-      final authService = AuthService();
-      final token = await authService.getStoredToken(); // Use getStoredToken instead of getToken
+      // First test if server is running
+      if (kDebugMode) {
+        print('Testing server health...');
+        final healthResult = await testServerHealth();
+        print('Health check result: $healthResult');
 
-      if (token == null) {
-        return {'success': false, 'message': 'Authentication required'};
+        print('Testing media route...');
+        final mediaResult = await testMediaRoute();
+        print('Media route test result: $mediaResult');
+      }
+
+      final authService = AuthService();
+      final token = await authService.getStoredToken();
+
+      if (token == null || token.isEmpty) {
+        return {'success': false, 'message': 'Authentication token not found'};
+      }
+
+      // Test authentication
+      final isAuth = await authService.isAuthenticated();
+      if (!isAuth) {
+        return {'success': false, 'message': 'User not authenticated'};
       }
 
       final dio = Dio();
 
+      // Configure Dio with timeouts
+      dio.options.connectTimeout = const Duration(seconds: 30);
+      dio.options.receiveTimeout = const Duration(seconds: 30);
+
+      // Add request interceptor for debugging
+      if (kDebugMode) {
+        dio.interceptors.add(InterceptorsWrapper(
+          onRequest: (options, handler) {
+            print('Request: ${options.method} ${options.uri}');
+            print('Headers: ${options.headers}');
+            handler.next(options);
+          },
+          onResponse: (response, handler) {
+            print('Response: ${response.statusCode}');
+            print('Response data: ${response.data}');
+            handler.next(response);
+          },
+          onError: (error, handler) {
+            print('Error: ${error.type}');
+            print('Error message: ${error.message}');
+            print('Error response: ${error.response?.data}');
+            handler.next(error);
+          },
+        ));
+      }
+
       FormData formData;
 
       if (kIsWeb && imageBytes != null) {
-        // For web platform
         formData = FormData.fromMap({
           'profilePicture': MultipartFile.fromBytes(
             imageBytes,
             filename: fileName,
-            contentType: DioMediaType.parse('image/jpeg'),
+            contentType: DioMediaType('image', 'jpeg'),
           ),
         });
       } else if (imageFile != null) {
-        // For mobile platforms
         formData = FormData.fromMap({
           'profilePicture': await MultipartFile.fromFile(
             imageFile.path,
             filename: fileName,
+            contentType: DioMediaType('image', 'jpeg'),
           ),
         });
       } else {
         return {'success': false, 'message': 'No image provided'};
       }
 
+      final uploadUrl = '$baseUrl/media/profile-picture';
+      if (kDebugMode) {
+        print('Uploading to: $uploadUrl');
+        print('Token: ${token.substring(0, 20)}...');
+      }
+
       final response = await dio.post(
-        '$baseUrl/media/profile-picture',
+        uploadUrl,
         data: formData,
         options: Options(
           headers: {
             'Authorization': 'Bearer $token',
-            'Content-Type': 'multipart/form-data',
           },
+          validateStatus: (status) => status != null && status < 500,
         ),
       );
 
@@ -63,12 +149,41 @@ class ProfileService {
           'success': true,
           'data': response.data,
           'profilePictureUrl': response.data['user']['profilePicture'],
+          'message': 'Profile picture uploaded successfully!'
+        };
+      } else if (response.statusCode == 404) {
+        return {
+          'success': false,
+          'message': 'Route not found. Please check if the backend server is running.',
+          'statusCode': response.statusCode,
         };
       } else {
         return {
           'success': false,
-          'message': response.data['message'] ?? 'Upload failed',
+          'message': response.data?['message'] ?? 'Upload failed',
+          'statusCode': response.statusCode,
         };
+      }
+    } on DioException catch (e) {
+      if (kDebugMode) {
+        print('Dio error: ${e.type}');
+        print('Dio message: ${e.message}');
+        print('Dio response: ${e.response?.data}');
+        print('Dio response status: ${e.response?.statusCode}');
+      }
+
+      if (e.response?.statusCode == 404) {
+        return {
+          'success': false,
+          'message': 'Route not found. The backend server might not be running or the endpoint doesn\'t exist.'
+        };
+      } else if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        return {'success': false, 'message': 'Connection timeout. Please check your internet connection.'};
+      } else if (e.type == DioExceptionType.connectionError) {
+        return {'success': false, 'message': 'Cannot connect to server. Please check if the backend is running.'};
+      } else {
+        return {'success': false, 'message': 'Upload failed: ${e.message}'};
       }
     } catch (e) {
       if (kDebugMode) {
@@ -76,123 +191,7 @@ class ProfileService {
       }
       return {
         'success': false,
-        'message': 'Network error occurred',
-      };
-    }
-  }
-
-  // Save complete profile data
-  static Future<Map<String, dynamic>> saveCompleteProfile({
-    required String profilePictureUrl,
-    required String birthDate,
-    required String streetAddress,
-    String? apartmentSuite,
-    required String city,
-    required String stateProvince,
-    required String postalCode,
-    required String phoneNumber,
-  }) async {
-    try {
-      final authService = AuthService();
-      final token = await authService.getStoredToken(); // Use getStoredToken
-
-      if (token == null) {
-        return {'success': false, 'message': 'Authentication required'};
-      }
-
-      final response = await http.put(
-        Uri.parse('$baseUrl/users/profile'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'profilePicture': profilePictureUrl,
-          'dateOfBirth': birthDate,
-          'address': {
-            'street': streetAddress,
-            'apartment': apartmentSuite,
-            'city': city,
-            'state': stateProvince,
-            'postalCode': postalCode,
-          },
-          'phoneNumber': phoneNumber,
-          'profileCompleted': true,
-        }),
-      );
-
-      final responseData = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        return {
-          'success': true,
-          'data': responseData,
-          'message': 'Profile saved successfully',
-        };
-      } else {
-        return {
-          'success': false,
-          'message': responseData['message'] ?? 'Failed to save profile',
-        };
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Profile save error: $e');
-      }
-      return {
-        'success': false,
-        'message': 'Network error occurred',
-      };
-    }
-  }
-
-  // Combined method to upload image and save complete profile
-  static Future<Map<String, dynamic>> completeProfileSetup({
-    File? imageFile,
-    Uint8List? imageBytes,
-    required String fileName,
-    required String birthDate,
-    required String streetAddress,
-    String? apartmentSuite,
-    required String city,
-    required String stateProvince,
-    required String postalCode,
-    required String phoneNumber,
-  }) async {
-    try {
-      // Step 1: Upload profile picture
-      final uploadResult = await uploadProfilePicture(
-        imageFile: imageFile,
-        imageBytes: imageBytes,
-        fileName: fileName,
-      );
-
-      if (!uploadResult['success']) {
-        return uploadResult;
-      }
-
-      final profilePictureUrl = uploadResult['profilePictureUrl'];
-
-      // Step 2: Save complete profile
-      final saveResult = await saveCompleteProfile(
-        profilePictureUrl: profilePictureUrl,
-        birthDate: birthDate,
-        streetAddress: streetAddress,
-        apartmentSuite: apartmentSuite,
-        city: city,
-        stateProvince: stateProvince,
-        postalCode: postalCode,
-        phoneNumber: phoneNumber,
-      );
-
-      return saveResult;
-    } catch (e) {
-      if (kDebugMode) {
-        print('Complete profile setup error: $e');
-      }
-      return {
-        'success': false,
-        'message': 'Failed to complete profile setup',
+        'message': 'Unexpected error occurred: $e',
       };
     }
   }
