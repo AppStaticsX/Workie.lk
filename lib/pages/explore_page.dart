@@ -1,6 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/models/job_model.dart';
+
+import '../widgets/custom_icon_button.dart';
+import '../widgets/custom_textfield.dart';
 
 class ExploreTabPage extends StatelessWidget {
   const ExploreTabPage({super.key});
@@ -12,19 +16,25 @@ class ExploreTabPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF4E6BF5),
         surfaceTintColor: const Color(0xFF4E6BF5),
-        leading: Icon(
-          Iconsax.briefcase_copy,
-          size: 26,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: Icon(
+            CupertinoIcons.briefcase_fill,
+            size: 26,
+            color: Colors.white,
+          ),
         ),
         title: Text(
           'Explore Jobs',
           style: TextStyle(
-              fontWeight: FontWeight.bold
+              fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
         ),
       ),
       body: Column(
         children: [
+          _WidgetSearchBar(),
           Expanded(
               child: Container(
                 color: Theme
@@ -92,6 +102,43 @@ class ExploreTabPage extends StatelessWidget {
           )
         ],
       )
+    );
+  }
+}
+
+class _WidgetSearchBar extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Color(0xFF4E6BF5),
+        borderRadius: const BorderRadius.only(), // You may want to add specific corners here
+      ),
+      padding: EdgeInsets.only(top: 12.0, bottom: 16.0, left: 8.0, right: 16.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: InkWell(
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: CustomTextfield(
+                  obscureText: false,
+                  prefixIconData: const Icon(Iconsax.search_normal_copy),
+                  hintText: 'Search',
+                ),
+              ),
+            ),
+          ),
+          CustomIconButton(
+            iconData: Iconsax.setting_4_copy,
+            color: const Color(0xFFFFD542),
+            width: 52,
+            height: 52,
+            size: 26,
+            iconColor: Colors.black,
+          ),
+        ],
+      ),
     );
   }
 }

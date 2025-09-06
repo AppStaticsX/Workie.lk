@@ -12,11 +12,12 @@ class ProfileTabPage extends StatelessWidget {
         backgroundColor: const Color(0xFF4E6BF5),
         surfaceTintColor: const Color(0xFF4E6BF5),
         elevation: 0,
-        leading: Icon(Iconsax.user_copy, size: 26),
+        leading: Icon(Iconsax.user_copy, size: 26, color: Colors.white,),
         title: Text(
           'My Profile',
           style: TextStyle(
-            fontWeight: FontWeight.bold
+            fontWeight: FontWeight.bold,
+            color: Colors.white
           ),
         ),
         actions: [
@@ -24,7 +25,7 @@ class ProfileTabPage extends StatelessWidget {
             onPressed: () {
               // Navigate to settings
             },
-            icon: const Icon(Iconsax.setting),
+            icon: const Icon(Iconsax.setting, color: Colors.white,),
           ),
         ],
       ),

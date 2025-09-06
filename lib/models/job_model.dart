@@ -39,13 +39,13 @@ class _JobCardState extends State<JobCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             spreadRadius: 1,
             blurRadius: 8,
             offset: const Offset(0, 2),
@@ -161,15 +161,15 @@ class _JobCardState extends State<JobCard> {
         Container(
           padding: EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(5),
             border: Border.all(
-              color: color.withOpacity(0.2),
+              color: color.withValues(alpha: 0.2),
               width: 1,
             ),
           ),
             child: _buildDetailItem(
-                Iconsax.timer_1, widget.jobType
+                Iconsax.timer, widget.jobType
             )
         ),
         const SizedBox(width: 20),
@@ -190,7 +190,7 @@ class _JobCardState extends State<JobCard> {
         const SizedBox(width: 6),
         Text(
           text,
-          style: Theme.of(context).textTheme.titleSmall?.
+          style: Theme.of(context).textTheme.titleMedium?.
             copyWith(color: AppColors.textSilver
           )
         ),
@@ -201,8 +201,8 @@ class _JobCardState extends State<JobCard> {
   Widget _buildDescription() {
     return Text(
       widget.description,
-      style: const TextStyle(
-        color: Colors.white70,
+      style: TextStyle(
+        color: Theme.of(context).colorScheme.inverseSurface,
         fontSize: 16,
         height: 1.4,
       ),
@@ -213,41 +213,39 @@ class _JobCardState extends State<JobCard> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            ElevatedButton(
-              onPressed: () {
-                // Handle save for later
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey[800],
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              ),
-              child: const Text('View-Job'),
+        ElevatedButton(
+          onPressed: () {
+            // Handle save for later
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.grey[800],
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
             ),
-            const SizedBox(width: 12),
-            ElevatedButton(
-              onPressed: () {
-                // Handle apply now
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4E6BF5),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          ),
+          child: const Text('View-Job'),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: () {
+              // Handle apply now
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4E6BF5),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
-              child: Text(
-                  'Apply Now',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
-          ],
+            child: Text(
+                'Apply Now',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.white,),
+            ),
+          ),
         ),
       ],
     );
