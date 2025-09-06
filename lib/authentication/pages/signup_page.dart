@@ -52,7 +52,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
   String? _passwordError;
   String? _lastNameError;
   String? _firstNameError;
-  String? _confirmPassowordError;
+  String? _confirmPasswordError; // Fixed typo: was _confirmPassowordError
 
   @override
   void initState() {
@@ -76,30 +76,33 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
 
   void _showNoInternetDialog() {
     if (!isConnected) {
-      showDialog(context: context, builder: (context) => FullScreenPopupDialog(
-          darkLottie: 'assets/animation/lottie_empty_state_no_internet_dark.json',
-          lightLottie: 'assets/animation/lottie_empty_state_no_internet.json',
-          title: 'Connection Lost!',
-          subTitle: 'Check your network settings and try again.'
-      ));
+      showDialog(
+          context: context,
+          builder: (context) => FullScreenPopupDialog(
+              darkLottie: 'assets/animation/lottie_empty_state_no_internet_dark.json',
+              lightLottie: 'assets/animation/lottie_empty_state_no_internet.json',
+              title: 'Connection Lost!',
+              subTitle: 'Check your network settings and try again.'
+          )
+      );
     }
   }
 
   void _setupLiveValidation() {
     _emailController.addListener(
-      () => _validateEmail(_emailController.text.trim()),
+          () => _validateEmail(_emailController.text.trim()),
     );
     _passwordController.addListener(
-      () => _validatePassword(_passwordController.text.trim()),
+          () => _validatePassword(_passwordController.text.trim()),
     );
     _confirmPasswordController.addListener(
-      () => _validateConfirmPassword(_confirmPasswordController.text.trim()),
+          () => _validateConfirmPassword(_confirmPasswordController.text.trim()),
     );
     _firstNameController.addListener(
-      () => _validateFirstName(_firstNameController.text.trim()),
+          () => _validateFirstName(_firstNameController.text.trim()),
     );
     _lastNameController.addListener(
-      () => _validateLastName(_lastNameController.text.trim()),
+          () => _validateLastName(_lastNameController.text.trim()),
     );
   }
 
@@ -110,7 +113,9 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
     _confirmPasswordController.dispose();
     _lastNameController.dispose();
     _firstNameController.dispose();
+    _phoneController.dispose(); // Added missing disposal
     _lottieController.dispose();
+    _stopTimer?.cancel(); // Added null check
     subscription.cancel();
     super.dispose();
   }
@@ -137,8 +142,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
     } else if (!RegExp(
       r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]',
     ).hasMatch(password)) {
-      error =
-          "Password must contain uppercase, lowercase, number & special character";
+      error = "Password must contain uppercase, lowercase, number & special character";
     } else if (RegExp(r'(.)\1{2,}').hasMatch(password)) {
       error = "Password cannot have repeated characters";
     } else if (RegExp(
@@ -161,8 +165,8 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
       error = 'Password doesn\'t match!';
     }
 
-    if (_confirmPassowordError != error) {
-      setState(() => _confirmPassowordError = error);
+    if (_confirmPasswordError != error) {
+      setState(() => _confirmPasswordError = error);
     }
   }
 
@@ -207,10 +211,10 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
 
   bool get _hasErrors =>
       _emailError != null ||
-      _passwordError != null ||
-      _confirmPassowordError != null ||
-      _lastNameError != null ||
-      _firstNameError != null;
+          _passwordError != null ||
+          _confirmPasswordError != null || // Fixed typo
+          _lastNameError != null ||
+          _firstNameError != null;
 
   Future<void> _handleSignup() async {
     // Validate all fields first
@@ -236,61 +240,80 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
         lastName: _lastNameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text,
-        phone: _phoneController.text.trim(),
+        phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(), // Better null handling
       );
 
       setState(() {
         _isLoading = false;
       });
 
-      if (result['success']) {
+      if (result['success'] == true) { // More explicit boolean check
         showDialog(
             context: context,
             builder: (context) => FullScreenPopupDialog(
                 darkLottie: 'assets/animation/lottie_feedback_happy_dark.json',
                 lightLottie: 'assets/animation/lottie_feedback_happy.json',
                 title: 'Hooooray!',
-                subTitle: 'Your account created successfully.'
+                subTitle: 'Your account created successfully. Please check your email for verification.'
             )
         );
 
         _navigateToVerification();
       } else {
-        // Handle different status codes
-        if (result['statusCode'] == 400) {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return ErrorDialog(
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text(
-                      'Use Different Email',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      setState(() => _isChecked = true);
-                      _dismissKeyboard();
-                    },
-                    child: const Text(
-                      'Log In',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-                title: 'Account Already Exists',
-                contentText: 'Account with this email address (',
-                contentText2: _emailController.text,
-                contentText3: ') already exists. Would you like to login instead?',
+        // Handle different error types based on updated AuthService
+        final errorType = result['error'];
+        final statusCode = result['statusCode'];
+
+        switch (errorType) {
+          case 'network':
+            _showNoInternetDialog();
+            break;
+          case 'timeout':
+            _showCustomToast('Request timed out. Please try again.', Iconsax.warning_2);
+            break;
+          case 'format':
+            _showCustomToast('Invalid server response. Please try again.', Iconsax.close_circle);
+            break;
+          default:
+          // Handle HTTP status codes
+            if (statusCode == 400) {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return ErrorDialog(
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text(
+                          'Use Different Email',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(builder: (context) => const LoginPage())
+                          );
+                        },
+                        child: const Text(
+                          'Log In',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                    title: 'Account Already Exists',
+                    contentText: 'Account with this email address (',
+                    contentText2: _emailController.text,
+                    contentText3: ') already exists. Would you like to login instead?',
+                  );
+                },
               );
-            },
-          );
-        } else {
-          _showCustomToast(result['message'], Iconsax.warning_2);
+            } else if (statusCode == 500) {
+              _showCustomToast('Server error. Please try again later.', Iconsax.close_circle);
+            } else {
+              _showCustomToast(result['message'] ?? 'Registration failed', Iconsax.warning_2);
+            }
         }
       }
     } catch (e) {
@@ -298,7 +321,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
         _isLoading = false;
       });
 
-      // Handle network and other exceptions
+      // Handle network and other exceptions - simplified since AuthService handles most errors
       if (e is SocketException) {
         _showNoInternetDialog();
       } else if (e is TimeoutException) {
@@ -311,8 +334,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
     }
   }
 
-  void _showCustomToast(String message, IconData icon,
-      {int durationInSeconds = 3}) {
+  void _showCustomToast(String message, IconData icon, {int durationInSeconds = 3}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: Theme.of(context).colorScheme.secondary,
@@ -326,7 +348,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
                   style: TextStyle(
                       color: Theme.of(context).colorScheme.inversePrimary
                   ),
-              )
+                )
             ),
           ],
         ),
@@ -364,11 +386,10 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
     if (mounted) {
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
-          pageBuilder:
-              (context, animation, secondaryAnimation) =>
-                  EmailVerificationPage(
-                    email: _emailController.text.trim(),
-                  ),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              EmailVerificationPage(
+                email: _emailController.text.trim(),
+              ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             const begin = Offset(0.0, 1.0);
             const end = Offset.zero;
@@ -390,12 +411,6 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
     setState(() {
       _isLoading = false;
     });
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    _lastNameController.dispose();
-    _firstNameController.dispose();
-    _lottieController.dispose();
   }
 
   void _dismissKeyboard() {
@@ -413,8 +428,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
           Positioned(
             child: Transform(
               alignment: Alignment.center,
-              transform:
-                  Matrix4.identity()..scale(-1.0, 1.0), // Flip horizontally
+              transform: Matrix4.identity()..scale(-1.0, 1.0), // Flip horizontally
               child: Lottie.asset(
                 Theme.of(context).brightness == Brightness.dark
                     ? 'assets/animation/circles-dark.json'
@@ -428,7 +442,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
                   // Start the animation
                   _lottieController.forward();
 
-                  // Stop after 2 seconds (or any specific time)
+                  // Stop after specified time
                   _stopTimer = Timer(Duration(milliseconds: 650), () {
                     if (mounted && _lottieController.isAnimating) {
                       _lottieController.stop();
@@ -470,9 +484,6 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
                   const SizedBox(height: 24),
                   _buildSignupButton(),
                   const SizedBox(height: 30),
-                  //_buildDivider(),
-                  //const SizedBox(height: 4),
-                  //_buildSocialSignup(),
                 ],
               ),
             ),
@@ -659,7 +670,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
           onPressed: () => setState(() => _obscureText2 = !_obscureText2),
         ),
         obscureText: _obscureText2,
-        errorText: _confirmPassowordError,
+        errorText: _confirmPasswordError, // Fixed variable name
       ),
     );
   }
@@ -683,14 +694,13 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
                   width: 2,
                 ),
               ),
-              child:
-                  _isChecked
-                      ? const Icon(
-                        Iconsax.tick_circle,
-                        size: 14,
-                        color: Color(0xFF4E6BF5),
-                      )
-                      : null,
+              child: _isChecked
+                  ? const Icon(
+                Iconsax.tick_circle,
+                size: 14,
+                color: Color(0xFF4E6BF5),
+              )
+                  : null,
             ),
           ),
           const SizedBox(width: 10),
@@ -703,28 +713,25 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
                 ),
                 children: [
                   const TextSpan(
-                    text:
-                        'I confirm that I have read, consent and agree to WORKIE\'s ',
+                    text: 'I confirm that I have read, consent and agree to WORKIE\'s ',
                   ),
                   TextSpan(
                     text: 'Terms of Use',
                     style: TextStyle(
-                      decorationColor:
-                          Theme.of(context).colorScheme.inversePrimary,
+                      decorationColor: Theme.of(context).colorScheme.inversePrimary,
                       color: Theme.of(context).colorScheme.inversePrimary,
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
                     ),
-                    recognizer:
-                        TapGestureRecognizer()
-                          ..onTap = () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => const SplashScreen(),
-                              ),
-                            );
-                            if (kDebugMode) print('Terms of Use tapped!');
-                          },
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const SplashScreen(),
+                          ),
+                        );
+                        if (kDebugMode) print('Terms of Use tapped!');
+                      },
                   ),
                   const TextSpan(
                     text: ' and ',
@@ -737,22 +744,20 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
                   TextSpan(
                     text: 'Privacy Policy.',
                     style: TextStyle(
-                      decorationColor:
-                          Theme.of(context).colorScheme.inversePrimary,
+                      decorationColor: Theme.of(context).colorScheme.inversePrimary,
                       color: Theme.of(context).colorScheme.inversePrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
                     ),
-                    recognizer:
-                        TapGestureRecognizer()
-                          ..onTap = () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => const SplashScreen(),
-                              ),
-                            );
-                            if (kDebugMode) print('Privacy Policy tapped!');
-                          },
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const SplashScreen(),
+                          ),
+                        );
+                        if (kDebugMode) print('Privacy Policy tapped!');
+                      },
                   ),
                 ],
               ),
@@ -821,14 +826,8 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
         onTap: () {
           Navigator.of(context).pushReplacement(
             PageRouteBuilder(
-              pageBuilder:
-                  (context, animation, secondaryAnimation) => const LoginPage(),
-              transitionsBuilder: (
-                context,
-                animation,
-                secondaryAnimation,
-                child,
-              ) {
+              pageBuilder: (context, animation, secondaryAnimation) => const LoginPage(),
+              transitionsBuilder: (context, animation, secondaryAnimation, child) {
                 const begin = Offset(-1.0, 0.0);
                 const end = Offset.zero;
                 const curve = Curves.ease;

@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/models/job_model.dart';
-
 import '../widgets/custom_icon_button.dart';
 import '../widgets/custom_textfield.dart';
 

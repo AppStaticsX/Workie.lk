@@ -24,13 +24,12 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
   late AnimationController _lottieController;
   Timer? _stopTimer;
 
-
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _pinController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
   final TextEditingController _newPasswordConfirmController = TextEditingController();
 
-  String _verificationCode = '';
+  String _resetToken = ''; // Changed from _verificationCode to _resetToken
 
   // Add loading states
   bool _isLoading = false;
@@ -49,6 +48,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
   void dispose() {
     _emailController.dispose();
     _pinController.dispose();
+    _newPasswordController.dispose();
+    _newPasswordConfirmController.dispose();
     _lottieController.dispose();
     _stopTimer?.cancel();
     super.dispose();
@@ -116,7 +117,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
     });
 
     final authService = AuthService();
-    final result = await authService.resetPassword(_verificationCode, password);
+    final result = await authService.resetPassword(_resetToken, password); // Using _resetToken
 
     setState(() {
       _isLoading = false;
@@ -158,7 +159,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
     }
   }
 
-  // Handle sending reset password email
+  // Handle sending reset password email (sends PIN according to backend)
   Future<void> _sendResetPasswordEmail() async {
     final email = _emailController.text.trim();
 
@@ -189,14 +190,10 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
       final result = await authService.sendResetPasswordEmail(email);
 
       if (result['success'] == true) {
-        setState(() {
-          _verificationCode = result['code'] ?? '';
-        });
-
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Reset code sent to $email'),
+              content: Text('Reset PIN sent to $email'), // Updated message
               backgroundColor: Colors.green,
               duration: Duration(seconds: 3),
             ),
@@ -284,7 +281,12 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Flexible(
-                                  child: _VerifyEmail(pinController: _pinController, resetButtonFunction: () { _sendResetPasswordEmail(); },),
+                                  child: _VerifyEmail(
+                                    pinController: _pinController,
+                                    resetButtonFunction: () {
+                                      _sendResetPasswordEmail();
+                                    },
+                                  ),
                                 ),
                               ],
                             ),
@@ -322,12 +324,12 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
                                 children: [
                                   _ContinueButton(
                                     onPressed: () async {
-                                      final code = _pinController.text.trim();
+                                      final pin = _pinController.text.trim(); // Changed from 'code' to 'pin'
                                       final email = _emailController.text.trim();
 
-                                      if (code.length != 5) {
+                                      if (pin.length != 5) {
                                         setState(() {
-                                          _errorMessage = 'Please enter the 5-digit code sent to your email.';
+                                          _errorMessage = 'Please enter the 5-digit PIN sent to your email.'; // Updated message
                                         });
                                         return;
                                       }
@@ -340,7 +342,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
                                       final authService = AuthService();
                                       final verifyResult = await authService.verifyResetCode(
                                         email,
-                                        code,
+                                        pin, // Using 'pin' instead of 'code'
                                       );
 
                                       setState(() {
@@ -351,18 +353,18 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
                                         if (mounted) {
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             SnackBar(
-                                              content: Text('Code verified! You can now reset your password.'),
+                                              content: Text('PIN verified! You can now reset your password.'), // Updated message
                                               backgroundColor: Colors.green,
                                             ),
                                           );
                                         }
                                         setState(() {
-                                          _verificationCode = verifyResult['resetToken'] ?? '';
+                                          _resetToken = verifyResult['resetToken'] ?? ''; // Store resetToken
                                         });
-                                        _nextPage(); // Or navigate to the password reset form
+                                        _nextPage();
                                       } else {
                                         setState(() {
-                                          _errorMessage = verifyResult['message'] ?? 'Invalid or expired code.';
+                                          _errorMessage = verifyResult['message'] ?? 'Invalid or expired PIN.'; // Updated message
                                         });
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(
@@ -374,7 +376,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
                                     },
                                     isLoading: _isLoading,
                                   ),
-                                  _HelpText(helpText: 'Check your inbox and spam folder for the code. Didn’t get it? Request a new one.'),
+                                  _HelpText(helpText: 'Check your inbox and spam folder for the PIN. Didn\'t get it? Request a new one.'), // Updated message
                                 ],
                               ),
                               Column(
@@ -589,7 +591,7 @@ class _EnterEmail extends StatelessWidget {
               const SizedBox(height: 40),
               _VerificationTitle(title: 'Find Your Account'),
               const SizedBox(height: 20),
-              _VerificationSubtitle(subTitle: 'Enter your registered email address to get a verification code.'),
+              _VerificationSubtitle(subTitle: 'Enter your registered email address to get a verification PIN.'), // Updated text
               const SizedBox(height: 30),
               CustomTextfield(
                 controller: controller,
@@ -621,7 +623,8 @@ class _VerifyEmail extends StatelessWidget {
   final VoidCallback resetButtonFunction;
 
   const _VerifyEmail({
-    required this.pinController, required this.resetButtonFunction
+    required this.pinController,
+    required this.resetButtonFunction
   });
 
   @override
@@ -685,7 +688,7 @@ class _VerifyEmail extends StatelessWidget {
               const SizedBox(height: 40),
               _VerificationTitle(title: 'Verify Your Identity'),
               const SizedBox(height: 20),
-              _VerificationSubtitle(subTitle: 'Enter the 5-digit code we sent to your email.'),
+              _VerificationSubtitle(subTitle: 'Enter the 5-digit PIN we sent to your email.'), // Updated text
               const SizedBox(height: 30),
               Pinput(
                 controller: pinController,
@@ -694,8 +697,7 @@ class _VerifyEmail extends StatelessWidget {
                 focusedPinTheme: focusedPinTheme,
                 keyboardType: TextInputType.number,
                 onCompleted: (value) {
-                  // Optional: Auto-continue when code is complete
-                  // _continue();
+                  // Optional: Auto-continue when PIN is complete
                 },
               ),
               const SizedBox(height: 30),
@@ -708,9 +710,7 @@ class _VerifyEmail extends StatelessWidget {
                       children: [
                         Icon(Iconsax.refresh_circle_copy),
                         const SizedBox(width: 8),
-                        Text(
-                          'Resend Code'
-                        )
+                        Text('Resend PIN') // Updated text
                       ],
                     )
                 ),
@@ -747,6 +747,7 @@ class _UpdatePassword extends StatefulWidget {
 class _UpdatePasswordState extends State<_UpdatePassword> {
   bool _obscureText = true;
   bool _obscureText2 = true;
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -789,7 +790,7 @@ class _UpdatePasswordState extends State<_UpdatePassword> {
                     child: Text(
                       'New Password',
                       style: TextStyle(
-                        fontSize: 15
+                          fontSize: 15
                       ),
                     ),
                   ),
@@ -808,7 +809,7 @@ class _UpdatePasswordState extends State<_UpdatePassword> {
                   onPressed: () => setState(() => _obscureText = !_obscureText),
                 ),
                 obscureText: _obscureText,
-                errorText: widget.errorText,
+                errorText: widget.errorText, // Add onChanged callback
               ),
               const SizedBox(height: 12),
               Row(
@@ -817,7 +818,7 @@ class _UpdatePasswordState extends State<_UpdatePassword> {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Text(
-                        'Confirm New Password',
+                      'Confirm New Password',
                       style: TextStyle(
                           fontSize: 15
                       ),
@@ -838,7 +839,7 @@ class _UpdatePasswordState extends State<_UpdatePassword> {
                   onPressed: () => setState(() => _obscureText2 = !_obscureText2),
                 ),
                 obscureText: _obscureText2,
-                errorText: widget.confirmErrorText,
+                errorText: widget.confirmErrorText,// Add onChanged callback
               ),
             ],
           ),

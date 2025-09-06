@@ -34,17 +34,7 @@ class AuthService {
 
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
-      // If idToken is not available, try using accessToken
-      String? token = googleAuth.idToken ?? googleAuth.accessToken;
-
-      if (token == null) {
-        return {
-          'success': false,
-          'message': 'Google authentication failed: No authentication token available.'
-        };
-      }
-
-      // Send the token to your backend
+      // Send the token to your backend - Updated to match backend expectations
       final response = await http.post(
         Uri.parse('$baseUrl/google-signin'),
         headers: {
@@ -52,8 +42,8 @@ class AuthService {
           'Accept': 'application/json',
         },
         body: jsonEncode({
-          'idToken': googleAuth.idToken,
-          'accessToken': googleAuth.accessToken,
+          'accessToken': googleAuth.accessToken, // Backend primarily uses accessToken
+          'idToken': googleAuth.idToken, // Keep as fallback
           'userInfo': {
             'email': googleUser.email,
             'displayName': googleUser.displayName,
@@ -339,7 +329,7 @@ class AuthService {
       final String? token = await getStoredToken();
 
       if (token != null) {
-        // Optional: Call logout endpoint
+        // Call logout endpoint with proper Authorization header
         await http.post(
           Uri.parse('$baseUrl/logout'),
           headers: {
@@ -371,7 +361,7 @@ class AuthService {
           'Accept': 'application/json',
           'Authorization': 'Bearer $token',
         },
-      ).timeout(const Duration(minutes: 10));// new edit
+      ).timeout(const Duration(seconds: 10)); // Changed from 10 minutes to 10 seconds
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
@@ -388,6 +378,7 @@ class AuthService {
     }
   }
 
+  /// Send password reset email (sends PIN according to backend)
   Future<Map<String, dynamic>> sendResetPasswordEmail(String email) async {
     try {
       final response = await http.post(
@@ -406,12 +397,12 @@ class AuthService {
       if (response.statusCode == 200 && responseData['success'] == true) {
         return {
           'success': true,
-          'message': responseData['message'] ?? 'Reset code sent successfully',
+          'message': responseData['message'] ?? 'Reset PIN sent successfully',
         };
       } else {
         return {
           'success': false,
-          'message': responseData['message'] ?? 'Failed to send reset email',
+          'message': responseData['message'] ?? 'Failed to send reset PIN',
           'statusCode': response.statusCode,
         };
       }
@@ -424,6 +415,7 @@ class AuthService {
     }
   }
 
+  /// Verify reset PIN (updated method name to be more accurate)
   Future<Map<String, dynamic>> verifyResetCode(String email, String pin) async {
     try {
       final response = await http.post(
@@ -462,10 +454,11 @@ class AuthService {
     }
   }
 
-  Future<Map<String, dynamic>> resetPassword(String code, String newPassword) async {
+  /// Reset password with token
+  Future<Map<String, dynamic>> resetPassword(String resetToken, String newPassword) async {
     try {
       final response = await http.put(
-        Uri.parse('$baseUrl/reset-password/$code'),
+        Uri.parse('$baseUrl/reset-password/$resetToken'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -478,6 +471,11 @@ class AuthService {
       final responseData = jsonDecode(response.body);
 
       if (response.statusCode == 200 && responseData['success'] == true) {
+        // Store the new token if provided
+        if (responseData['data']?['token'] != null) {
+          await storeToken(responseData['data']['token']);
+        }
+
         return {
           'success': true,
           'message': responseData['message'] ?? 'Password reset successful',
@@ -487,6 +485,55 @@ class AuthService {
         return {
           'success': false,
           'message': responseData['message'] ?? 'Failed to reset password',
+          'statusCode': response.statusCode,
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'An error occurred: ${e.toString()}',
+        'error': 'unknown'
+      };
+    }
+  }
+
+  /// Change password for logged in user (NEW METHOD)
+  Future<Map<String, dynamic>> changePassword(String currentPassword, String newPassword) async {
+    try {
+      final String? token = await getStoredToken();
+
+      if (token == null) {
+        return {
+          'success': false,
+          'message': 'Not authenticated',
+          'error': 'auth'
+        };
+      }
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/change-password'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'currentPassword': currentPassword,
+          'newPassword': newPassword,
+        }),
+      ).timeout(const Duration(seconds: 15));
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && responseData['success'] == true) {
+        return {
+          'success': true,
+          'message': responseData['message'] ?? 'Password changed successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to change password',
           'statusCode': response.statusCode,
         };
       }
@@ -537,6 +584,7 @@ class AuthService {
     }
   }
 
+  /// Resend email OTP
   Future<Map<String, dynamic>> resendEmailOtp(String email) async {
     try {
       final response = await http.post(
