@@ -2,248 +2,353 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
-import 'package:dio/dio.dart';
-import 'package:mime/mime.dart';
-import '../services/auth_service.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileService {
-  static const String baseUrl = 'https://workie-lk-backend.onrender.com/api';
-  static const int maxFileSize = 5 * 1024 * 1024; // 5MB limit
+  static const String baseUrl = 'https://workie-lk-backend.onrender.com';
 
-  // Test if the backend server is running
-  static Future<Map<String, dynamic>> testServerHealth() async {
+  // Get auth token from SharedPreferences
+  static Future<String?> _getAuthToken() async {
     try {
-      final dio = Dio();
-      dio.options.connectTimeout = const Duration(seconds: 10);
-      dio.options.receiveTimeout = const Duration(seconds: 10);
-
-      final response = await dio.get('$baseUrl/health');
-
-      if (response.statusCode == 200) {
-        return {'success': true, 'data': response.data};
-      } else {
-        return {'success': false, 'message': 'Server returned ${response.statusCode}'};
-      }
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('auth_token');
     } catch (e) {
-      return {'success': false, 'message': 'Health check failed: $e'};
+      if (kDebugMode) {
+        print('Error getting auth token: $e');
+      }
+      return null;
     }
   }
 
-  // Test media route specifically
-  static Future<Map<String, dynamic>> testMediaRoute() async {
-    try {
-      final dio = Dio();
-      dio.options.connectTimeout = const Duration(seconds: 10);
-      dio.options.receiveTimeout = const Duration(seconds: 10);
-
-      final response = await dio.get('$baseUrl/media/test');
-
-      if (response.statusCode == 200) {
-        return {'success': true, 'data': response.data};
-      } else {
-        return {'success': false, 'message': 'Media route returned ${response.statusCode}'};
-      }
-    } catch (e) {
-      return {'success': false, 'message': 'Media route test failed: $e'};
-    }
-  }
-
-  // Upload profile picture to Cloudinary via your backend
-  static Future<Map<String, dynamic>> uploadProfilePicture({
+  // Upload profile picture to Cloudinary
+  static Future<Map<String, dynamic>?> uploadProfilePicture({
     File? imageFile,
     Uint8List? imageBytes,
     required String fileName,
   }) async {
     try {
-      // Validate file size
-      int fileSize = 0;
-      if (imageFile != null) {
-        fileSize = await imageFile.length();
-      } else if (imageBytes != null) {
-        fileSize = imageBytes.length;
+      final token = await _getAuthToken();
+      if (token == null) {
+        throw Exception('Authentication token not found');
       }
 
-      if (fileSize > maxFileSize) {
-        return {
-          'success': false,
-          'message': 'File size too large. Maximum allowed size is ${maxFileSize ~/ (1024 * 1024)}MB'
-        };
-      }
+      final uri = Uri.parse('$baseUrl/api/media/profile-picture');
+      final request = http.MultipartRequest('POST', uri);
 
-      if (fileSize == 0) {
-        return {'success': false, 'message': 'No image provided or file is empty'};
-      }
+      // Add authorization header
+      request.headers['Authorization'] = 'Bearer $token';
 
-      final authService = AuthService();
-      final token = await authService.getStoredToken();
-
-      if (token == null || token.isEmpty) {
-        return {'success': false, 'message': 'Authentication token not found'};
-      }
-
-      final dio = Dio();
-
-      // Configure Dio with longer timeouts for file upload
-      dio.options.connectTimeout = const Duration(seconds: 60);
-      dio.options.receiveTimeout = const Duration(seconds: 60);
-      dio.options.sendTimeout = const Duration(seconds: 60);
-
-      // Add request interceptor for debugging
-      if (kDebugMode) {
-        dio.interceptors.add(InterceptorsWrapper(
-          onRequest: (options, handler) {
-            print('Request: ${options.method} ${options.uri}');
-            print('Headers: ${options.headers}');
-            handler.next(options);
-          },
-          onResponse: (response, handler) {
-            print('Response: ${response.statusCode}');
-            print('Response data: ${response.data}');
-            handler.next(response);
-          },
-          onError: (error, handler) {
-            print('Error: ${error.type}');
-            print('Error message: ${error.message}');
-            print('Error response: ${error.response?.data}');
-            handler.next(error);
-          },
-        ));
-      }
-
-      // Detect MIME type
-      String? mimeType;
-      String contentType = 'image/jpeg'; // default
-
-      if (imageFile != null) {
-        mimeType = lookupMimeType(imageFile.path);
-      } else if (imageBytes != null) {
-        // Try to detect from bytes (basic detection)
-        if (imageBytes.length > 3) {
-          if (imageBytes[0] == 0xFF && imageBytes[1] == 0xD8) {
-            mimeType = 'image/jpeg';
-          } else if (imageBytes[0] == 0x89 && imageBytes[1] == 0x50 && imageBytes[2] == 0x4E && imageBytes[3] == 0x47) {
-            mimeType = 'image/png';
-          }
-        }
-      }
-
-      if (mimeType != null) {
-        contentType = mimeType;
-      }
-
-      FormData formData;
-
+      // Add the image file
       if (kIsWeb && imageBytes != null) {
-        formData = FormData.fromMap({
-          'profilePicture': MultipartFile.fromBytes(
-            imageBytes,
-            filename: fileName,
-            contentType: DioMediaType.parse(contentType),
-          ),
-        });
+        // For web platform
+        request.files.add(http.MultipartFile.fromBytes(
+          'profilePicture',
+          imageBytes,
+          filename: fileName,
+          contentType: MediaType('image', 'jpeg'),
+        ));
       } else if (imageFile != null) {
-        formData = FormData.fromMap({
-          'profilePicture': await MultipartFile.fromFile(
-            imageFile.path,
-            filename: fileName,
-            contentType: DioMediaType.parse(contentType),
-          ),
-        });
+        // For mobile platforms
+        request.files.add(await http.MultipartFile.fromPath(
+          'profilePicture',
+          imageFile.path,
+          filename: fileName,
+          contentType: MediaType('image', 'jpeg'),
+        ));
       } else {
-        return {'success': false, 'message': 'No image provided'};
+        throw Exception('No image provided');
       }
 
-      final uploadUrl = '$baseUrl/media/profile-picture';
-      if (kDebugMode) {
-        print('Uploading to: $uploadUrl');
-        print('Token: ${token.substring(0, 20)}...');
-        print('Content Type: $contentType');
-        print('File Size: ${fileSize} bytes');
-      }
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+      final responseData = json.decode(responseBody);
 
-      final response = await dio.post(
-        uploadUrl,
-        data: formData,
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-            'Accept': 'application/json',
-          },
-          validateStatus: (status) => status != null && status < 500,
-        ),
-        onSendProgress: (sent, total) {
-          if (kDebugMode) {
-            print('Upload progress: ${(sent / total * 100).toStringAsFixed(1)}%');
-          }
-        },
-      );
-
-      if (kDebugMode) {
-        print('Response received: ${response.statusCode}');
-        print('Response data: ${response.data}');
-      }
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        // Handle the response structure from your backend
-        String? profilePictureUrl;
-
-        if (response.data is Map<String, dynamic>) {
-          final data = response.data as Map<String, dynamic>;
-
-          // Based on your backend, it returns: user.profilePicture
-          if (data['user']?['profilePicture'] != null) {
-            profilePictureUrl = data['user']['profilePicture'];
-          }
+      if (response.statusCode == 200) {
+        if (kDebugMode) {
+          print('Profile picture upload response: $responseData');
         }
-
-        return {
-          'success': true,
-          'data': response.data,
-          'profilePictureUrl': profilePictureUrl,
-          'message': 'Profile picture uploaded successfully!'
-        };
-      } else if (response.statusCode == 404) {
-        return {
-          'success': false,
-          'message': 'Route not found. Please check if Cloudinary is configured on the backend.',
-          'statusCode': response.statusCode,
-        };
+        return responseData;
       } else {
-        return {
-          'success': false,
-          'message': response.data?['message'] ?? 'Upload failed',
-          'statusCode': response.statusCode,
-        };
-      }
-    } on DioException catch (e) {
-      if (kDebugMode) {
-        print('Dio error: ${e.type}');
-        print('Dio message: ${e.message}');
-        print('Dio response: ${e.response?.data}');
-        print('Dio response status: ${e.response?.statusCode}');
-      }
-
-      if (e.response?.statusCode == 404) {
-        return {
-          'success': false,
-          'message': 'Upload endpoint not found. Please check if Cloudinary configuration exists on the backend.'
-        };
-      } else if (e.response?.statusCode == 401) {
-        return {
-          'success': false,
-          'message': 'Authentication failed. Please log in again.'
-        };
-      } else {
-        return {'success': false, 'message': 'Upload failed: ${e.message}'};
+        throw Exception(responseData['message'] ?? 'Failed to upload profile picture');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Profile picture upload error: $e');
+        print('Error uploading profile picture: $e');
       }
-      return {
-        'success': false,
-        'message': 'Unexpected error occurred: $e',
-      };
+      return null;
     }
+  }
+
+  // Create or update user profile
+  static Future<Map<String, dynamic>?> createOrUpdateProfile({
+    required String userId,
+    required String dateOfBirth,
+    required String streetAddress,
+    required String city,
+    required String stateOrProvince,
+    required String postalCode,
+    required String phoneNumber,
+    String? apartmentOrSuite,
+  }) async {
+    try {
+      final token = await _getAuthToken();
+      if (token == null) {
+        throw Exception('Authentication token not found');
+      }
+
+      final uri = Uri.parse('$baseUrl/api/profiles/$userId');
+
+      final profileData = {
+        'personalInfo': {
+          'dateOfBirth': dateOfBirth,
+          'phoneNumber': phoneNumber,
+        },
+        'address': {
+          'streetAddress': streetAddress,
+          'apartmentOrSuite': apartmentOrSuite,
+          'city': city,
+          'stateOrProvince': stateOrProvince,
+          'postalCode': postalCode,
+        },
+        'isProfileComplete': true,
+        'profileCompletedAt': DateTime.now().toIso8601String(),
+      };
+
+      final response = await http.put(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode(profileData),
+      );
+
+      final responseData = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        return responseData;
+      } else {
+        throw Exception(responseData['message'] ?? 'Failed to update profile');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error updating profile: $e');
+      }
+      return null;
+    }
+  }
+
+  // Update user personal information (WITHOUT touching profile picture fields)
+  static Future<Map<String, dynamic>?> updateUserInfo({
+    required String userId,
+    required String phoneNumber,
+    required Map<String, String> address,
+  }) async {
+    try {
+      final token = await _getAuthToken();
+      if (token == null) {
+        throw Exception('Authentication token not found');
+      }
+
+      final uri = Uri.parse('$baseUrl/api/users/$userId');
+
+      final userData = {
+        'phone': phoneNumber,
+        'address': address,
+      };
+      // DO NOT include profilePicture or profilePicturePublicId here
+      // as they are already correctly saved by the media upload route
+
+      final response = await http.put(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode(userData),
+      );
+
+      final responseData = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        return responseData;
+      } else {
+        throw Exception(responseData['message'] ?? 'Failed to update user info');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error updating user info: $e');
+      }
+      return null;
+    }
+  }
+
+  // Complete profile setup
+  static Future<bool> completeProfileSetup({
+    required String userId,
+    required String dateOfBirth,
+    required String streetAddress,
+    required String city,
+    required String stateOrProvince,
+    required String postalCode,
+    required String phoneNumber,
+    String? apartmentOrSuite,
+    File? profileImage,
+    Uint8List? profileImageBytes,
+  }) async {
+    try {
+      // Step 1: Upload profile picture if provided
+      // This already saves both profilePicture and profilePicturePublicId to the User document
+      if (profileImage != null || profileImageBytes != null) {
+        if (kDebugMode) {
+          print('Uploading profile picture...');
+        }
+
+        final uploadResult = await uploadProfilePicture(
+          imageFile: profileImage,
+          imageBytes: profileImageBytes,
+          fileName: 'profile_picture_${userId}_${DateTime.now().millisecondsSinceEpoch}.jpg',
+        );
+
+        if (uploadResult != null && uploadResult['message'] != null) {
+          if (uploadResult['message'].toString().contains('successfully')) {
+            if (kDebugMode) {
+              print('Profile picture uploaded successfully');
+              print('URL: ${uploadResult['user']?['profilePicture']}');
+              print('Public ID: ${uploadResult['user']?['profilePicturePublicId']}');
+            }
+          }
+        } else {
+          if (kDebugMode) {
+            print('Failed to upload profile picture');
+          }
+          // Continue even if profile picture upload fails
+        }
+      }
+
+      // Step 2: Update user information (WITHOUT profile picture data)
+      if (kDebugMode) {
+        print('Updating user information...');
+      }
+
+      final userUpdateResult = await updateUserInfo(
+        userId: userId,
+        phoneNumber: phoneNumber,
+        address: {
+          'streetAddress': streetAddress,
+          'apartmentOrSuite': apartmentOrSuite ?? '',
+          'city': city,
+          'stateOrProvince': stateOrProvince,
+          'postalCode': postalCode,
+        },
+      );
+
+      if (userUpdateResult == null || userUpdateResult['success'] != true) {
+        throw Exception('Failed to update user information');
+      }
+
+      // Step 3: Create or update profile
+      if (kDebugMode) {
+        print('Creating/updating profile...');
+      }
+
+      final profileUpdateResult = await createOrUpdateProfile(
+        userId: userId,
+        dateOfBirth: dateOfBirth,
+        streetAddress: streetAddress,
+        city: city,
+        stateOrProvince: stateOrProvince,
+        postalCode: postalCode,
+        phoneNumber: phoneNumber,
+        apartmentOrSuite: apartmentOrSuite,
+      );
+
+      if (profileUpdateResult == null || profileUpdateResult['success'] != true) {
+        throw Exception('Failed to create/update profile');
+      }
+
+      // Step 4: Clear local storage after successful completion
+      try {
+        await clearProfileSetupData();
+        if (kDebugMode) {
+          print('Local profile setup data cleared');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Warning: Failed to clear local data: $e');
+        }
+      }
+
+      if (kDebugMode) {
+        print('Profile setup completed successfully!');
+      }
+
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error completing profile setup: $e');
+      }
+      return false;
+    }
+  }
+
+  // Get current user ID from SharedPreferences
+  static Future<String?> getCurrentUserId() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('USER_ID');
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting current user ID: $e');
+      }
+      return null;
+    }
+  }
+
+  // Clear profile setup data after completion
+  static Future<void> clearProfileSetupData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('profile_setup_temp_data');
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error clearing profile setup data: $e');
+      }
+    }
+  }
+
+  // Validate required fields before submission
+  static bool validateProfileData({
+    required String dateOfBirth,
+    required String streetAddress,
+    required String city,
+    required String stateOrProvince,
+    required String postalCode,
+    required String phoneNumber,
+    File? profileImage,
+    Uint8List? profileImageBytes,
+  }) {
+    if (dateOfBirth.isEmpty ||
+        streetAddress.isEmpty ||
+        city.isEmpty ||
+        stateOrProvince.isEmpty ||
+        postalCode.isEmpty ||
+        phoneNumber.isEmpty) {
+      return false;
+    }
+
+    if (profileImage == null && profileImageBytes == null) {
+      return false;
+    }
+
+    return true;
+  }
+
+  // Check if user is authenticated
+  static Future<bool> isAuthenticated() async {
+    final token = await _getAuthToken();
+    return token != null && token.isNotEmpty;
   }
 }

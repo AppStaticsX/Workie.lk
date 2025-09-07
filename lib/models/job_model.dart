@@ -72,6 +72,7 @@ class _JobCardState extends State<JobCard> {
 
   Widget _buildHeader() {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           width: 64,
@@ -120,11 +121,15 @@ class _JobCardState extends State<JobCard> {
                 });
               },
               child: Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.tertiary,
+                  borderRadius: BorderRadius.circular(10)
+                ),
                 padding: const EdgeInsets.all(8),
                 child: Icon(
-                  isSaved ? Iconsax.save_add : Iconsax.save_add_copy,
-                  color: isSaved ? const Color(0xFF4E6BF5) : Colors.grey,
-                  size: 28,
+                  isSaved ? Iconsax.heart_add : Iconsax.heart_add_copy,
+                  color: isSaved ? Colors.red : Colors.grey,
+                  size: 24,
                 ),
               ),
             ),

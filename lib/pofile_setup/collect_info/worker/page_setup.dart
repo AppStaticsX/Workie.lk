@@ -32,6 +32,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
   bool _hasText = false;
   bool _hasExperience = false;
   bool _hasEducation = false;
+  bool _isCompletingProfile = false;
 
   @override
   void initState() {
@@ -178,139 +179,153 @@ class _ProfileSetupState extends State<ProfileSetup> {
     );
   }
 
-  Future<void> _testBackendConnection() async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return const AlertDialog(
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('Testing backend connection...'),
-            ],
-          ),
-        );
-      },
-    );
+// Update the _handleProfileCompletion method
+  Future<void> _handleProfileCompletion() async {
+    if (_isCompletingProfile) return; // Prevent multiple calls
+
+    setState(() {
+      _isCompletingProfile = true;
+    });
 
     try {
-      final healthResult = await ProfileService.testServerHealth();
-      final mediaResult = await ProfileService.testMediaRoute();
+      // Check if user is authenticated
+      final isAuthenticated = await ProfileService.isAuthenticated();
+      if (!isAuthenticated) {
+        _showSnackBar('Error: Please log in again.');
+        Navigator.of(context).pushReplacementNamed('/login');
+        return;
+      }
 
-      Navigator.of(context).pop(); // Close loading dialog
+      // Get current user ID
+      final userId = await ProfileService.getCurrentUserId();
+      if (userId == null) {
+        _showSnackBar('Error: User not found. Please log in again.');
+        Navigator.of(context).pushReplacementNamed('/login');
+        return;
+      }
 
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Backend Test Results'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Health Check: ${healthResult['success'] ? 'Success' : 'Failed'}'),
-                if (!healthResult['success'])
-                  Text('Error: ${healthResult['message']}'),
-                const SizedBox(height: 8),
-                Text('Media Route: ${mediaResult['success'] ? 'Success' : 'Failed'}'),
-                if (!mediaResult['success'])
-                  Text('Error: ${mediaResult['message']}'),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
+      // Get personal details from the form
+      final personalDetailsState = _personalDetailsKey.currentState;
+      if (personalDetailsState == null) {
+        _showSnackBar('Error: Unable to access personal details form.');
+        return;
+      }
+
+      // Validate the form data
+      final isValid = ProfileService.validateProfileData(
+        dateOfBirth: personalDetailsState.birthDayController.text,
+        streetAddress: personalDetailsState.streetAddressController.text,
+        city: personalDetailsState.cityController.text,
+        stateOrProvince: personalDetailsState.stateOrProvinceController.text,
+        postalCode: personalDetailsState.postalCodeController.text,
+        phoneNumber: personalDetailsState.phoneNumberController.text,
+        profileImage: personalDetailsState.profileImage,
+        profileImageBytes: personalDetailsState.profileImageBytes,
       );
+
+      if (!isValid) {
+        _showSnackBar('Please fill all required fields and add a profile picture.');
+        return;
+      }
+
+      // Show loading dialog
+      _showLoadingDialog('Completing your profile...');
+
+      // Complete profile setup
+      final success = await ProfileService.completeProfileSetup(
+        userId: userId,
+        dateOfBirth: personalDetailsState.birthDayController.text,
+        streetAddress: personalDetailsState.streetAddressController.text,
+        city: personalDetailsState.cityController.text,
+        stateOrProvince: personalDetailsState.stateOrProvinceController.text,
+        postalCode: personalDetailsState.postalCodeController.text,
+        phoneNumber: personalDetailsState.phoneNumberController.text,
+        apartmentOrSuite: personalDetailsState.apartmentOrSuiteController.text.isNotEmpty
+            ? personalDetailsState.apartmentOrSuiteController.text
+            : null,
+        profileImage: personalDetailsState.profileImage,
+        profileImageBytes: personalDetailsState.profileImageBytes,
+      );
+
+      // Hide loading dialog
+      if (Navigator.canPop(context)) {
+        Navigator.of(context).pop();
+      }
+
+      if (success) {
+        _showSuccessDialog();
+      } else {
+        _showSnackBar('Failed to complete profile. Please try again.');
+      }
     } catch (e) {
-      Navigator.of(context).pop(); // Close loading dialog
-      _showSnackBar('Test failed: $e');
+      // Hide loading dialog if still showing
+      if (Navigator.canPop(context)) {
+        Navigator.of(context).pop();
+      }
+
+      if (kDebugMode) {
+        print('Error completing profile: $e');
+      }
+      _showSnackBar('An error occurred while completing your profile.');
+    } finally {
+      setState(() {
+        _isCompletingProfile = false;
+      });
     }
   }
 
-// Update the _handleProfileCompletion method
-  Future<void> _handleProfileCompletion() async {
-    final personalDetailsState = _personalDetailsKey.currentState;
-    if (personalDetailsState == null) return;
-
-    // Check if user has selected an image
-    if (personalDetailsState.profileImage == null && personalDetailsState.profileImageBytes == null) {
-      _showSnackBar('Please select a profile picture to continue.');
-      return;
-    }
-
-    // Show loading indicator
+  void _showLoadingDialog(String message) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return const AlertDialog(
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
+        return AlertDialog(
+          content: Row(
             children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('Uploading profile picture...'),
+              const CircularProgressIndicator(),
+              const SizedBox(width: 20),
+              Expanded(child: Text(message)),
             ],
           ),
         );
       },
     );
+  }
 
-    try {
-      // Generate filename for the image
-      final fileName = 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-      if (kDebugMode) {
-        print('Starting profile picture upload...');
-      }
-
-      // Upload only the profile picture
-      final result = await ProfileService.uploadProfilePicture(
-        imageFile: personalDetailsState.profileImage,
-        imageBytes: personalDetailsState.profileImageBytes,
-        fileName: fileName,
-      );
-
-      // Hide loading indicator
-      Navigator.of(context).pop();
-
-      if (result['success']) {
-        _showSnackBar('Profile picture uploaded successfully!');
-
-        // Navigate to next screen or main app
-        // Navigator.pushReplacement(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => MainDashboard()),
-        // );
-      } else {
-        // Show detailed error message
-        String errorMessage = result['message'] ?? 'Failed to upload profile picture';
-        if (result['statusCode'] != null) {
-          errorMessage += ' (Status: ${result['statusCode']})';
-        }
-        _showSnackBar(errorMessage);
-
-        if (kDebugMode) {
-          print('Profile picture upload failed: $result');
-        }
-      }
-    } catch (e) {
-      // Hide loading indicator
-      Navigator.of(context).pop();
-
-      if (kDebugMode) {
-        print('Profile picture upload error: $e');
-      }
-      _showSnackBar('An error occurred while uploading your profile picture');
-    }
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                Icons.check_circle,
+                color: Colors.green,
+                size: 28,
+              ),
+              const SizedBox(width: 8),
+              const Text('Profile Completed!'),
+            ],
+          ),
+          content: const Text('Your profile has been successfully created and saved. You can now start using Workie.lk!'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+                // Navigate to main app or dashboard
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  '/dashboard',
+                      (route) => false,
+                );
+              },
+              child: const Text('Get Started'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _dismissKeyboard() {
