@@ -50,3 +50,7 @@ android/app/mykeystore.jks
 
 # Backup
 Workie.zip
+
+#backend
+/backend
+/backend/

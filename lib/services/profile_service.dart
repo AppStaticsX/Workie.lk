@@ -154,9 +154,19 @@ class ProfileService {
 
       final uri = Uri.parse('$baseUrl/api/users/$userId');
 
+      // Ensure postalCode is always included and not empty
+      final fixedAddress = Map<String, String>.from(address);
+      if (!fixedAddress.containsKey('postalCode') || (fixedAddress['postalCode']?.isEmpty ?? true)) {
+        fixedAddress['postalCode'] = '';
+      }
+      if (kDebugMode) {
+        print('Sending address to backend:');
+        print(fixedAddress);
+      }
+
       final userData = {
         'phone': phoneNumber,
-        'address': address,
+        'address': fixedAddress,
       };
       // DO NOT include profilePicture or profilePicturePublicId here
       // as they are already correctly saved by the media upload route

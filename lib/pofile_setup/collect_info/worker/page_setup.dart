@@ -239,7 +239,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
         city: personalDetailsState.cityController.text,
         stateOrProvince: personalDetailsState.stateOrProvinceController.text,
         postalCode: personalDetailsState.postalCodeController.text,
-        phoneNumber: personalDetailsState.phoneNumberController.text,
+        phoneNumber: '+94${personalDetailsState.phoneNumberController.text}',
         apartmentOrSuite: personalDetailsState.apartmentOrSuiteController.text.isNotEmpty
             ? personalDetailsState.apartmentOrSuiteController.text
             : null,
