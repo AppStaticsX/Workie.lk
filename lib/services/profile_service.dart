@@ -1,23 +1,91 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileService {
-  static const String baseUrl = 'https://workie-lk-backend.onrender.com';
+  static const String _baseUrl = 'https://workie-lk-backend.onrender.com';
+  static const String _authTokenKey = 'auth_token';
+  static const String _userIdKey = 'USER_ID';
 
   // Get auth token from SharedPreferences
   static Future<String?> _getAuthToken() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getString('auth_token');
+      return prefs.getString(_authTokenKey);
     } catch (e) {
-      if (kDebugMode) {
-        print('Error getting auth token: $e');
+      if (kDebugMode) print('Error getting auth token: $e');
+      return null;
+    }
+  }
+
+  // Get current user ID from SharedPreferences
+  static Future<String?> getCurrentUserId() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(_userIdKey);
+    } catch (e) {
+      if (kDebugMode) print('Error getting current user ID: $e');
+      return null;
+    }
+  }
+
+  // Check if user is authenticated
+  static Future<bool> isAuthenticated() async {
+    final token = await _getAuthToken();
+    return token != null && token.isNotEmpty;
+  }
+
+  // Generic HTTP request helper
+  static Future<Map<String, dynamic>?> _makeRequest({
+    required String method,
+    required String endpoint,
+    Map<String, dynamic>? body,
+    bool requiresAuth = true,
+  }) async {
+    try {
+      if (requiresAuth) {
+        final token = await _getAuthToken();
+        if (token == null) {
+          throw Exception('Authentication token not found');
+        }
       }
+
+      final uri = Uri.parse('$_baseUrl$endpoint');
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+        if (requiresAuth) 'Authorization': 'Bearer ${await _getAuthToken()}',
+      };
+
+      late http.Response response;
+      switch (method.toUpperCase()) {
+        case 'GET':
+          response = await http.get(uri, headers: headers);
+          break;
+        case 'POST':
+          response = await http.post(uri, headers: headers, body: json.encode(body));
+          break;
+        case 'PUT':
+          response = await http.put(uri, headers: headers, body: json.encode(body));
+          break;
+        case 'DELETE':
+          response = await http.delete(uri, headers: headers);
+          break;
+        default:
+          throw Exception('Unsupported HTTP method: $method');
+      }
+
+      final responseData = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        return responseData;
+      } else {
+        throw Exception(responseData['message'] ?? 'Request failed');
+      }
+    } catch (e) {
+      if (kDebugMode) print('HTTP request error: $e');
       return null;
     }
   }
@@ -34,15 +102,16 @@ class ProfileService {
         throw Exception('Authentication token not found');
       }
 
-      final uri = Uri.parse('$baseUrl/api/media/profile-picture');
-      final request = http.MultipartRequest('POST', uri);
+      if (imageFile == null && imageBytes == null) {
+        throw Exception('No image provided');
+      }
 
-      // Add authorization header
-      request.headers['Authorization'] = 'Bearer $token';
+      final uri = Uri.parse('$_baseUrl/api/media/profile-picture');
+      final request = http.MultipartRequest('POST', uri)
+        ..headers['Authorization'] = 'Bearer $token';
 
-      // Add the image file
+      // Add the image file based on platform
       if (kIsWeb && imageBytes != null) {
-        // For web platform
         request.files.add(http.MultipartFile.fromBytes(
           'profilePicture',
           imageBytes,
@@ -50,15 +119,12 @@ class ProfileService {
           contentType: MediaType('image', 'jpeg'),
         ));
       } else if (imageFile != null) {
-        // For mobile platforms
         request.files.add(await http.MultipartFile.fromPath(
           'profilePicture',
           imageFile.path,
           filename: fileName,
           contentType: MediaType('image', 'jpeg'),
         ));
-      } else {
-        throw Exception('No image provided');
       }
 
       final response = await request.send();
@@ -66,266 +132,128 @@ class ProfileService {
       final responseData = json.decode(responseBody);
 
       if (response.statusCode == 200) {
-        if (kDebugMode) {
-          print('Profile picture upload response: $responseData');
-        }
+        if (kDebugMode) print('Profile picture upload response: $responseData');
         return responseData;
       } else {
         throw Exception(responseData['message'] ?? 'Failed to upload profile picture');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error uploading profile picture: $e');
-      }
+      if (kDebugMode) print('Error uploading profile picture: $e');
       return null;
     }
   }
 
-  // Create or update user profile
-  static Future<Map<String, dynamic>?> createOrUpdateProfile({
+  // Calculate age from date of birth
+  static int _calculateAge(DateTime dateOfBirth) {
+    final now = DateTime.now();
+    int age = now.year - dateOfBirth.year;
+    
+    // Check if birthday hasn't occurred this year yet
+    if (now.month < dateOfBirth.month || 
+        (now.month == dateOfBirth.month && now.day < dateOfBirth.day)) {
+      age--;
+    }
+    
+    // Ensure age is within valid range (18-100 as per backend model)
+    return age.clamp(18, 100);
+  }
+
+  // Save personal details to profile and upload profile picture if provided
+  static Future<Map<String, dynamic>?> savePersonalDetailsToProfile({
     required String userId,
-    required String dateOfBirth,
+    required DateTime dateOfBirth,
     required String streetAddress,
     required String city,
-    required String stateOrProvince,
     required String postalCode,
     required String phoneNumber,
-    String? apartmentOrSuite,
-  }) async {
-    try {
-      final token = await _getAuthToken();
-      if (token == null) {
-        throw Exception('Authentication token not found');
-      }
-
-      final uri = Uri.parse('$baseUrl/api/profiles/$userId');
-
-      final profileData = {
-        'personalInfo': {
-          'dateOfBirth': dateOfBirth,
-          'phoneNumber': phoneNumber,
-        },
-        'address': {
-          'streetAddress': streetAddress,
-          'apartmentOrSuite': apartmentOrSuite,
-          'city': city,
-          'stateOrProvince': stateOrProvince,
-          'postalCode': postalCode,
-        },
-        'isProfileComplete': true,
-        'profileCompletedAt': DateTime.now().toIso8601String(),
-      };
-
-      final response = await http.put(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: json.encode(profileData),
-      );
-
-      final responseData = json.decode(response.body);
-
-      if (response.statusCode == 200) {
-        return responseData;
-      } else {
-        throw Exception(responseData['message'] ?? 'Failed to update profile');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error updating profile: $e');
-      }
-      return null;
-    }
-  }
-
-  // Update user personal information (WITHOUT touching profile picture fields)
-  static Future<Map<String, dynamic>?> updateUserInfo({
-    required String userId,
-    required String phoneNumber,
-    required Map<String, String> address,
-  }) async {
-    try {
-      final token = await _getAuthToken();
-      if (token == null) {
-        throw Exception('Authentication token not found');
-      }
-
-      final uri = Uri.parse('$baseUrl/api/users/$userId');
-
-      // Ensure postalCode is always included and not empty
-      final fixedAddress = Map<String, String>.from(address);
-      if (!fixedAddress.containsKey('postalCode') || (fixedAddress['postalCode']?.isEmpty ?? true)) {
-        fixedAddress['postalCode'] = '';
-      }
-      if (kDebugMode) {
-        print('Sending address to backend:');
-        print(fixedAddress);
-      }
-
-      final userData = {
-        'phone': phoneNumber,
-        'address': fixedAddress,
-      };
-      // DO NOT include profilePicture or profilePicturePublicId here
-      // as they are already correctly saved by the media upload route
-
-      final response = await http.put(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: json.encode(userData),
-      );
-
-      final responseData = json.decode(response.body);
-
-      if (response.statusCode == 200) {
-        return responseData;
-      } else {
-        throw Exception(responseData['message'] ?? 'Failed to update user info');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error updating user info: $e');
-      }
-      return null;
-    }
-  }
-
-  // Complete profile setup
-  static Future<bool> completeProfileSetup({
-    required String userId,
-    required String dateOfBirth,
-    required String streetAddress,
-    required String city,
-    required String stateOrProvince,
-    required String postalCode,
-    required String phoneNumber,
-    String? apartmentOrSuite,
+    required String province,
     File? profileImage,
     Uint8List? profileImageBytes,
+    String? apartmentOrSuite,
   }) async {
     try {
-      // Step 1: Upload profile picture if provided
-      // This already saves both profilePicture and profilePicturePublicId to the User document
+      String? profilePictureUrl;
+      // Upload profile picture if provided
       if (profileImage != null || profileImageBytes != null) {
-        if (kDebugMode) {
-          print('Uploading profile picture...');
-        }
-
         final uploadResult = await uploadProfilePicture(
           imageFile: profileImage,
           imageBytes: profileImageBytes,
           fileName: 'profile_picture_${userId}_${DateTime.now().millisecondsSinceEpoch}.jpg',
         );
-
-        if (uploadResult != null && uploadResult['message'] != null) {
-          if (uploadResult['message'].toString().contains('successfully')) {
-            if (kDebugMode) {
-              print('Profile picture uploaded successfully');
-              print('URL: ${uploadResult['user']?['profilePicture']}');
-              print('Public ID: ${uploadResult['user']?['profilePicturePublicId']}');
-            }
-          }
-        } else {
-          if (kDebugMode) {
-            print('Failed to upload profile picture');
-          }
-          // Continue even if profile picture upload fails
+        if (uploadResult != null && uploadResult['user']?['profilePicture'] != null) {
+          profilePictureUrl = uploadResult['user']['profilePicture'];
         }
       }
 
-      // Step 2: Update user information (WITHOUT profile picture data)
-      if (kDebugMode) {
-        print('Updating user information...');
+      // Format phone number as +94XXXXXXXXX (no spaces)
+      String formattedPhone = phoneNumber.trim().replaceAll(' ', '');
+      if (!formattedPhone.startsWith('+94')) {
+        // Remove leading 0 if present and add +94
+        if (formattedPhone.startsWith('0')) {
+          formattedPhone = '+94' + formattedPhone.substring(1);
+        } else if (!formattedPhone.startsWith('+')) {
+          formattedPhone = '+94' + formattedPhone;
+        }
       }
 
-      final userUpdateResult = await updateUserInfo(
-        userId: userId,
-        phoneNumber: phoneNumber,
-        address: {
-          'streetAddress': streetAddress,
-          'apartmentOrSuite': apartmentOrSuite ?? '',
+      // Update profile fields
+      final calculatedAge = _calculateAge(dateOfBirth);
+      final profileData = {
+        'dateOfBirth': dateOfBirth.toIso8601String().split('T')[0],
+        'age': calculatedAge,
+        'country': 'Sri Lanka',
+        'streetAddress': streetAddress,
+        'city': city,
+        'province': province,
+        'postalCode': postalCode,
+        'phone': formattedPhone,
+      };
+
+      final profileResult = await _makeRequest(
+        method: 'PUT',
+        endpoint: '/api/profiles/$userId',
+        body: profileData,
+      );
+
+      // Update user fields (phone, profilePicture, address)
+      final userData = <String, dynamic>{
+        'phone': formattedPhone,
+        'address': {
+          'street': streetAddress,
           'city': city,
-          'stateOrProvince': stateOrProvince,
-          'postalCode': postalCode,
+          'state': province,
+          'zipCode': postalCode,
+          'country': 'Sri Lanka',
         },
+      };
+      
+      if (profilePictureUrl != null) {
+        userData['profilePicture'] = profilePictureUrl;
+      }
+
+      final userResult = await _makeRequest(
+        method: 'PUT',
+        endpoint: '/api/users/$userId',
+        body: userData,
       );
 
-      if (userUpdateResult == null || userUpdateResult['success'] != true) {
-        throw Exception('Failed to update user information');
-      }
-
-      // Step 3: Create or update profile
-      if (kDebugMode) {
-        print('Creating/updating profile...');
-      }
-
-      final profileUpdateResult = await createOrUpdateProfile(
-        userId: userId,
-        dateOfBirth: dateOfBirth,
-        streetAddress: streetAddress,
-        city: city,
-        stateOrProvince: stateOrProvince,
-        postalCode: postalCode,
-        phoneNumber: phoneNumber,
-        apartmentOrSuite: apartmentOrSuite,
-      );
-
-      if (profileUpdateResult == null || profileUpdateResult['success'] != true) {
-        throw Exception('Failed to create/update profile');
-      }
-
-      // Step 4: Clear local storage after successful completion
-      try {
-        await clearProfileSetupData();
+      // Check if user update was successful
+      if (userResult == null || userResult['success'] == false) {
+        final errorMsg = userResult?['message'] ?? 'Failed to update user info.';
         if (kDebugMode) {
-          print('Local profile setup data cleared');
+          print('User update failed: $errorMsg');
         }
-      } catch (e) {
-        if (kDebugMode) {
-          print('Warning: Failed to clear local data: $e');
-        }
+        throw Exception(errorMsg);
       }
 
-      if (kDebugMode) {
-        print('Profile setup completed successfully!');
-      }
-
-      return true;
+      // Return both results for reference
+      return {
+        'profile': profileResult,
+        'user': userResult,
+      };
     } catch (e) {
-      if (kDebugMode) {
-        print('Error completing profile setup: $e');
-      }
-      return false;
-    }
-  }
-
-  // Get current user ID from SharedPreferences
-  static Future<String?> getCurrentUserId() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getString('USER_ID');
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error getting current user ID: $e');
-      }
+      if (kDebugMode) print('Error saving personal details: $e');
       return null;
-    }
-  }
-
-  // Clear profile setup data after completion
-  static Future<void> clearProfileSetupData() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('profile_setup_temp_data');
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error clearing profile setup data: $e');
-      }
     }
   }
 
@@ -340,25 +268,21 @@ class ProfileService {
     File? profileImage,
     Uint8List? profileImageBytes,
   }) {
-    if (dateOfBirth.isEmpty ||
-        streetAddress.isEmpty ||
-        city.isEmpty ||
-        stateOrProvince.isEmpty ||
-        postalCode.isEmpty ||
-        phoneNumber.isEmpty) {
+    final requiredFields = [
+      dateOfBirth,
+      streetAddress,
+      city,
+      stateOrProvince,
+      postalCode,
+      phoneNumber,
+    ];
+
+    // Check if any required field is empty
+    if (requiredFields.any((field) => field.isEmpty)) {
       return false;
     }
 
-    if (profileImage == null && profileImageBytes == null) {
-      return false;
-    }
-
-    return true;
-  }
-
-  // Check if user is authenticated
-  static Future<bool> isAuthenticated() async {
-    final token = await _getAuthToken();
-    return token != null && token.isNotEmpty;
+    // Check if profile image is provided
+    return profileImage != null || profileImageBytes != null;
   }
 }

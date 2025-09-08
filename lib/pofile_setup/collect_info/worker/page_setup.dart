@@ -104,9 +104,9 @@ class _ProfileSetupState extends State<ProfileSetup> {
           _showSnackBar('Please add at least one work experience to continue, or use the skip button.');
           return;
         }
-        
+
         break;
-  
+
       case 6:
         if (!_hasEducation) {
           _showSnackBar('Please add at least one education to continue, or use the skip button.');
@@ -265,28 +265,45 @@ class _ProfileSetupState extends State<ProfileSetup> {
       // Show loading dialog
       _showLoadingDialog('Completing your profile...');
 
-      // Complete profile setup
-      final success = await ProfileService.completeProfileSetup(
+      // Save personal details and upload profile picture if provided
+      // Parse dateOfBirth as DateTime from controller (assume yyyy-MM-dd)
+      DateTime? dob;
+      try {
+        dob = DateTime.parse(personalDetailsState.birthDayController.text);
+      } catch (_) {
+        dob = null;
+      }
+      if (dob == null) {
+        _showSnackBar('Invalid date of birth format.');
+        if (Navigator.canPop(context)) {
+          Navigator.of(context).pop();
+        }
+        return;
+      }
+      final profileResult = await ProfileService.savePersonalDetailsToProfile(
         userId: userId,
-        dateOfBirth: personalDetailsState.birthDayController.text,
+        dateOfBirth: dob,
         streetAddress: personalDetailsState.streetAddressController.text,
         city: personalDetailsState.cityController.text,
-        stateOrProvince: personalDetailsState.stateOrProvinceController.text,
+        province: personalDetailsState.stateOrProvinceController.text,
         postalCode: personalDetailsState.postalCodeController.text,
-        phoneNumber: '+94${personalDetailsState.phoneNumberController.text}',
+        phoneNumber: personalDetailsState.phoneNumberController.text,
         apartmentOrSuite: personalDetailsState.apartmentOrSuiteController.text.isNotEmpty
             ? personalDetailsState.apartmentOrSuiteController.text
             : null,
         profileImage: personalDetailsState.profileImage,
         profileImageBytes: personalDetailsState.profileImageBytes,
       );
+      if (kDebugMode) {
+        print('savePersonalDetailsToProfile result: $profileResult');
+      }
 
       // Hide loading dialog
       if (Navigator.canPop(context)) {
         Navigator.of(context).pop();
       }
 
-      if (success) {
+      if (profileResult != null) {
         _showSuccessDialog();
       } else {
         _showSnackBar('Failed to complete profile. Please try again.');
@@ -380,9 +397,9 @@ class _ProfileSetupState extends State<ProfileSetup> {
           size: 36,
         ),
         title: Text('Create & Verify Your Profile',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold
-          )
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold
+            )
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4.0),
@@ -478,7 +495,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
               onTapAction: () {
                 _navigateNext();
                 _dismissKeyboard();
-                },
+              },
               onBackAction: _navigateBack,
               onSkip: _skipNext,
             ),
