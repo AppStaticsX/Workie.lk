@@ -2,38 +2,38 @@ import 'package:flutter/material.dart';
 import 'package:workie/values/color.dart';
 import 'package:workie/widgets/simple_textfeild.dart';
 
-class AddTitlePage extends StatefulWidget {
+class AddOverviewPage extends StatefulWidget {
   final ValueChanged<bool>? onTextChanged;
 
-  const AddTitlePage({
+  const AddOverviewPage({
     super.key,
     this.onTextChanged
   });
 
   @override
-  State<AddTitlePage> createState() => _AddTitlePageState();
+  State<AddOverviewPage> createState() => _AddTitlePageState();
 }
 
-class _AddTitlePageState extends State<AddTitlePage> {
-  final TextEditingController _professionController = TextEditingController();
+class _AddTitlePageState extends State<AddOverviewPage> {
+  final TextEditingController _overviewController = TextEditingController();
   int _letterCount = 0;
 
   @override
   void initState() {
     super.initState();
-    _professionController.addListener(_countLetters);
+    _overviewController.addListener(_countLetters);
   }
 
   void _countLetters() {
     setState(() {
-      String text = _professionController.text;
+      String text = _overviewController.text;
       _letterCount = text.length;
       _notifyParent();
     });
   }
 
   void _notifyParent() {
-    widget.onTextChanged?.call(_professionController.text.isNotEmpty);
+    widget.onTextChanged?.call(_overviewController.text.isNotEmpty);
   }
 
   @override
@@ -47,47 +47,46 @@ class _AddTitlePageState extends State<AddTitlePage> {
           children: [
             const SizedBox(height: 24),
             Text(
-              'Now, add a title to show the work you do.',
+              'Great. Now write a bio to tell the world about yourself',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                height: 1.2
+                  fontWeight: FontWeight.bold,
+                  height: 1.2
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'Clients see this first, so make it clear. Describe the work you do in your own words.',
+              'Let others know about you in a few lines. What work are you good at? Write it clearly in a short paragraph. You can change it later, but read it again now to make sure there are no mistakes.',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: AppColors.textSilver,
-                height: 1.3
+                  height: 1.3
               ),
             ),
             const SizedBox(height: 32),
-            Text(
-              'Your Work Title',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.inverseSurface,
-                fontWeight: FontWeight.bold
-              ),
-            ),
-            const SizedBox(height: 8),
             SimpleTextfield(
-              lengthLimit: 99,
+              lengthLimit: 400,
               focusBorderColor: Theme.of(context).colorScheme.inverseSurface,
-                paddingHorizontal: 0,
-                controller: _professionController,
-                hintText: 'Ex: Skilled Carpenter for Custom Furniture & Wood Work',
-                obscureText: false,
-                maxLines: 2,
+              paddingHorizontal: 0,
+              controller: _overviewController,
+              hintText: 'Write your main skills, work experiences, and interests. This is one of the first things people will see on your profile.',
+              obscureText: false,
+              maxLines: 6,
             ),
             const SizedBox(height: 4),
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '$_letterCount/99 letters',
+                  'At least 100 Characters',
                   style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 13
+                      color: Colors.grey,
+                      fontSize: 13
+                  ),
+                ),
+                Text(
+                  '$_letterCount/400 letters',
+                  style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 13
                   ),
                 )
               ],

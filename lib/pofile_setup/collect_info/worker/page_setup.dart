@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_education_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_experience_page.dart';
+import 'package:workie/pofile_setup/collect_info/worker/add_overview_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_personal_details_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_skills_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_title_page.dart';
@@ -25,14 +26,15 @@ class ProfileSetup extends StatefulWidget {
 class _ProfileSetupState extends State<ProfileSetup> {
   final GlobalKey<AddPersonalDetailsPageState> _personalDetailsKey = GlobalKey();
   int _selectedIndex = 0;
-  final int _maxIndex = 6;
+  final int _maxIndex = 7;
 
   bool _hasWorkSelection = false;
   bool _hasSkills = false;
-  bool _hasText = false;
+  bool _hasTitle = false;
   bool _hasExperience = false;
   bool _hasEducation = false;
   bool _isCompletingProfile = false;
+  bool _hasOverview = false;
 
   @override
   void initState() {
@@ -82,24 +84,30 @@ class _ProfileSetupState extends State<ProfileSetup> {
         }
         break;
       case 3:
-        if (!_hasText) {
+        if (!_hasTitle) {
           _showSnackBar('Please enter your professional title to continue.');
           return;
         }
         break;
       case 4:
+        if (!_hasOverview) {
+          _showSnackBar('Please enter overview about you to continue.');
+          return;
+        }
+        break;
+      case 5:
         if (!_hasExperience) {
           _showSnackBar('Please add at least one work experience to continue, or use the skip button.');
           return;
         }
         break;
-      case 5:
+      case 6:
         if (!_hasEducation) {
           _showSnackBar('Please add at least one education to continue, or use the skip button.');
           return;
         }
         break;
-      case 6:
+      case 7:
         bool isValid = _personalDetailsKey.currentState?.validateInputs() ?? false;
         if (!isValid) {
           _showSnackBar('Please fill all required personal details to continue.');
@@ -380,11 +388,18 @@ class _ProfileSetupState extends State<ProfileSetup> {
             },
           ),
           AddTitlePage(
-            onTextChanged: (hasText) {
+            onTextChanged: (hasTitle) {
               setState(() {
-                _hasText = hasText;
+                _hasTitle = hasTitle;
               });
             },
+          ),
+          AddOverviewPage(
+            onTextChanged: (hasOverview) {
+              setState(() {
+                _hasOverview = hasOverview;
+              });
+            }
           ),
           AddExperiencePage(
             onExperienceChanged: (hasExperience) {
@@ -418,6 +433,11 @@ class _ProfileSetupState extends State<ProfileSetup> {
             ),
             BottomNavigation(
               actionName: 'Add Profile Title',
+              onTapAction: _navigateNext,
+              onBackAction: _navigateBack,
+            ),
+            BottomNavigation(
+              actionName: 'Add Overview',
               onTapAction: _navigateNext,
               onBackAction: _navigateBack,
             ),

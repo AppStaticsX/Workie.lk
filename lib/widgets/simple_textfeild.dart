@@ -14,6 +14,7 @@ class SimpleTextfield extends StatelessWidget {
   final String? errorText;
   final String? Function(String?)? validator;
   final Color focusBorderColor;
+  final int lengthLimit;
 
   const SimpleTextfield({
     super.key,
@@ -26,7 +27,8 @@ class SimpleTextfield extends StatelessWidget {
     this.validator,
     required this.paddingHorizontal,
     required this.maxLines,
-    required this.focusBorderColor
+    required this.focusBorderColor,
+    required this.lengthLimit
   });
 
   @override
@@ -38,7 +40,7 @@ class SimpleTextfield extends StatelessWidget {
         children: [
           TextFormField(
             inputFormatters: [
-              LengthLimitingTextInputFormatter(99),
+              LengthLimitingTextInputFormatter(lengthLimit),
             ],
             maxLines: maxLines,
             obscureText: obscureText,
