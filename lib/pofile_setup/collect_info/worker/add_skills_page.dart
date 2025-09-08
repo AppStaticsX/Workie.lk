@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/values/color.dart';
@@ -16,21 +15,30 @@ class _AddSkillsPageState extends State<AddSkillsPage> {
   final int maxSkills = 15;
   final TextEditingController _skillController = TextEditingController();
 
-  List<String> selectedSkills = [
-    'Android App Development',
-    'App Development',
-    'Mobile App Development',
-    'Mobile App',
-  ];
+  List<String> selectedSkills = [];
 
   List<String> suggestedSkills = [
-    'Mobile Game',
-    'iOS Development',
-    'Smartphone',
-    'Construction Document Preparation',
-    'Specifications',
-    'Web Application',
+    // Masonry & Construction Work
+    'Bricklaying',
+    'Concrete Work',
+
+    // Carpentry & Wood Work
+    'Furniture Making',
+    'Door and Window Installation',
+
+    // Welding & Metal Fabrication
+    'Arc Welding',
+    'Metal Gate Fabrication',
+
+    // Painting & Finishing Work
+    'Wall Painting',
+    'Wood Polishing',
+
+    // Tile & Flooring Work
+    'Tile Laying',
+    'Floor Finishing',
   ];
+
 
   void _notifyParent() {
     widget.onSkillsChanged?.call(selectedSkills.isNotEmpty);
