@@ -190,9 +190,9 @@ class ProfileService {
       if (!formattedPhone.startsWith('+94')) {
         // Remove leading 0 if present and add +94
         if (formattedPhone.startsWith('0')) {
-          formattedPhone = '+94' + formattedPhone.substring(1);
+          formattedPhone = '+94${formattedPhone.substring(1)}';
         } else if (!formattedPhone.startsWith('+')) {
-          formattedPhone = '+94' + formattedPhone;
+          formattedPhone = '+94$formattedPhone';
         }
       }
 
