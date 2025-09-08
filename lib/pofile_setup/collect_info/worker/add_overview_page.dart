@@ -7,37 +7,40 @@ class AddOverviewPage extends StatefulWidget {
 
   const AddOverviewPage({
     super.key,
-    this.onTextChanged
+    this.onTextChanged,
   });
 
   @override
-  State<AddOverviewPage> createState() => _AddTitlePageState();
+  State<AddOverviewPage> createState() => AddOverviewPageState();
 }
 
-class _AddTitlePageState extends State<AddOverviewPage> {
-  final TextEditingController _overviewController = TextEditingController();
+class AddOverviewPageState extends State<AddOverviewPage> {
+  final TextEditingController overviewController = TextEditingController();
   int _letterCount = 0;
 
   @override
   void initState() {
     super.initState();
-    _overviewController.addListener(_countLetters);
+    overviewController.addListener(_countLetters);
   }
 
   void _countLetters() {
     setState(() {
-      String text = _overviewController.text;
+      String text = overviewController.text;
       _letterCount = text.length;
       _notifyParent();
     });
   }
 
   void _notifyParent() {
-    widget.onTextChanged?.call(_overviewController.text.isNotEmpty);
+    // Check if text has minimum 100 characters
+    bool hasValidText = overviewController.text.trim().length >= 100;
+    widget.onTextChanged?.call(hasValidText);
   }
 
   @override
   Widget build(BuildContext context) {
+    bool hasMinimumChars = _letterCount >= 100;
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: SingleChildScrollView(
@@ -66,7 +69,7 @@ class _AddTitlePageState extends State<AddOverviewPage> {
               lengthLimit: 400,
               focusBorderColor: Theme.of(context).colorScheme.inverseSurface,
               paddingHorizontal: 0,
-              controller: _overviewController,
+              controller: overviewController,
               hintText: 'Write your main skills, work experiences, and interests. This is one of the first things people will see on your profile.',
               obscureText: false,
               maxLines: 6,
@@ -76,10 +79,13 @@ class _AddTitlePageState extends State<AddOverviewPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'At least 100 Characters',
+                  hasMinimumChars
+                      ? '✓ Minimum requirement met'
+                      : 'At least 100 Characters required',
                   style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 13
+                    color: hasMinimumChars ? Colors.green : Colors.orange,
+                    fontSize: 13,
+                    fontWeight: hasMinimumChars ? FontWeight.w500 : FontWeight.normal,
                   ),
                 ),
                 Text(

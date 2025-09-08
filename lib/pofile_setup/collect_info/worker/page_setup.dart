@@ -13,6 +13,7 @@ import 'package:workie/widgets/bottom_navigation.dart';
 import 'package:workie/widgets/bottom_navigation_with_skip.dart';
 import 'package:workie/widgets/simple_bottom_navigation.dart';
 import '../../../services/hive_service.dart';
+import '../../../services/overview_service.dart';
 import '../../../services/profile_service.dart';
 import 'start_page.dart';
 
@@ -25,6 +26,7 @@ class ProfileSetup extends StatefulWidget {
 
 class _ProfileSetupState extends State<ProfileSetup> {
   final GlobalKey<AddPersonalDetailsPageState> _personalDetailsKey = GlobalKey();
+  final GlobalKey<AddOverviewPageState> _overviewDetailsKey = GlobalKey();
   int _selectedIndex = 0;
   final int _maxIndex = 7;
 
@@ -90,17 +92,21 @@ class _ProfileSetupState extends State<ProfileSetup> {
         }
         break;
       case 4:
-        if (!_hasOverview) {
-          _showSnackBar('Please enter overview about you to continue.');
+        final overviewState = _overviewDetailsKey.currentState;
+        if (overviewState == null || overviewState.overviewController.text.trim().length < 100) {
+          _showSnackBar('Please write at least 100 characters in your overview to continue.');
           return;
         }
+        _saveOverview();
         break;
       case 5:
         if (!_hasExperience) {
           _showSnackBar('Please add at least one work experience to continue, or use the skip button.');
           return;
         }
+        
         break;
+  
       case 6:
         if (!_hasEducation) {
           _showSnackBar('Please add at least one education to continue, or use the skip button.');
@@ -185,6 +191,26 @@ class _ProfileSetupState extends State<ProfileSetup> {
         behavior: SnackBarBehavior.fixed,
       ),
     );
+  }
+
+  Future<void> _saveOverview() async {
+    final overviewDetailsState = _overviewDetailsKey.currentState;
+    if (overviewDetailsState?.overviewController.text.isEmpty ?? true) return;
+
+    final success = await OverviewService.saveOverview(
+        overviewDetailsState!.overviewController.text.trim()
+    );
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(success
+                ? 'Overview saved as bio!'
+                : 'Failed to save overview. Please try again.'
+            )
+        ),
+      );
+    }
   }
 
 // Update the _handleProfileCompletion method
@@ -395,11 +421,12 @@ class _ProfileSetupState extends State<ProfileSetup> {
             },
           ),
           AddOverviewPage(
+            key: _overviewDetailsKey,
             onTextChanged: (hasOverview) {
               setState(() {
                 _hasOverview = hasOverview;
               });
-            }
+            },
           ),
           AddExperiencePage(
             onExperienceChanged: (hasExperience) {
