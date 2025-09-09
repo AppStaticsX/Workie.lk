@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:workie/values/color.dart';
 import '../../../services/hive_service.dart';
+import '../../../services/work_category_service.dart';
 import '../../../widgets/expandebale_selection_widget.dart';
 
 class SelectWorkPage extends StatefulWidget {
@@ -32,14 +33,12 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
         _isLoading = true;
       });
 
-      final savedWorkSelection = await HiveService.getWorkSelection();
+      // Use the new method to get all category selections
+      final savedCategorySelections = await HiveService.getAllCategorySelections();
 
-      if (savedWorkSelection != null) {
-        categorySelections.clear();
-
+      if (savedCategorySelections.isNotEmpty) {
         setState(() {
-          categorySelections[savedWorkSelection.categoryTitle] =
-          List<String>.from(savedWorkSelection.selectedOptions);
+          categorySelections = Map<String, List<String>>.from(savedCategorySelections);
           _isLoading = false;
         });
 
@@ -76,7 +75,33 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
 
   Future<void> _saveToHive() async {
     try {
+      if (kDebugMode) {
+        print('=== _saveToHive called ===');
+        print('Current categorySelections: $categorySelections');
+        print('Number of categories: ${categorySelections.length}');
+        categorySelections.forEach((category, options) {
+          print('Category: $category, Options count: ${options.length}, Options: $options');
+        });
+      }
+
       await HiveService.saveCategorySelections(categorySelections);
+      
+      // Debug: Print what's actually stored in Hive
+      if (kDebugMode) {
+        await HiveService.debugPrintAllData();
+      }
+      
+      // Also save category titles to backend if user has selected categories
+      if (categorySelections.isNotEmpty) {
+        final success = await WorkCategoryService.saveWorkCategoriesFromSelections(categorySelections);
+        if (kDebugMode) {
+          if (success) {
+            print('Work category titles saved to backend successfully');
+          } else {
+            print('Failed to save work category titles to backend');
+          }
+        }
+      }
     } catch (e) {
       if (kDebugMode) {
         print('Error saving to Hive: $e');

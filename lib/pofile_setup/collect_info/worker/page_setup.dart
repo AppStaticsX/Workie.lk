@@ -15,6 +15,7 @@ import 'package:workie/widgets/simple_bottom_navigation.dart';
 import '../../../services/hive_service.dart';
 import '../../../services/overview_service.dart';
 import '../../../services/profile_service.dart';
+import '../../../services/work_category_service.dart';
 import 'start_page.dart';
 
 class ProfileSetup extends StatefulWidget {
@@ -77,7 +78,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
           _showSnackBar('Please select at least one work option to continue.');
           return;
         }
-        _saveWorkSelectionOnContinue();
+        _saveWorkCategory();
         break;
       case 2:
         if (!_hasSkills) {
@@ -139,12 +140,22 @@ class _ProfileSetupState extends State<ProfileSetup> {
     }
   }
 
-  Future<void> _saveWorkSelectionOnContinue() async {
+  Future<void> _saveWorkCategory() async {
     try {
       final savedData = await HiveService.getWorkSelection();
       if (savedData != null) {
         if (kDebugMode) {
           print('Work selection saved successfully: ${savedData.categoryTitle}');
+        }
+        
+        // Also save to backend database
+        final success = await WorkCategoryService.saveWorkCategoriesToProfile();
+        if (kDebugMode) {
+          if (success) {
+            print('Work categories saved to backend database successfully');
+          } else {
+            print('Failed to save work categories to backend database');
+          }
         }
       }
     } catch (e) {

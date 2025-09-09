@@ -65,6 +65,15 @@ class HiveService {
   static Future<bool> hasWorkSelection() async {
     try {
       final box = await _getBox();
+      
+      // Check for new format (category_0, category_1, etc.)
+      for (var key in box.keys) {
+        if (key.toString().startsWith('category_')) {
+          return true;
+        }
+      }
+      
+      // Check old format for backward compatibility
       final hasData = box.containsKey(_workSelectionKey);
       return hasData;
     } catch (e) {
@@ -75,8 +84,7 @@ class HiveService {
   // Clear work selection
   static Future<void> clearWorkSelection() async {
     try {
-      final box = await _getBox();
-      await box.delete(_workSelectionKey);
+      await _clearAllCategorySelections();
     } catch (e) {
       if (kDebugMode) {
         print('Error clearing work selection: $e');
@@ -87,28 +95,93 @@ class HiveService {
   // Save category selections (for internal state management)
   static Future<void> saveCategorySelections(Map<String, List<String>> categorySelections) async {
     try {
-      // Find the active category (one with selections)
-      String? activeCategory;
-      List<String> selectedOptions = [];
-
+      final box = await _getBox();
+      
+      // Clear all existing category selections first
+      await _clearAllCategorySelections();
+      
+      // Save each category with a unique key
+      int categoryIndex = 0;
       for (var entry in categorySelections.entries) {
         if (entry.value.isNotEmpty) {
-          activeCategory = entry.key;
-          selectedOptions = entry.value;
-          break;
+          final workSelection = WorkSelection(
+            categoryTitle: entry.key,
+            selectedOptions: entry.value,
+          );
+          
+          // Use unique keys for each category: 'category_0', 'category_1', etc.
+          final key = 'category_$categoryIndex';
+          await box.put(key, workSelection);
+          categoryIndex++;
         }
       }
-
-      if (activeCategory != null && selectedOptions.isNotEmpty) {
-        await saveWorkSelection(activeCategory, selectedOptions);
-      } else {
-        // If no selections, clear the saved data
-        await clearWorkSelection();
+      
+      if (kDebugMode) {
+        print('Saved $categoryIndex categories to Hive');
       }
     } catch (e) {
       if (kDebugMode) {
         print('Error saving category selections: $e');
       }
+    }
+  }
+
+  // Helper method to clear all category selections
+  static Future<void> _clearAllCategorySelections() async {
+    try {
+      final box = await _getBox();
+      
+      // Remove all category keys (category_0, category_1, etc.)
+      final keysToRemove = <String>[];
+      for (var key in box.keys) {
+        if (key.toString().startsWith('category_')) {
+          keysToRemove.add(key.toString());
+        }
+      }
+      
+      for (var key in keysToRemove) {
+        await box.delete(key);
+      }
+      
+      // Also remove the old single key for backward compatibility
+      await box.delete(_workSelectionKey);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error clearing category selections: $e');
+      }
+    }
+  }
+
+  // Get all category selections
+  static Future<Map<String, List<String>>> getAllCategorySelections() async {
+    try {
+      final box = await _getBox();
+      final Map<String, List<String>> categorySelections = {};
+      
+      // Get all categories (category_0, category_1, etc.)
+      for (var key in box.keys) {
+        if (key.toString().startsWith('category_')) {
+          final workSelection = box.get(key) as WorkSelection?;
+          if (workSelection != null) {
+            categorySelections[workSelection.categoryTitle] = workSelection.selectedOptions;
+          }
+        }
+      }
+      
+      // If no new format found, try the old format for backward compatibility
+      if (categorySelections.isEmpty) {
+        final oldWorkSelection = box.get(_workSelectionKey) as WorkSelection?;
+        if (oldWorkSelection != null) {
+          categorySelections[oldWorkSelection.categoryTitle] = oldWorkSelection.selectedOptions;
+        }
+      }
+      
+      return categorySelections;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting all category selections: $e');
+      }
+      return {};
     }
   }
 
@@ -131,11 +204,30 @@ class HiveService {
     try {
       final box = await _getBox();
 
+      if (kDebugMode) {
+        print('=== All Hive Data ===');
+        print('Total keys in box: ${box.keys.length}');
+      }
+
       for (var key in box.keys) {
         final value = box.get(key);
         if (kDebugMode) {
-          print('Key: $key, Value: ${value?.categoryTitle}, Options: ${value?.selectedOptions}');
+          if (value is WorkSelection) {
+            print('Key: $key, Category: ${value.categoryTitle}, Options: ${value.selectedOptions}');
+          } else {
+            print('Key: $key, Value: $value');
+          }
         }
+      }
+
+      // Also print the new format data
+      final allSelections = await getAllCategorySelections();
+      if (kDebugMode) {
+        print('=== Parsed Category Selections ===');
+        print('Number of categories: ${allSelections.length}');
+        allSelections.forEach((category, options) {
+          print('Category: $category, Options: $options');
+        });
       }
     } catch (e) {
       if (kDebugMode) {
