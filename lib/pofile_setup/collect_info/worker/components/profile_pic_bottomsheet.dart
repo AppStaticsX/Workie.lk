@@ -23,7 +23,7 @@ class ProfilePicBottomsheet extends StatefulWidget {
 class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
 
   bool _hasImage = false;
-  double _imgScale = 1.5;
+  double _imgScale = 1;
   double _imgAngle = 0;
   File? _selectedImage;
   Uint8List? _webImageBytes;
@@ -185,8 +185,8 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
   Widget _buildImageScaler() {
     return Slider(
       value: _imgScale,
-      min: 0,
-      max: 10,
+      min: 1,
+      max: 2,
       thumbColor: const Color(0xFF4E6BF5),
       activeColor: const Color(0xFF4E6BF5),
       inactiveColor: Theme.of(context).colorScheme.tertiary,

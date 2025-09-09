@@ -215,26 +215,34 @@ class DashedPhotoPickerState extends State<DashedPhotoPicker>
       return ClipOval(
         child: Transform.rotate(
           angle: widget.angle * (pi / 180),
-          child: Image.memory(
-            _webImageBytes!,
-            width: widget.size,
-            height: widget.size,
-            fit: BoxFit.fitWidth,
-            scale: 3.0 - widget.scale,
-          ),
+          child: ClipRect(
+            child: Transform.scale(
+              scale: widget.scale,
+              child: Image.memory(
+                _webImageBytes!,
+                width: widget.size,
+                height: widget.size,
+                fit: BoxFit.cover,
+              ),
+            ),
+          )
         ),
       );
     } else if (_selectedImage != null) {
       return ClipOval(
         child: Transform.rotate(
           angle: widget.angle * (pi / 180),
-          child: Image.file(
-            _selectedImage!,
-            width: widget.size,
-            height: widget.size,
-            fit: BoxFit.none,
-            scale: 10.0 - widget.scale,
-          ),
+          child: ClipRect(
+            child: Transform.scale(
+              scale: widget.scale,
+              child: Image.file(
+                _selectedImage!,
+                width: widget.size,
+                height: widget.size,
+                fit: BoxFit.cover,
+              ),
+            ),
+          )
         ),
       );
     }
