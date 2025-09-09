@@ -8,7 +8,7 @@ import 'dart:typed_data';
 
 class ProfilePicBottomsheet extends StatefulWidget {
   final VoidCallback closeBottomSheet;
-  final Function(File?, Uint8List?)? onImageAttached;
+  final Function(File?, Uint8List?, double? , double?)? onImageAttached;
 
   const ProfilePicBottomsheet({
     super.key,
@@ -309,8 +309,8 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
         const SizedBox(width: 24),
         ElevatedButton(
           onPressed: _hasImage ? () {
-            // Pass image data to parent and close
-            widget.onImageAttached?.call(_selectedImage, _webImageBytes);
+            // Pass image data with scale to parent and close
+            widget.onImageAttached?.call(_selectedImage, _webImageBytes, _imgScale, _imgAngle);
             widget.closeBottomSheet();
           } : null,
           style: ElevatedButton.styleFrom(

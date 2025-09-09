@@ -19,6 +19,8 @@ class AddPersonalDetailsPage extends StatefulWidget {
 class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
   File? profileImage;
   Uint8List? profileImageBytes;
+  double? profileImageScale;
+  double? profileImageAngle;
 
   String? selectedProvince;
 
@@ -147,6 +149,9 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
           children: [
             GestureDetector(
               onTap: () {
+                setState(() {
+                  profileImageAngle = 0;
+                });
                 showModalBottomSheet(
                     isScrollControlled: true,
                     isDismissible: false,
@@ -155,10 +160,12 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                       closeBottomSheet: () {
                         Navigator.pop(context);
                       },
-                      onImageAttached: (file, bytes) {
+                      onImageAttached: (file, bytes, scale, angle) {
                         setState(() {
                           profileImage = file;
                           profileImageBytes = bytes;
+                          profileImageScale = scale;
+                          profileImageAngle = angle;
                         });
                       },
                     )
@@ -170,15 +177,33 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                   width: 150,
                   height: 150,
                   child: kIsWeb && profileImageBytes != null
-                      ? Image.memory(
-                    profileImageBytes!,
-                    fit: BoxFit.cover,
-                  )
+                      ? ClipRect(
+                        child: Transform.rotate(
+                          angle: profileImageAngle! - 45,
+                          child: Transform.scale(
+                            scale: profileImageScale,
+                            child: Image.
+                            memory(
+                              profileImageBytes!,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      )
                       : profileImage != null
-                      ? Image.file(
-                    profileImage!,
-                    fit: BoxFit.cover,
-                  )
+                      ? ClipRect(
+                          child: Transform.rotate(
+                            angle: profileImageAngle! - 45,
+                            child: Transform.scale(
+                              scale: profileImageScale,
+                              child: Image.
+                              file(
+                                profileImage!,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                      )
                       : Container(
                     decoration: BoxDecoration(
                         shape: BoxShape.circle,
@@ -221,6 +246,9 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
         const SizedBox(height: 12),
         OutlinedButton(
           onPressed: () {
+            setState(() {
+              profileImageAngle = 0;
+            });
             showModalBottomSheet(
                 isScrollControlled: true,
                 isDismissible: false,
