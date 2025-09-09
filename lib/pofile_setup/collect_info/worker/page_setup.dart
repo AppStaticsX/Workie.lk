@@ -36,7 +36,6 @@ class _ProfileSetupState extends State<ProfileSetup> {
   bool _hasExperience = false;
   bool _hasEducation = false;
   bool _isCompletingProfile = false;
-  bool _hasOverview = false;
   bool _isSaving = false;
 
   @override
@@ -249,7 +248,9 @@ class _ProfileSetupState extends State<ProfileSetup> {
       final isAuthenticated = await ProfileService.isAuthenticated();
       if (!isAuthenticated) {
         _showSnackBar('Error: Please log in again.');
-        Navigator.of(context).pushReplacementNamed('/login');
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed('/login');
+        }
         return;
       }
 
@@ -257,7 +258,9 @@ class _ProfileSetupState extends State<ProfileSetup> {
       final userId = await ProfileService.getCurrentUserId();
       if (userId == null) {
         _showSnackBar('Error: User not found. Please log in again.');
-        Navigator.of(context).pushReplacementNamed('/login');
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed('/login');
+        }
         return;
       }
 
@@ -298,8 +301,10 @@ class _ProfileSetupState extends State<ProfileSetup> {
       }
       if (dob == null) {
         _showSnackBar('Invalid date of birth format.');
-        if (Navigator.canPop(context)) {
-          Navigator.of(context).pop();
+        if (mounted) {
+          if (Navigator.canPop(context)) {
+            Navigator.of(context).pop();
+          }
         }
         return;
       }
@@ -322,8 +327,10 @@ class _ProfileSetupState extends State<ProfileSetup> {
       }
 
       // Hide loading dialog
-      if (Navigator.canPop(context)) {
-        Navigator.of(context).pop();
+      if (mounted) {
+        if (Navigator.canPop(context)) {
+          Navigator.of(context).pop();
+        }
       }
 
       if (profileResult != null) {
@@ -332,9 +339,10 @@ class _ProfileSetupState extends State<ProfileSetup> {
         _showSnackBar('Failed to complete profile. Please try again.');
       }
     } catch (e) {
-      // Hide loading dialog if still showing
-      if (Navigator.canPop(context)) {
-        Navigator.of(context).pop();
+      if (mounted) {
+        if (Navigator.canPop(context)) {
+          Navigator.of(context).pop();
+        }
       }
 
       if (kDebugMode) {
@@ -464,7 +472,6 @@ class _ProfileSetupState extends State<ProfileSetup> {
             key: _overviewDetailsKey,
             onTextChanged: (hasOverview) {
               setState(() {
-                _hasOverview = hasOverview;
               });
             },
           ),
@@ -518,6 +525,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
               onBackAction: _navigateBack,
             ),
             BottomNavigationWithSkip(
+              isSaving: _isSaving,
               actionName: 'Add Education',
               onTapAction: () {
                 _navigateNext();
@@ -527,6 +535,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
               onSkip: _skipNext,
             ),
             BottomNavigationWithSkip(
+              isSaving: _isSaving,
               actionName: 'Add Personal Info',
               onTapAction: _navigateNext,
               onBackAction: _navigateBack,
