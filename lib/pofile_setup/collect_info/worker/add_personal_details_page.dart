@@ -589,7 +589,7 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                 value: selectedProvince,
                 decoration: InputDecoration(
                   hintText: 'Select Province',
-                  hintStyle: const TextStyle(color: Colors.grey),
+                  hintStyle: const TextStyle(color: Colors.grey, fontWeight: FontWeight.normal),
                   filled: true,
                   fillColor: Theme.of(context).colorScheme.tertiary,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

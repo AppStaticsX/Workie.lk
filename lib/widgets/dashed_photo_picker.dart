@@ -233,7 +233,7 @@ class DashedPhotoPickerState extends State<DashedPhotoPicker>
             width: widget.size,
             height: widget.size,
             fit: BoxFit.none,
-            scale: 3.0 - widget.scale,
+            scale: 10.0 - widget.scale,
           ),
         ),
       );

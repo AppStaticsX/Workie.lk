@@ -64,16 +64,28 @@ class BottomNavigation extends StatelessWidget {
                   fontWeight: FontWeight.w900,
                   fontSize: 16,
                 ),
-              ) : Transform.scale(
-                scale: 0.45, // Makes it half the size
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 4.0),
-                  child: CircularProgressIndicator(
-                    strokeWidth: 9,
-                    color: Colors.white,
-                    strokeCap: StrokeCap.square,
+              ) : Row(
+                children: [
+                  Transform.scale(
+                    scale: 0.45, // Makes it half the size
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 4.0),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 9,
+                        color: Colors.white,
+                        strokeCap: StrokeCap.square,
+                      ),
+                    ),
                   ),
-                ),
+                  Text(
+                    'Saving...',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

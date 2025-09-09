@@ -75,15 +75,6 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
 
   Future<void> _saveToHive() async {
     try {
-      if (kDebugMode) {
-        print('=== _saveToHive called ===');
-        print('Current categorySelections: $categorySelections');
-        print('Number of categories: ${categorySelections.length}');
-        categorySelections.forEach((category, options) {
-          print('Category: $category, Options count: ${options.length}, Options: $options');
-        });
-      }
-
       await HiveService.saveCategorySelections(categorySelections);
       
       // Debug: Print what's actually stored in Hive

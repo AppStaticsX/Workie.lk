@@ -186,7 +186,7 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
     return Slider(
       value: _imgScale,
       min: 0,
-      max: 3.0,
+      max: 10,
       thumbColor: const Color(0xFF4E6BF5),
       activeColor: const Color(0xFF4E6BF5),
       inactiveColor: Theme.of(context).colorScheme.tertiary,
