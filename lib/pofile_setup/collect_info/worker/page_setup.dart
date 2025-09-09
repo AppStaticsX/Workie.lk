@@ -37,6 +37,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
   bool _hasEducation = false;
   bool _isCompletingProfile = false;
   bool _hasOverview = false;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -97,8 +98,8 @@ class _ProfileSetupState extends State<ProfileSetup> {
           _showSnackBar('Please write at least 100 characters in your overview to continue.');
           return;
         }
-        _saveOverview();
-        break;
+        _saveOverview(); // This will handle navigation internally
+        return;
       case 5:
         if (!_hasExperience) {
           _showSnackBar('Please add at least one work experience to continue, or use the skip button.');
@@ -195,21 +196,43 @@ class _ProfileSetupState extends State<ProfileSetup> {
 
   Future<void> _saveOverview() async {
     final overviewDetailsState = _overviewDetailsKey.currentState;
-    if (overviewDetailsState?.overviewController.text.isEmpty ?? true) return;
+    if (overviewDetailsState?.overviewController.text.isEmpty ?? true) {
+      _showSnackBar('Please enter your overview to continue.');
+      return;
+    }
 
-    final success = await OverviewService.saveOverview(
-        overviewDetailsState!.overviewController.text.trim()
-    );
+    setState(() {
+      _isSaving = true;
+    });
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(success
-                ? 'Overview saved as bio!'
-                : 'Failed to save overview. Please try again.'
-            )
-        ),
+    try {
+      final success = await OverviewService.saveOverview(
+          overviewDetailsState!.overviewController.text.trim()
       );
+
+      if (success) {
+        // Navigate to next page after successful save
+        if (_selectedIndex < _maxIndex) {
+          setState(() {
+            _selectedIndex++;
+          });
+
+          if (kDebugMode) {
+            print('Overview saved successfully, navigated to index: $_selectedIndex');
+          }
+        }
+      } else {
+        _showSnackBar('Failed to save overview. Please try again.');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error saving overview: $e');
+      }
+      _showSnackBar('An error occurred while saving your overview.');
+    } finally {
+      setState(() {
+        _isSaving = false;
+      });
     }
   }
 
@@ -471,21 +494,25 @@ class _ProfileSetupState extends State<ProfileSetup> {
               onTapAction: _navigateNext,
             ),
             BottomNavigation(
+              isSaving: _isSaving,
               actionName: 'Add Skills',
               onTapAction: _navigateNext,
               onBackAction: _navigateBack,
             ),
             BottomNavigation(
+              isSaving: _isSaving,
               actionName: 'Add Profile Title',
               onTapAction: _navigateNext,
               onBackAction: _navigateBack,
             ),
             BottomNavigation(
+              isSaving: _isSaving,
               actionName: 'Add Overview',
               onTapAction: _navigateNext,
               onBackAction: _navigateBack,
             ),
             BottomNavigation(
+              isSaving: _isSaving,
               actionName: 'Add Experience',
               onTapAction: _navigateNext,
               onBackAction: _navigateBack,
@@ -506,6 +533,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
               onSkip: _skipNext,
             ),
             BottomNavigation(
+              isSaving: _isSaving,
               actionName: 'Complete Profile',
               onTapAction: _navigateNext,
               onBackAction: _navigateBack,

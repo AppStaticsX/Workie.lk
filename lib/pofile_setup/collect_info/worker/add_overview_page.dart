@@ -79,12 +79,10 @@ class AddOverviewPageState extends State<AddOverviewPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  hasMinimumChars
-                      ? '✓ Minimum requirement met'
-                      : 'At least 100 Characters required',
+                  'At least 100 Characters Required',
                   style: TextStyle(
-                    color: hasMinimumChars ? Colors.green : Colors.orange,
-                    fontSize: 13,
+                    color: hasMinimumChars ? Colors.green : Colors.grey,
+                    fontSize: 12,
                     fontWeight: hasMinimumChars ? FontWeight.w500 : FontWeight.normal,
                   ),
                 ),
@@ -92,7 +90,7 @@ class AddOverviewPageState extends State<AddOverviewPage> {
                   '$_letterCount/400 letters',
                   style: TextStyle(
                       color: Colors.grey,
-                      fontSize: 13
+                      fontSize: 14
                   ),
                 )
               ],

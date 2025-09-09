@@ -15,6 +15,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
   int _selectedIndex = 0;
   bool _isPortraitSelected = false;
   bool _isNicSelected = false;
+  bool _isSaving = false;
 
   void _onPortraitSelectionChanged(bool isSelected) {
     setState(() {
@@ -97,6 +98,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
         index: _selectedIndex,
         children: [
           BottomNavigation(
+            isSaving: _isSaving,
             actionName: 'Next Step',
             onTapAction: _handleNextStep,
             onBackAction: () {
@@ -106,6 +108,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
             },
           ),
           BottomNavigation(
+            isSaving: _isSaving,
             actionName: 'Next Step',
             onTapAction: _handleNextStep, // Use the same validation method
             onBackAction: () {
@@ -115,6 +118,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
             },
           ),
           BottomNavigation(
+            isSaving: _isSaving,
             actionName: 'test',
             onTapAction: () {
               setState(() {

@@ -5,12 +5,14 @@ class BottomNavigation extends StatelessWidget {
   final String actionName;
   final VoidCallback onTapAction;
   final VoidCallback onBackAction;
+  final bool isSaving;
 
   const BottomNavigation({
     super.key,
     required this.actionName,
     required this.onTapAction,
-    required this.onBackAction
+    required this.onBackAction,
+    required this.isSaving
   });
 
   @override
@@ -28,13 +30,20 @@ class BottomNavigation extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: const Color(0xFF4E6BF5),
+                color: isSaving
+                    ? Colors.grey
+                    : const Color(0xFF4E6BF5),
                 width: 2.5
               )
             ),
             child: IconButton(
-              onPressed: onBackAction,
-              icon: const Icon(Iconsax.arrow_left_2_copy),
+              onPressed: isSaving? null : onBackAction,
+              icon: Icon(
+                  Iconsax.arrow_left_2_copy,
+                  color: isSaving
+                      ? Colors.grey
+                      : Theme.of(context).colorScheme.inverseSurface
+              ),
             ),
           ),
           SizedBox(
@@ -43,17 +52,27 @@ class BottomNavigation extends StatelessWidget {
               onPressed: onTapAction,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF4E6BF5),
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),
               ),
-              child: Text(
+              child: !isSaving
+                  ?Text(
                 actionName,
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w900,
                   fontSize: 16,
+                ),
+              ) : Transform.scale(
+                scale: 0.45, // Makes it half the size
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 4.0),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 9,
+                    color: Colors.white,
+                    strokeCap: StrokeCap.square,
+                  ),
                 ),
               ),
             ),

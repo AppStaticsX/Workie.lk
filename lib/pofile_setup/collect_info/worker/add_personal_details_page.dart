@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:pinput/pinput.dart';
@@ -19,6 +20,20 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
   File? profileImage;
   Uint8List? profileImageBytes;
 
+  String? selectedProvince;
+
+  final List<String> provinces = [
+    'Western',
+    'Central',
+    'Southern',
+    'Northern',
+    'Eastern',
+    'North Western',
+    'North Central',
+    'Uva',
+    'Sabaragamuwa'
+  ];
+
   bool _isBirthDayEmpty = false;
   bool _isStreetAddressEmpty = false;
   bool _isCityEmpty = false;
@@ -27,6 +42,7 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
   bool _isPhoneNumberEmpty = false;
   bool _isApartmentOrSuiteEmpty = false;
   bool _isProfileImage = false;
+  bool _isPhoneNumberInvalid = false;
 
   TextEditingController birthDayController = TextEditingController();
   TextEditingController streetAddressController = TextEditingController();
@@ -52,16 +68,17 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
       _isStateOrProvinceEmpty = stateOrProvinceController.text.isEmpty;
       _isPostalCodeEmpty = postalCodeController.text.isEmpty;
       _isPhoneNumberEmpty = phoneNumberController.text.isEmpty;
+      _isPhoneNumberInvalid = phoneNumberController.text.isNotEmpty && phoneNumberController.text.length != 9;
       _isProfileImage = profileImage == null && profileImageBytes == null;
     });
 
-    // Return the validation result
     return !(_isBirthDayEmpty ||
         _isStreetAddressEmpty ||
         _isCityEmpty ||
         _isStateOrProvinceEmpty ||
         _isPostalCodeEmpty ||
         _isPhoneNumberEmpty ||
+        _isPhoneNumberInvalid ||
         _isProfileImage);
   }
 
@@ -568,16 +585,10 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
             ),
             const SizedBox(width: 24), // Add spacing between fields
             Expanded(
-              child: TextFormField(
-                controller: stateOrProvinceController,
-                focusNode: stateOrProvinceFocusNode,
-                onChanged: (value) {
-                  if (_isStateOrProvinceEmpty && value.isNotEmpty) {
-                    setState(() => _isStateOrProvinceEmpty = false);
-                  }
-                },
+              child: DropdownButtonFormField<String>(
+                value: selectedProvince,
                 decoration: InputDecoration(
-                  hintText: 'Ex: California',
+                  hintText: 'Select Province',
                   hintStyle: const TextStyle(color: Colors.grey),
                   filled: true,
                   fillColor: Theme.of(context).colorScheme.tertiary,
@@ -604,6 +615,23 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                     ),
                   ),
                 ),
+                items: provinces.map((String province) {
+                  return DropdownMenuItem<String>(
+                    value: province,
+                    child: Text(
+                        province, style: TextStyle(fontWeight: FontWeight.normal)
+                    ),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    selectedProvince = newValue;
+                    stateOrProvinceController.text = newValue ?? '';
+                    if (_isStateOrProvinceEmpty && newValue != null) {
+                      _isStateOrProvinceEmpty = false;
+                    }
+                  });
+                },
               ),
             ),
           ],
@@ -727,6 +755,11 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                 '  (Required)',
                 style: TextStyle(fontSize: 12, color: Colors.red),
               ),
+            if (_isPhoneNumberInvalid)
+              const Text(
+                '  (Must be 9 digits)',
+                style: TextStyle(fontSize: 12, color: Colors.red),
+              ),
           ],
         ),
         const SizedBox(height: 4),
@@ -755,10 +788,18 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
               child: TextFormField(
                 controller: phoneNumberController,
                 focusNode: phoneNumberFocusNode,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(9),
+                ],
                 onChanged: (value) {
-                  if (_isPhoneNumberEmpty && value.isNotEmpty) {
-                    setState(() => _isPhoneNumberEmpty = false);
-                  }
+                  setState(() {
+                    if (_isPhoneNumberEmpty && value.isNotEmpty) {
+                      _isPhoneNumberEmpty = false;
+                    }
+                    _isPhoneNumberInvalid = value.isNotEmpty && value.length != 9;
+                  });
                 },
                 decoration: InputDecoration(
                   hintText: 'Ex: 712211251',
@@ -776,14 +817,18 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: _isPhoneNumberEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                      color: (_isPhoneNumberEmpty || _isPhoneNumberInvalid)
+                          ? Colors.red
+                          : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
                       width: 1.5,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: _isPhoneNumberEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
+                      color: (_isPhoneNumberEmpty || _isPhoneNumberInvalid)
+                          ? Colors.red
+                          : Theme.of(context).colorScheme.inverseSurface,
                       width: 2,
                     ),
                   ),
