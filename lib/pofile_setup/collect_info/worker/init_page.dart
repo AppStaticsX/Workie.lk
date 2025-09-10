@@ -25,7 +25,8 @@ class _InitPageState extends State<InitPage> {
         ),
         title: Text('Create & Verify Your Profile',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold
+                fontWeight: FontWeight.bold,
+              color: Colors.white
             )
         ),
         bottom: PreferredSize(

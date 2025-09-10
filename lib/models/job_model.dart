@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:workie/models/detailed_job_model.dart';
 import 'package:workie/values/color.dart';
 
 class JobCard extends StatefulWidget {
@@ -82,9 +83,9 @@ class _JobCardState extends State<JobCard> {
             borderRadius: BorderRadius.circular(12),
           ),
           child: const Icon(
-            Icons.business,
+            Iconsax.building_3,
             color: Colors.white,
-            size: 36,
+            size: 40,
           ),
         ),
         const SizedBox(width: 12),
@@ -96,11 +97,11 @@ class _JobCardState extends State<JobCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.jobTitle,
-                    style: Theme.of(context).textTheme.titleLarge?.
+                      widget.jobTitle,
+                      style: Theme.of(context).textTheme.titleLarge?.
                       copyWith(
-                        fontWeight: FontWeight.bold
-                    )
+                          fontWeight: FontWeight.bold
+                      )
                   ),
                   _buildDetailItem(Iconsax.location, widget.location),
                   _buildAuthorInfo()
@@ -122,13 +123,13 @@ class _JobCardState extends State<JobCard> {
               },
               child: Container(
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.tertiary,
-                  borderRadius: BorderRadius.circular(10)
+                    color: Theme.of(context).colorScheme.tertiary,
+                    borderRadius: BorderRadius.circular(10)
                 ),
                 padding: const EdgeInsets.all(8),
                 child: Icon(
-                  isSaved ? Iconsax.heart_add : Iconsax.heart_add_copy,
-                  color: isSaved ? Colors.red : Colors.grey,
+                  isSaved ? Iconsax.bookmark_2 : Iconsax.bookmark_2_copy,
+                  color: isSaved ? const Color(0xFF4E6BF5) : Colors.grey,
                   size: 24,
                 ),
               ),
@@ -149,10 +150,10 @@ class _JobCardState extends State<JobCard> {
         ),
         const SizedBox(width: 6),
         Text(
-          'Published on ${widget.publishedDate}',
-          style: Theme.of(context).textTheme.titleSmall?.
+            'Published on ${widget.publishedDate}',
+            style: Theme.of(context).textTheme.titleSmall?.
             copyWith(color: AppColors.textSilver
-          )
+            )
         ),
       ],
     );
@@ -164,15 +165,15 @@ class _JobCardState extends State<JobCard> {
     return Row(
       children: [
         Container(
-          padding: EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(5),
-            border: Border.all(
-              color: color.withValues(alpha: 0.2),
-              width: 1,
+            padding: EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(5),
+              border: Border.all(
+                color: color.withValues(alpha: 0.2),
+                width: 1,
+              ),
             ),
-          ),
             child: _buildDetailItem(
                 Iconsax.timer, widget.jobType
             )
@@ -194,10 +195,10 @@ class _JobCardState extends State<JobCard> {
         ),
         const SizedBox(width: 6),
         Text(
-          text,
-          style: Theme.of(context).textTheme.titleMedium?.
+            text,
+            style: Theme.of(context).textTheme.titleMedium?.
             copyWith(color: AppColors.textSilver
-          )
+            )
         ),
       ],
     );
@@ -220,7 +221,61 @@ class _JobCardState extends State<JobCard> {
       children: [
         ElevatedButton(
           onPressed: () {
-            // Handle save for later
+            print("View Job button pressed"); // Debug print
+
+            try {
+              // Method 1: Try using the static show method
+              JobDetailsBottomSheet.show(
+                context,
+                companyName: widget.companyName,
+                jobTitle: widget.jobTitle,
+                location: widget.location,
+                salaryRange: widget.salary,
+                jobType: widget.jobType,
+                workingModel: 'Remote',
+                level: 'Mid-level',
+                aboutCompany: widget.description,
+                jobDescriptionPoints: [
+                  'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+                  'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                ],
+                onApply: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Application submitted!')),
+                  );
+                },
+              );
+            } catch (e) {
+              print("Error with JobDetailsBottomSheet.show: $e");
+
+              // Method 2: Fallback - use showModalBottomSheet directly
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => JobDetailsBottomSheet(
+                  companyName: widget.companyName,
+                  jobTitle: widget.jobTitle,
+                  location: widget.location,
+                  salaryRange: widget.salary,
+                  jobType: widget.jobType,
+                  workingModel: 'Remote',
+                  level: 'Mid-level',
+                  aboutCompany: widget.description,
+                  jobDescriptionPoints: [
+                    'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+                    'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                  ],
+                  onApply: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Application submitted!')),
+                    );
+                  },
+                ),
+              );
+            }
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.grey[800],
@@ -236,6 +291,7 @@ class _JobCardState extends State<JobCard> {
         Expanded(
           child: ElevatedButton(
             onPressed: () {
+              print("Apply Now button pressed"); // Debug print
               // Handle apply now
             },
             style: ElevatedButton.styleFrom(
@@ -247,7 +303,7 @@ class _JobCardState extends State<JobCard> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             child: Text(
-                'Apply Now',
+              'Apply Now',
               style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.white,),
             ),
           ),
