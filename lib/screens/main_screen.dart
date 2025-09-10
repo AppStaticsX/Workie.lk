@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workie/pages/explore_page.dart';
 import 'package:workie/pages/home_page.dart';
 import 'package:workie/pages/post_page.dart';
-import 'package:workie/screens/worker_post_screen.dart';
 import '../pages/activity_page.dart';
 import '../pages/profile_page.dart';
 
@@ -21,20 +20,12 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   void initState() {
-    _loadUserRole();
     super.initState();
   }
 
   void _navigateBottomBar(int index) {
     setState(() {
       _selectedIndex = index;
-    });
-  }
-
-  Future<void> _loadUserRole() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      selectedRole = prefs.getString('USER_ROLE') ?? 'No data saved';
     });
   }
 
@@ -47,7 +38,9 @@ class _MainScreenState extends State<MainScreen> {
         children: [
           const HomeTabPage(),
           const ExploreTabPage(),
-          selectedRole == 'job_seeker'? WorkerPostScreen(onPostSuccess: () => _navigateBottomBar(0)) : const PostTabPage(),
+          PostPage(navigatePage: () {
+            _navigateBottomBar(0);
+          }),
           const ActivityTabPage(),
           const ProfileTabPage(),
         ],
