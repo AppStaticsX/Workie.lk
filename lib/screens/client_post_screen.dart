@@ -435,6 +435,10 @@ class _ClientPostScreenState extends State<ClientPostScreen> {
           value: _selectedJobCategory,
           decoration: InputDecoration(
             hintText: 'Select job category',
+            hintStyle: TextStyle(
+              fontWeight: FontWeight.normal,
+              color: Colors.grey
+            ),
             filled: true,
             fillColor: Theme.of(context).colorScheme.tertiary,
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -450,6 +454,13 @@ class _ClientPostScreenState extends State<ClientPostScreen> {
               borderSide: BorderSide(
                 color: _isJobCategoryEmpty ? Colors.red : Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
                 width: 0.5,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: _isJobTitleEmpty ? Colors.red : const Color(0xFF4E6BF5),
+                width: 1.5,
               ),
             ),
           ),
@@ -1016,6 +1027,9 @@ class _ClientPostScreenState extends State<ClientPostScreen> {
             setState(() => _materialsProvided = value);
           },
           contentPadding: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(100.0),
+          ),
         ),
         if (_materialsProvided) ...[
           TextFormField(
