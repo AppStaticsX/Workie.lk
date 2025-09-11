@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workie/pages/components/profile_pic_bottomsheet.dart';
 import 'package:workie/values/color.dart';
 import '../services/pull_data/get_user_data.dart';
 
@@ -54,6 +55,11 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     });
   }
 
+  Future<void> _refreshData() async {
+    await _loadUserRole();
+    await _getUserData();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -66,8 +72,8 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
         title: Text(
           'My Profile',
           style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white
+              fontWeight: FontWeight.bold,
+              color: Colors.white
           ),
         ),
         actions: [
@@ -79,8 +85,10 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
           ),
         ],
       ),
-      body: SafeArea(
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
         child: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -133,21 +141,21 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
           ),
           if (selectedRole == 'employer')
             Text(
-              'Professional Carpenter Specializing in Custom Furniture and Woodcraft',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.inverseSurface,
-                fontSize: 15,
-                height: 1.3
-              )
+                'Professional Carpenter Specializing in Custom Furniture and Woodcraft',
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.inverseSurface,
+                    fontSize: 15,
+                    height: 1.3
+                )
             ),
           const SizedBox(height: 2),
           Text(
-            '$_userCity, $_userProvince Province',
-            style: Theme.of(context).textTheme.bodyMedium
+              '$_userCity, $_userProvince Province',
+              style: Theme.of(context).textTheme.bodyMedium
                   ?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.textDarkGrey
-            )
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDarkGrey
+              )
           ),
           const SizedBox(height: 8),
           Row(
@@ -155,11 +163,11 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.tertiary,
-                  borderRadius: BorderRadius.all(Radius.circular(5))
+                    color: Theme.of(context).colorScheme.tertiary,
+                    borderRadius: BorderRadius.all(Radius.circular(5))
                 ),
                 child: Text(
-                  '23 Works'
+                    '23 Works'
                 ),
               ),
               const SizedBox(width: 12),
@@ -203,7 +211,29 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
         ),
         child: IconButton(
           padding: EdgeInsets.zero,
-          onPressed: () {},
+          onPressed: () {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              builder: (context) => SizedBox(
+                height: MediaQuery.of(context).size.height * 0.8,
+                child: ProfilePicBottomsheet(
+                  currentImageUrl: _userAvatarUrl, // Pass current profile image URL
+                  closeBottomSheet: () {
+                    Navigator.pop(context);
+                  },
+                  onImageAttached: (file, webBytes, scale, angle) {
+                    // Handle the image attachment logic here
+                    // You can upload the new image and update the UI
+                    print('New image attached with scale: $scale, angle: $angle');
+
+                    // Example: You might want to refresh user data after upload
+                    // _getUserData();
+                  },
+                ),
+              ),
+            );
+          },
           icon: const Icon(
             Iconsax.camera,
             size: 18,
@@ -220,27 +250,27 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
       top: 125, // Position to overlap background
       child: InkWell(
         child: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF4E6BF5),
-            shape: BoxShape.rectangle,
-            borderRadius: BorderRadius.all(Radius.circular(5)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-            child: Row(
-              children: [
-                Icon(Iconsax.user_edit_copy, size: 18, color: Colors.white),
-                const SizedBox(width: 8),
-                const Text(
-                  'Edit Profile',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white
-                  ),
-                )
-              ],
+            decoration: BoxDecoration(
+              color: const Color(0xFF4E6BF5),
+              shape: BoxShape.rectangle,
+              borderRadius: BorderRadius.all(Radius.circular(5)),
             ),
-          )
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+              child: Row(
+                children: [
+                  Icon(Iconsax.user_edit_copy, size: 18, color: Colors.white),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Edit Profile',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white
+                    ),
+                  )
+                ],
+              ),
+            )
         ),
       ),
     );
@@ -261,7 +291,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
         child: CircleAvatar(
           radius: 60,
           backgroundImage: NetworkImage(
-            _userAvatarUrl
+              _userAvatarUrl
           ),
         ),
       ),
@@ -281,7 +311,28 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
         ),
         child: IconButton(
           padding: EdgeInsets.zero,
-          onPressed: () {},
+          onPressed: () {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              builder: (context) => SizedBox(
+                height: MediaQuery.of(context).size.height * 0.8, // 50% of screen height
+                child: ProfilePicBottomsheet(
+                  currentImageUrl: _userCoverImageUrl, // Pass current cover image URL
+                  closeBottomSheet: () {
+                    Navigator.pop(context);
+                  },
+                  onImageAttached: (file, webBytes, scale, angle) {
+                    // Handle the cover image attachment logic here
+                    print('New cover image attached with scale: $scale, angle: $angle');
+
+                    // Example: You might want to refresh user data after upload
+                    // _getUserData();
+                  },
+                ),
+              ),
+            );
+          },
           icon: const Icon(
             Icons.edit,
             size: 20,
@@ -300,7 +351,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
         borderRadius: BorderRadius.only(bottomRight: Radius.circular(15), bottomLeft: Radius.circular(15)),
         image: DecorationImage(
           image: NetworkImage(
-            _userCoverImageUrl
+              _userCoverImageUrl
           ),
           fit: BoxFit.cover,
         ),
