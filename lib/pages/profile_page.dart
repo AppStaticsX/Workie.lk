@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workie/pages/components/cover_pic_bottomsheet.dart';
 import 'package:workie/pages/components/profile_pic_bottomsheet.dart';
 import 'package:workie/values/color.dart';
 import '../services/pull_data/get_user_data.dart';
@@ -158,7 +160,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
               )
           ),
           const SizedBox(height: 8),
-          Row(
+          /*Row(
             children: [
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -188,7 +190,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                 ),
               )
             ],
-          )
+          )*/
         ],
       ),
     );
@@ -225,7 +227,9 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                   onImageAttached: (file, webBytes, scale, angle) {
                     // Handle the image attachment logic here
                     // You can upload the new image and update the UI
-                    print('New image attached with scale: $scale, angle: $angle');
+                    if (kDebugMode) {
+                      print('New image attached with scale: $scale, angle: $angle');
+                    }
 
                     // Example: You might want to refresh user data after upload
                     // _getUserData();
@@ -288,15 +292,18 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
             color: Theme.of(context).colorScheme.surface,
           ),
         ),
-        child: CircleAvatar(
-          radius: 60,
-          backgroundImage: NetworkImage(
-              _userAvatarUrl
+        child: ClipOval(
+          child: Image.network(
+            _userAvatarUrl,
+            width: 120, // diameter = 2 * radius
+            height: 120,
+            fit: BoxFit.cover,
           ),
         ),
       ),
     );
   }
+
 
   Positioned _coverImageEditButton() {
     return Positioned(
@@ -316,16 +323,14 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
               context: context,
               isScrollControlled: true,
               builder: (context) => SizedBox(
-                height: MediaQuery.of(context).size.height * 0.8, // 50% of screen height
-                child: ProfilePicBottomsheet(
+                height: MediaQuery.of(context).size.height * 0.65, // 50% of screen height
+                child: CoverPicBottomsheet(
                   currentImageUrl: _userCoverImageUrl, // Pass current cover image URL
                   closeBottomSheet: () {
                     Navigator.pop(context);
                   },
-                  onImageAttached: (file, webBytes, scale, angle) {
+                  onImageAttached: (file, webBytes) {
                     // Handle the cover image attachment logic here
-                    print('New cover image attached with scale: $scale, angle: $angle');
-
                     // Example: You might want to refresh user data after upload
                     // _getUserData();
                   },

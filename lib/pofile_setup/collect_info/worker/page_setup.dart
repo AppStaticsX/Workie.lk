@@ -79,7 +79,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
           return;
         }
         _saveWorkCategory();
-        break;
+        return;
       case 2:
         if (!_hasSkills) {
           _showSnackBar('Please add at least one skill to continue.');
@@ -142,26 +142,49 @@ class _ProfileSetupState extends State<ProfileSetup> {
 
   Future<void> _saveWorkCategory() async {
     try {
-      final savedData = await HiveService.getWorkSelection();
-      if (savedData != null) {
+      setState(() {
+        _isSaving = true;
+      });
+
+      // Check if we have work selection using the same method as validation
+      final hasWorkSelection = await HiveService.hasWorkSelection();
+      if (!hasWorkSelection) {
+        _showSnackBar('No work selection found. Please select at least one work option.');
+        return;
+      }
+
+      if (kDebugMode) {
+        print('Work selection confirmed, proceeding to save...');
+      }
+
+      // Save to backend database
+      final success = await WorkCategoryService.saveWorkCategoriesToProfile();
+
+      if (success) {
         if (kDebugMode) {
-          print('Work selection saved successfully: ${savedData.categoryTitle}');
+          print('Work categories saved to backend database successfully');
         }
-        
-        // Also save to backend database
-        final success = await WorkCategoryService.saveWorkCategoriesToProfile();
+        // Navigate to next page after successful save
+        if (_selectedIndex < _maxIndex) {
+          setState(() {
+            _selectedIndex++;
+          });
+        }
+      } else {
         if (kDebugMode) {
-          if (success) {
-            print('Work categories saved to backend database successfully');
-          } else {
-            print('Failed to save work categories to backend database');
-          }
+          print('Failed to save work categories to backend database');
         }
+        _showSnackBar('Failed to save work categories. Please try again.');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Error confirming work selection save: $e');
+        print('Error saving work categories: $e');
       }
+      _showSnackBar('An error occurred while saving work categories.');
+    } finally {
+      setState(() {
+        _isSaving = false;
+      });
     }
   }
 

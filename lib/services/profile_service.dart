@@ -143,6 +143,59 @@ class ProfileService {
     }
   }
 
+  // Upload cover photo to Cloudinary
+  static Future<Map<String, dynamic>?> uploadCoverPhoto({
+    File? imageFile,
+    Uint8List? imageBytes,
+    required String fileName,
+  }) async {
+    try {
+      final token = await _getAuthToken();
+      if (token == null) {
+        throw Exception('Authentication token not found');
+      }
+
+      if (imageFile == null && imageBytes == null) {
+        throw Exception('No image provided');
+      }
+
+      final uri = Uri.parse('$_baseUrl/api/media/cover-photo');
+      final request = http.MultipartRequest('POST', uri)
+        ..headers['Authorization'] = 'Bearer $token';
+
+      // Add the image file based on platform
+      if (kIsWeb && imageBytes != null) {
+        request.files.add(http.MultipartFile.fromBytes(
+          'coverPhoto',
+          imageBytes,
+          filename: fileName,
+          contentType: MediaType('image', 'jpeg'),
+        ));
+      } else if (imageFile != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'coverPhoto',
+          imageFile.path,
+          filename: fileName,
+          contentType: MediaType('image', 'jpeg'),
+        ));
+      }
+
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+      final responseData = json.decode(responseBody);
+
+      if (response.statusCode == 200) {
+        if (kDebugMode) print('Cover photo upload response: $responseData');
+        return responseData;
+      } else {
+        throw Exception(responseData['message'] ?? 'Failed to upload cover photo');
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error uploading cover photo: $e');
+      return null;
+    }
+  }
+
   // Calculate age from date of birth
   static int _calculateAge(DateTime dateOfBirth) {
     final now = DateTime.now();

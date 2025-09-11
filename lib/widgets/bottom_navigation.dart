@@ -78,7 +78,7 @@ class BottomNavigation extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Saving...',
+                    'Updating...',
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w900,
