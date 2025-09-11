@@ -12,6 +12,7 @@ import 'package:workie/pofile_setup/collect_info/worker/select_work_page.dart';
 import 'package:workie/widgets/bottom_navigation.dart';
 import 'package:workie/widgets/bottom_navigation_with_skip.dart';
 import 'package:workie/widgets/simple_bottom_navigation.dart';
+import '../../../services/add_skills_service.dart';
 import '../../../services/hive_service.dart';
 import '../../../services/overview_service.dart';
 import '../../../services/profile_service.dart';
@@ -28,6 +29,7 @@ class ProfileSetup extends StatefulWidget {
 class _ProfileSetupState extends State<ProfileSetup> {
   final GlobalKey<AddPersonalDetailsPageState> _personalDetailsKey = GlobalKey();
   final GlobalKey<AddOverviewPageState> _overviewDetailsKey = GlobalKey();
+  final GlobalKey<AddSkillsPageState> _addSkillsKey = GlobalKey();
   int _selectedIndex = 0;
   final int _maxIndex = 7;
 
@@ -85,7 +87,8 @@ class _ProfileSetupState extends State<ProfileSetup> {
           _showSnackBar('Please add at least one skill to continue.');
           return;
         }
-        break;
+        _saveSkills();
+        return;
       case 3:
         if (!_hasTitle) {
           _showSnackBar('Please enter your professional title to continue.');
@@ -137,6 +140,59 @@ class _ProfileSetupState extends State<ProfileSetup> {
           print('Now showing AddPersonalDetailsPage');
         }
       }
+    }
+  }
+
+  Future<void> _saveSkills() async {
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      final userId = await AddSkillsService.getCurrentUserId();
+      final addSkillsState = _addSkillsKey.currentState;
+
+      if (userId == null) {
+        _showSnackBar('Error: User not logged in');
+        return;
+      }
+
+      if (addSkillsState?.selectedSkills == null || addSkillsState!.selectedSkills.isEmpty) {
+        _showSnackBar('No skills selected to save');
+        return;
+      }
+
+      final result = await AddSkillsService.addSkillsToProfile(
+        userId: userId,
+        skills: addSkillsState.selectedSkills,
+        defaultLevel: 'beginner',
+        defaultExperience: 0,
+      );
+
+      if (result?['success'] == true) {
+        if (kDebugMode) {
+          print('Added ${result?['added']} skills successfully');
+          print('Skipped ${result?['skipped']} existing skills');
+        }
+
+        // Navigate to next page after successful save
+        if (_selectedIndex < _maxIndex) {
+          setState(() {
+            _selectedIndex++;
+          });
+        }
+      } else {
+        _showSnackBar('Failed to save skills: ${result?['message'] ?? 'Unknown error'}');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error saving skills: $e');
+      }
+      _showSnackBar('An error occurred while saving skills');
+    } finally {
+      setState(() {
+        _isSaving = false;
+      });
     }
   }
 
@@ -490,6 +546,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
             },
           ),
           AddSkillsPage(
+            key: _addSkillsKey,
             onSkillsChanged: (hasSkills) {
               setState(() {
                 _hasSkills = hasSkills;

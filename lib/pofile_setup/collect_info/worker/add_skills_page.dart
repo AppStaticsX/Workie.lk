@@ -8,10 +8,10 @@ class AddSkillsPage extends StatefulWidget {
   const AddSkillsPage({super.key, this.onSkillsChanged});
 
   @override
-  State<AddSkillsPage> createState() => _AddSkillsPageState();
+  State<AddSkillsPage> createState() => AddSkillsPageState();
 }
 
-class _AddSkillsPageState extends State<AddSkillsPage> {
+class AddSkillsPageState extends State<AddSkillsPage> {
   final int maxSkills = 15;
   final TextEditingController _skillController = TextEditingController();
 
