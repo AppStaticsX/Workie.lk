@@ -27,7 +27,7 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
   // Initialize video player
   Future<void> _initializeVideo() async {
     try {
-      _videoController = VideoPlayerController.asset('assets/video/background.mp4');
+      _videoController = VideoPlayerController.asset('assets/video/onboard_screen_video.mp4');
       await _videoController!.initialize();
 
       // Set video to loop and play

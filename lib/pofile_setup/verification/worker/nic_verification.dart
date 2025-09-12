@@ -7,7 +7,7 @@ import 'dart:io';
 import '../../../widgets/imagesource_dialog.dart';
 
 class NICVerification extends StatefulWidget {
-  final Function(bool)? onSelectionChanged; // Add callback for validation
+  final Function(bool)? onSelectionChanged;
 
   const NICVerification({super.key, this.onSelectionChanged});
 
@@ -26,12 +26,10 @@ class _NICVerificationState extends State<NICVerification> {
 
   final ImagePicker _picker = ImagePicker();
 
-  // Check if both images are selected
   bool get bothImagesSelected => selectedFrontFile != null && selectedBackFile != null;
 
   Future<void> _pickFile({required bool isFront}) async {
     try {
-      // Show options for camera or gallery
       final ImageSource? source = await _showImageSourceDialog();
       if (source == null) return;
 
@@ -52,7 +50,6 @@ class _NICVerificationState extends State<NICVerification> {
             backFileSize = _formatFileSize(fileSize);
           }
 
-          // Notify parent about selection state
           widget.onSelectionChanged?.call(bothImagesSelected);
         });
       }
@@ -77,7 +74,6 @@ class _NICVerificationState extends State<NICVerification> {
         backFileSize = null;
       }
 
-      // Notify parent about selection state
       widget.onSelectionChanged?.call(bothImagesSelected);
     });
   }
@@ -115,309 +111,40 @@ class _NICVerificationState extends State<NICVerification> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Scrollable content below
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Column(
               children: [
                 const SizedBox(height: 44),
-                Text(
-                  textAlign: TextAlign.center,
-                  'Verify with Your NIC or\nDriver License',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold
-                  ),
-                ),
+                _buildTitle(context),
                 const SizedBox(height: 24),
-                // Front view upload
-                SizedBox(
-                  width: 300,
-                  height: 200,
-                  child: MouseRegion(
-                    onEnter: (_) => _onHover(true),
-                    onExit: (_) => _onHover(false),
-                    child: GestureDetector(
-                      onTap: selectedFrontFile == null ? () => _pickFile(isFront: true) : null,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.tertiary,
-                          borderRadius: BorderRadius.circular(12),
-                          border: selectedFrontFile != null ? Border.all(
-                            color: isHovered ? Color(0xFF4CAF50) : Color(0xFF666666),
-                            width: 2,
-                          ) : null,
-                        ),
-                        child: selectedFrontFile != null
-                            ? Stack(
-                          children: [
-                            // Image preview
-                            Container(
-                              width: double.infinity,
-                              height: double.infinity,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                image: DecorationImage(
-                                  image: FileImage(selectedFrontFile!),
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                            // Overlay with semi-transparent background
-                            Container(
-                              width: double.infinity,
-                              height: double.infinity,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: Colors.black.withOpacity(0.3),
-                              ),
-                            ),
-                            // Action buttons
-                            Positioned(
-                              top: 8,
-                              right: 8,
-                              child: Row(
-                                children: [
-                                  IconButton(
-                                    onPressed: () => _previewImage(isFront: true),
-                                    icon: Icon(CupertinoIcons.zoom_in, color: Colors.white),
-                                    style: IconButton.styleFrom(
-                                      backgroundColor: Colors.black54,
-                                      padding: EdgeInsets.all(8),
-                                    ),
-                                  ),
-                                  SizedBox(width: 4),
-                                  IconButton(
-                                    onPressed: () => _removeFile(isFront: true),
-                                    icon: Icon(Icons.close, color: Colors.white),
-                                    style: IconButton.styleFrom(
-                                      backgroundColor: Colors.red.withOpacity(0.7),
-                                      padding: EdgeInsets.all(8),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // File info at bottom
-                            Positioned(
-                              bottom: 8,
-                              left: 8,
-                              right: 8,
-                              child: Container(
-                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.black54,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      'File Name: $frontFileName',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    Text(
-                                      frontFileSize ?? '',
-                                      style: TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 10,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            // "Front View" label
-                            Positioned(
-                              top: 8,
-                              left: 8,
-                              child: Container(
-                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Color(0xFF4CAF50),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  'FRONT VIEW',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                            : CustomPaint(
-                          painter: DashedBorderPainter(
-                            color: isHovered ? Color(0xFF4CAF50) : Color(0xFF666666),
-                            strokeWidth: 2,
-                            dashLength: 8,
-                            dashSpace: 4,
-                          ),
-                          child: SizedBox(
-                            width: double.infinity,
-                            height: double.infinity,
-                            child: _buildUploadContent(Iconsax.personalcard_copy, 'Front-View'),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                _buildImageUploadContainer(
+                  isSelected: selectedFrontFile != null,
+                  selectedFile: selectedFrontFile,
+                  fileName: frontFileName,
+                  fileSize: frontFileSize,
+                  onTap: () => _pickFile(isFront: true),
+                  onPreview: () => _previewImage(isFront: true),
+                  onRemove: () => _removeFile(isFront: true),
+                  uploadIcon: Iconsax.personalcard_copy,
+                  uploadText: 'Front-View',
+                  viewLabel: 'FRONT VIEW',
                 ),
                 const SizedBox(height: 12),
                 _buildImageLimit(),
                 const SizedBox(height: 24),
-                // Back view upload
-                SizedBox(
-                  width: 300,
-                  height: 200,
-                  child: MouseRegion(
-                    onEnter: (_) => _onHover(true),
-                    onExit: (_) => _onHover(false),
-                    child: GestureDetector(
-                      onTap: selectedBackFile == null ? () => _pickFile(isFront: false) : null,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.tertiary,
-                          borderRadius: BorderRadius.circular(12),
-                          border: selectedBackFile != null ? Border.all(
-                            color: isHovered ? Color(0xFF4CAF50) : Color(0xFF666666),
-                            width: 2,
-                          ) : null,
-                        ),
-                        child: selectedBackFile != null
-                            ? Stack(
-                          children: [
-                            // Image preview
-                            Container(
-                              width: double.infinity,
-                              height: double.infinity,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                image: DecorationImage(
-                                  image: FileImage(selectedBackFile!),
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                            // Overlay with semi-transparent background
-                            Container(
-                              width: double.infinity,
-                              height: double.infinity,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: Colors.black.withOpacity(0.3),
-                              ),
-                            ),
-                            // Action buttons
-                            Positioned(
-                              top: 8,
-                              right: 8,
-                              child: Row(
-                                children: [
-                                  IconButton(
-                                    onPressed: () => _previewImage(isFront: false),
-                                    icon: Icon(CupertinoIcons.zoom_in, color: Colors.white),
-                                    style: IconButton.styleFrom(
-                                      backgroundColor: Colors.black54,
-                                      padding: EdgeInsets.all(8),
-                                    ),
-                                  ),
-                                  SizedBox(width: 4),
-                                  IconButton(
-                                    onPressed: () => _removeFile(isFront: false),
-                                    icon: Icon(Icons.close, color: Colors.white),
-                                    style: IconButton.styleFrom(
-                                      backgroundColor: Colors.red.withOpacity(0.7),
-                                      padding: EdgeInsets.all(8),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // File info at bottom
-                            Positioned(
-                              bottom: 8,
-                              left: 8,
-                              right: 8,
-                              child: Container(
-                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.black54,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      'File Name: $backFileName',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    Text(
-                                      backFileSize ?? '',
-                                      style: TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 10,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            // "Back View" label
-                            Positioned(
-                              top: 8,
-                              left: 8,
-                              child: Container(
-                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Color(0xFF4CAF50),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  'BACK VIEW',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                            : CustomPaint(
-                          painter: DashedBorderPainter(
-                            color: isHovered ? Color(0xFF4CAF50) : Color(0xFF666666),
-                            strokeWidth: 2,
-                            dashLength: 8,
-                            dashSpace: 4,
-                          ),
-                          child: SizedBox(
-                            width: double.infinity,
-                            height: double.infinity,
-                            child: _buildUploadContent(Iconsax.card_copy, 'Back-View'),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                _buildImageUploadContainer(
+                  isSelected: selectedBackFile != null,
+                  selectedFile: selectedBackFile,
+                  fileName: backFileName,
+                  fileSize: backFileSize,
+                  onTap: () => _pickFile(isFront: false),
+                  onPreview: () => _previewImage(isFront: false),
+                  onRemove: () => _removeFile(isFront: false),
+                  uploadIcon: Iconsax.card_copy,
+                  uploadText: 'Back-View',
+                  viewLabel: 'BACK VIEW',
                 ),
                 const SizedBox(height: 12),
                 _buildImageLimit(),
@@ -431,7 +158,302 @@ class _NICVerificationState extends State<NICVerification> {
     );
   }
 
-  Text _buildImageLimit() {
+  // Reusable widget for the title
+  Widget _buildTitle(BuildContext context) {
+    return Text(
+      textAlign: TextAlign.center,
+      'Verify with Your NIC or\nDriver License',
+      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.bold
+      ),
+    );
+  }
+
+  // Reusable widget for image upload container
+  Widget _buildImageUploadContainer({
+    required bool isSelected,
+    required File? selectedFile,
+    required String? fileName,
+    required String? fileSize,
+    required VoidCallback onTap,
+    required VoidCallback onPreview,
+    required VoidCallback onRemove,
+    required IconData uploadIcon,
+    required String uploadText,
+    required String viewLabel,
+  }) {
+    return SizedBox(
+      width: 300,
+      height: 200,
+      child: MouseRegion(
+        onEnter: (_) => _onHover(true),
+        onExit: (_) => _onHover(false),
+        child: GestureDetector(
+          onTap: !isSelected ? onTap : null,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.tertiary,
+              borderRadius: BorderRadius.circular(12),
+              border: isSelected ? Border.all(
+                color: isHovered ? Color(0xFF4CAF50) : Color(0xFF666666),
+                width: 2,
+              ) : null,
+            ),
+            child: isSelected && selectedFile != null
+                ? _buildSelectedImageView(
+              imageFile: selectedFile,
+              fileName: fileName,
+              fileSize: fileSize,
+              onPreview: onPreview,
+              onRemove: onRemove,
+              viewLabel: viewLabel,
+            )
+                : _buildEmptyUploadView(
+              icon: uploadIcon,
+              uploadText: uploadText,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Reusable widget for selected image view
+  Widget _buildSelectedImageView({
+    required File imageFile,
+    required String? fileName,
+    required String? fileSize,
+    required VoidCallback onPreview,
+    required VoidCallback onRemove,
+    required String viewLabel,
+  }) {
+    return Stack(
+      children: [
+        _buildImageBackground(imageFile),
+        _buildImageOverlay(),
+        _buildActionButtons(onPreview: onPreview, onRemove: onRemove),
+        _buildFileInfo(fileName: fileName, fileSize: fileSize),
+        _buildViewLabel(viewLabel),
+      ],
+    );
+  }
+
+  // Reusable widget for image background
+  Widget _buildImageBackground(File imageFile) {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        image: DecorationImage(
+          image: FileImage(imageFile),
+          fit: BoxFit.cover,
+        ),
+      ),
+    );
+  }
+
+  // Reusable widget for image overlay
+  Widget _buildImageOverlay() {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: Colors.black.withOpacity(0.3),
+      ),
+    );
+  }
+
+  // Reusable widget for action buttons
+  Widget _buildActionButtons({
+    required VoidCallback onPreview,
+    required VoidCallback onRemove,
+  }) {
+    return Positioned(
+      top: 8,
+      right: 8,
+      child: Row(
+        children: [
+          _buildActionButton(
+            onPressed: onPreview,
+            icon: CupertinoIcons.zoom_in,
+            backgroundColor: Colors.black54,
+          ),
+          SizedBox(width: 4),
+          _buildActionButton(
+            onPressed: onRemove,
+            icon: Icons.close,
+            backgroundColor: Colors.red.withOpacity(0.7),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Reusable widget for individual action button
+  Widget _buildActionButton({
+    required VoidCallback onPressed,
+    required IconData icon,
+    required Color backgroundColor,
+  }) {
+    return IconButton(
+      onPressed: onPressed,
+      icon: Icon(icon, color: Colors.white),
+      style: IconButton.styleFrom(
+        backgroundColor: backgroundColor,
+        padding: EdgeInsets.all(8),
+      ),
+    );
+  }
+
+  // Reusable widget for file info
+  Widget _buildFileInfo({
+    required String? fileName,
+    required String? fileSize,
+  }) {
+    return Positioned(
+      bottom: 8,
+      left: 8,
+      right: 8,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.black54,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'File Name: $fileName',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              fileSize ?? '',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 10,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Reusable widget for view label
+  Widget _buildViewLabel(String label) {
+    return Positioned(
+      top: 8,
+      left: 8,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: Color(0xFF4CAF50),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Reusable widget for empty upload view
+  Widget _buildEmptyUploadView({
+    required IconData icon,
+    required String uploadText,
+  }) {
+    return CustomPaint(
+      painter: DashedBorderPainter(
+        color: isHovered ? Color(0xFF4CAF50) : Color(0xFF666666),
+        strokeWidth: 2,
+        dashLength: 8,
+        dashSpace: 4,
+      ),
+      child: SizedBox(
+        width: double.infinity,
+        height: double.infinity,
+        child: _buildUploadContent(icon, uploadText),
+      ),
+    );
+  }
+
+  // Reusable widget for upload content
+  Widget _buildUploadContent(IconData icon, String viewOfID) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildUploadIcon(icon),
+        SizedBox(height: 12),
+        _buildUploadText(),
+        _buildUploadDescription(viewOfID),
+      ],
+    );
+  }
+
+  // Reusable widget for upload icon
+  Widget _buildUploadIcon(IconData icon) {
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        color: isHovered ? Color(0xFF4CAF50) : Color(0xFF666666),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(
+        icon,
+        color: Colors.white,
+        size: 30,
+      ),
+    );
+  }
+
+  // Reusable widget for upload text
+  Widget _buildUploadText() {
+    return RichText(
+      textAlign: TextAlign.center,
+      text: TextSpan(
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w500,
+          color: isHovered ? Colors.white : Color(0xFFcccccc),
+          height: 1.4,
+        ),
+        children: [
+          TextSpan(
+            text: 'UPLOAD',
+            style: TextStyle(
+              color: const Color(0xFF4E6BF5),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          TextSpan(text: ' or Take\nImage Here'),
+        ],
+      ),
+    );
+  }
+
+  // Reusable widget for upload description
+  Widget _buildUploadDescription(String viewOfID) {
+    return Text('( $viewOfID of NIC or Driver Licence. )');
+  }
+
+  // Reusable widget for image limit text
+  Widget _buildImageLimit() {
     return Text(
       '360x480 Min / 5 MB Max',
       style: TextStyle(
@@ -441,58 +463,40 @@ class _NICVerificationState extends State<NICVerification> {
     );
   }
 
-  Padding _buildAlertText(BuildContext context) {
+  // Reusable widget for alert text
+  Widget _buildAlertText(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: RichText(
         textAlign: TextAlign.center,
         text: TextSpan(
           children: [
-            TextSpan(
-              text: 'Must be an actual photo of you.',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
+            _buildAlertTextSpan(
+              'Must be an actual photo of you.',
+              Colors.grey,
             ),
-            TextSpan(
-              text: '\nLogos, clip-art, group photos, and digitally-altered images',
-              style: TextStyle(
-                fontSize: 16,
-                color: Theme.of(context).colorScheme.inverseSurface,
-                fontWeight: FontWeight.w600,
-              ),
+            _buildAlertTextSpan(
+              '\nLogos, clip-art, group photos, and digitally-altered images',
+              Theme.of(context).colorScheme.inverseSurface,
+              fontWeight: FontWeight.w600,
             ),
-            TextSpan(
-              text: ' are not allowed. It will cause account ',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
+            _buildAlertTextSpan(
+              ' are not allowed. It will cause account ',
+              Colors.grey,
             ),
-            TextSpan(
-              text: 'Rejection',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
-              ),
+            _buildAlertTextSpan(
+              'Rejection',
+              Colors.red,
+              fontWeight: FontWeight.bold,
             ),
-            TextSpan(
-              text: ' or ',
-              style: TextStyle(
-                fontSize: 16,
-                color: Theme.of(context).colorScheme.inverseSurface,
-                fontWeight: FontWeight.normal,
-              ),
+            _buildAlertTextSpan(
+              ' or ',
+              Theme.of(context).colorScheme.inverseSurface,
             ),
-            TextSpan(
-              text: 'Termination.',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
-              ),
+            _buildAlertTextSpan(
+              'Termination.',
+              Colors.red,
+              fontWeight: FontWeight.bold,
             ),
           ],
         ),
@@ -500,49 +504,19 @@ class _NICVerificationState extends State<NICVerification> {
     );
   }
 
-  Widget _buildUploadContent(IconData icon, String viewOfID) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            color: isHovered ? Color(0xFF4CAF50) : Color(0xFF666666),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            icon,
-            color: Colors.white,
-            size: 30,
-          ),
-        ),
-        SizedBox(height: 12),
-        RichText(
-          textAlign: TextAlign.center,
-          text: TextSpan(
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-              color: isHovered ? Colors.white : Color(0xFFcccccc),
-              height: 1.4,
-            ),
-            children: [
-              TextSpan(
-                text: 'UPLOAD',
-                style: TextStyle(
-                  color: const Color(0xFF4E6BF5),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              TextSpan(text: ' or Take\nImage Here'),
-            ],
-          ),
-        ),
-        Text(
-            '( $viewOfID of NIC or Driver Licence. )'
-        ),
-      ],
+  // Reusable widget for alert text span
+  TextSpan _buildAlertTextSpan(
+      String text,
+      Color color, {
+        FontWeight fontWeight = FontWeight.normal,
+      }) {
+    return TextSpan(
+      text: text,
+      style: TextStyle(
+        fontSize: 16,
+        color: color,
+        fontWeight: fontWeight,
+      ),
     );
   }
 }
@@ -621,47 +595,48 @@ class _ImagePreviewScreen extends StatelessWidget {
           ),
         ),
       ),
-      bottomNavigationBar: Container(
-        padding: EdgeInsets.all(16),
-        color: Colors.black,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            ElevatedButton.icon(
-              onPressed: () => Navigator.pop(context),
-              icon: Icon(Icons.close),
-              label: Text('Close'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey[800],
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-            ElevatedButton.icon(
-              onPressed: () {
-                // You can add share functionality here if needed
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Share functionality can be added here'),
-                    backgroundColor: Colors.grey[800],
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          padding: EdgeInsets.all(16),
+          color: Colors.black,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton.icon(
+                onPressed: () => Navigator.pop(context),
+                icon: Icon(Icons.close),
+                label: Text('Close'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey[800],
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                );
-              },
-              icon: Icon(Icons.share),
-              label: Text('Share'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF4E6BF5),
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
                 ),
               ),
-            ),
-          ],
+              ElevatedButton.icon(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Share functionality can be added here'),
+                      backgroundColor: Colors.grey[800],
+                    ),
+                  );
+                },
+                icon: Icon(Icons.share),
+                label: Text('Share'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF4E6BF5),
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

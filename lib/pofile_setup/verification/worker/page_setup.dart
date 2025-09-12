@@ -90,11 +90,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
             isSaving: _isSaving,
             actionName: 'Next Step',
             onTapAction: _handleNextStep, // Use the same validation method
-            onBackAction: () {
-              setState(() {
-                _selectedIndex = _selectedIndex - 1;
-              });
-            },
+            onBackAction: () {},
           ),
           BottomNavigation(
             isSaving: _isSaving,

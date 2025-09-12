@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:workie/screens/googlemap_screen.dart';
 
 class ClientPostScreen extends StatefulWidget {
   const ClientPostScreen({super.key});
@@ -77,9 +78,10 @@ class _ClientPostScreenState extends State<ClientPostScreen> {
   }
 
   void _selectLocationOnMap() {
-    // Implement Google Maps location picker
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Map location picker - To be implemented')),
+    Navigator.push(
+        context, MaterialPageRoute(
+          builder: (context) => GoogleMapScreen()
+      )
     );
   }
 

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:workie/values/color.dart';
 
 ThemeData darkMode = ThemeData(
-    fontFamily: 'Raleway SemiBold',
     colorScheme: ColorScheme.dark(
       surface: const Color(0xFF1A1A1A), //0xFF151515
       primary: AppColors.textSilver,

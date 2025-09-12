@@ -23,7 +23,7 @@ dependencies:
   pinput: ^5.0.1
   share_plus: ^11.0.0
   image_picker: ^1.1.2
-  google_maps_flutter: ^2.12.3
+  google_maps_flutter: ^2.13.1
   http: ^1.5.0
   connectivity_plus: ^6.1.5
   internet_connection_checker_plus: ^2.7.2
@@ -58,11 +58,6 @@ flutter:
    - assets/image/
    - assets/icon/profession/
    - assets/icon/profession/mono/
-
-  #fonts:
-   #- family: Raleway SemiBold
-     #fonts:
-       #- asset: 'assets/font/Raleway-SemiBold.ttf'
 
 # Flutter launcher icons
 flutter_icons:
