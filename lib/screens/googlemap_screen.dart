@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -27,6 +28,15 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
   LatLng? _selectedLocation;
   String _selectedAddress = '';
   bool _isLoading = false;
+  MapType _currentMapType = MapType.normal;
+
+  // Map type options
+  final List<MapTypeOption> _mapTypeOptions = [
+    MapTypeOption(MapType.normal, 'Normal', Icons.map),
+    MapTypeOption(MapType.satellite, 'Satellite', Icons.satellite_alt),
+    MapTypeOption(MapType.terrain, 'Terrain', Icons.terrain),
+    MapTypeOption(MapType.hybrid, 'Hybrid', Icons.layers),
+  ];
 
   @override
   void initState() {
@@ -64,7 +74,9 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
 
       _moveCamera(LatLng(position.latitude, position.longitude));
     } catch (e) {
-      print('Error getting current location: $e');
+      if (kDebugMode) {
+        print('Error getting current location: $e');
+      }
     }
   }
 
@@ -97,9 +109,11 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
         _getAddressFromLatLng(position);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Location not found: $query')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Location not found: $query')),
+        );
+      }
     }
 
     setState(() {
@@ -141,7 +155,9 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
         });
       }
     } catch (e) {
-      print('Error getting address: $e');
+      if (kDebugMode) {
+        print('Error getting address: $e');
+      }
     }
   }
 
@@ -161,12 +177,100 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
     });
   }
 
+  // Show map type selector
+  void _showMapTypeSelector() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Map Type',
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  ..._mapTypeOptions.map((option) => ListTile(
+                    leading: Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: _currentMapType == option.type
+                            ? const Color(0xFF4E6BF5).withValues(alpha: 0.1)
+                            : Colors.grey[100],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        option.icon,
+                        color: _currentMapType == option.type
+                            ? const Color(0xFF4E6BF5)
+                            : Colors.grey[600],
+                      ),
+                    ),
+                    title: Text(
+                      option.name,
+                      style: TextStyle(
+                        fontWeight: _currentMapType == option.type
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                        color: _currentMapType == option.type
+                            ? const Color(0xFF4E6BF5)
+                            : Colors.black,
+                      ),
+                    ),
+                    trailing: _currentMapType == option.type
+                        ? Icon(
+                      Iconsax.tick_circle_copy,
+                      color: const Color(0xFF4E6BF5),
+                    )
+                        : null,
+                    onTap: () {
+                      setState(() {
+                        _currentMapType = option.type;
+                      });
+                      Navigator.pop(context);
+                    },
+                  )),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-            'Maps Search & Pick',
+          'Maps Search & Pick',
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -178,6 +282,13 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
             },
             icon: Icon(Iconsax.arrow_left_2_copy)
         ),
+        actions: [
+          IconButton(
+            onPressed: _showMapTypeSelector,
+            icon: Icon(Iconsax.layer),
+            tooltip: 'Map Type',
+          ),
+        ],
         surfaceTintColor: Colors.transparent,
         backgroundColor: const Color(0xFF4E6BF5),
         foregroundColor: Colors.white,
@@ -195,6 +306,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
             myLocationEnabled: true,
             myLocationButtonEnabled: false,
             zoomControlsEnabled: false,
+            mapType: _currentMapType,
           ),
 
           // Search Bar
@@ -218,9 +330,15 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
                 children: [
                   Expanded(
                     child: TextField(
+                      style: TextStyle(
+                        color: Colors.black
+                      ),
                       controller: _searchController,
                       decoration: InputDecoration(
                         hintText: 'Search for a location...',
+                        hintStyle: TextStyle(
+                          color: Colors.grey
+                        ),
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.all(16),
                         prefixIcon: Icon(Icons.search, color: Colors.grey),
@@ -242,6 +360,45 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
                       icon: Icon(Icons.clear, color: Colors.grey),
                       onPressed: _clearSearch,
                     ),
+                ],
+              ),
+            ),
+          ),
+
+          // Map Type Indicator
+          Positioned(
+            top: 90,
+            right: 16,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 6,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _mapTypeOptions.firstWhere((option) => option.type == _currentMapType).icon,
+                    size: 16,
+                    color: const Color(0xFF4E6BF5),
+                  ),
+                  SizedBox(width: 6),
+                  Text(
+                    _mapTypeOptions.firstWhere((option) => option.type == _currentMapType).name,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF4E6BF5),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -274,6 +431,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
                       'Selected Location',
                       style: TextStyle(
                         fontSize: 16,
+                        color: Colors.black,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -316,7 +474,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                         child: Text(
-                            'Select This Location',
+                          'Select This Location',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w900,
@@ -350,4 +508,13 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
     _searchController.dispose();
     super.dispose();
   }
+}
+
+// Helper class for map type options
+class MapTypeOption {
+  final MapType type;
+  final String name;
+  final IconData icon;
+
+  MapTypeOption(this.type, this.name, this.icon);
 }

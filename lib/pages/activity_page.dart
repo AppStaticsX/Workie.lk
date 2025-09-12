@@ -10,10 +10,10 @@ class ActivityTabPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Iconsax.activity_copy, size: 80, color: Color(0xFF4E6BF5)),
+          Icon(Iconsax.video_play_copy, size: 80, color: Color(0xFF4E6BF5)),
           SizedBox(height: 16),
           Text(
-            'My Activity',
+            'Reels',
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 8),

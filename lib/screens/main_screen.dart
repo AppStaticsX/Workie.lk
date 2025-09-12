@@ -59,7 +59,7 @@ class _MainScreenState extends State<MainScreen> {
               buildAnimatedNavIcon(Iconsax.home_copy, Iconsax.home_1, 0, 'Home'),
               buildAnimatedNavIcon(Iconsax.location_copy, Iconsax.location, 1, 'Explore'),
               buildAnimatedNavIcon(Iconsax.add_square_copy, Iconsax.add_square, 2, 'Post'),
-              buildAnimatedNavIcon(Iconsax.activity_copy, Iconsax.activity, 3, 'My Activity'),
+              buildAnimatedNavIcon(Iconsax.video_play_copy, Iconsax.video_play, 3, 'Reels'),
               buildAnimatedNavIcon(Iconsax.user_copy, Iconsax.user, 4, 'Profile'),
             ],
           ),
