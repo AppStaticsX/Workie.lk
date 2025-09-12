@@ -1,9 +1,9 @@
 import 'dart:ui';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-
 import '../../../widgets/imagesource_dialog.dart';
 
 class NICVerification extends StatefulWidget {
@@ -82,6 +82,22 @@ class _NICVerificationState extends State<NICVerification> {
     });
   }
 
+  void _previewImage({required bool isFront}) {
+    final File? imageFile = isFront ? selectedFrontFile : selectedBackFile;
+    final String title = isFront ? 'Front View Preview' : 'Back View Preview';
+
+    if (imageFile != null) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => _ImagePreviewScreen(
+            imageFile: imageFile,
+            title: title,
+          ),
+        ),
+      );
+    }
+  }
+
   String _formatFileSize(int bytes) {
     if (bytes <= 0) return "0 Bytes";
     const suffixes = ["Bytes", "KB", "MB", "GB", "TB"];
@@ -132,25 +148,125 @@ class _NICVerificationState extends State<NICVerification> {
                             width: 2,
                           ) : null,
                         ),
-                        child: CustomPaint(
-                          painter: selectedFrontFile == null
-                              ? DashedBorderPainter(
+                        child: selectedFrontFile != null
+                            ? Stack(
+                          children: [
+                            // Image preview
+                            Container(
+                              width: double.infinity,
+                              height: double.infinity,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                image: DecorationImage(
+                                  image: FileImage(selectedFrontFile!),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                            // Overlay with semi-transparent background
+                            Container(
+                              width: double.infinity,
+                              height: double.infinity,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: Colors.black.withOpacity(0.3),
+                              ),
+                            ),
+                            // Action buttons
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: Row(
+                                children: [
+                                  IconButton(
+                                    onPressed: () => _previewImage(isFront: true),
+                                    icon: Icon(CupertinoIcons.zoom_in, color: Colors.white),
+                                    style: IconButton.styleFrom(
+                                      backgroundColor: Colors.black54,
+                                      padding: EdgeInsets.all(8),
+                                    ),
+                                  ),
+                                  SizedBox(width: 4),
+                                  IconButton(
+                                    onPressed: () => _removeFile(isFront: true),
+                                    icon: Icon(Icons.close, color: Colors.white),
+                                    style: IconButton.styleFrom(
+                                      backgroundColor: Colors.red.withOpacity(0.7),
+                                      padding: EdgeInsets.all(8),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // File info at bottom
+                            Positioned(
+                              bottom: 8,
+                              left: 8,
+                              right: 8,
+                              child: Container(
+                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'File Name: $frontFileName',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      frontFileSize ?? '',
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            // "Front View" label
+                            Positioned(
+                              top: 8,
+                              left: 8,
+                              child: Container(
+                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Color(0xFF4CAF50),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  'FRONT VIEW',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                            : CustomPaint(
+                          painter: DashedBorderPainter(
                             color: isHovered ? Color(0xFF4CAF50) : Color(0xFF666666),
                             strokeWidth: 2,
                             dashLength: 8,
                             dashSpace: 4,
-                          )
-                              : null,
+                          ),
                           child: SizedBox(
                             width: double.infinity,
                             height: double.infinity,
-                            child: selectedFrontFile == null
-                                ? _buildUploadContent(Iconsax.personalcard_copy, 'Front-View')
-                                : _buildFileContent(
-                              fileName: frontFileName,
-                              fileSize: frontFileSize,
-                              onRemove: () => _removeFile(isFront: true),
-                            ),
+                            child: _buildUploadContent(Iconsax.personalcard_copy, 'Front-View'),
                           ),
                         ),
                       ),
@@ -178,25 +294,125 @@ class _NICVerificationState extends State<NICVerification> {
                             width: 2,
                           ) : null,
                         ),
-                        child: CustomPaint(
-                          painter: selectedBackFile == null
-                              ? DashedBorderPainter(
+                        child: selectedBackFile != null
+                            ? Stack(
+                          children: [
+                            // Image preview
+                            Container(
+                              width: double.infinity,
+                              height: double.infinity,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                image: DecorationImage(
+                                  image: FileImage(selectedBackFile!),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                            // Overlay with semi-transparent background
+                            Container(
+                              width: double.infinity,
+                              height: double.infinity,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: Colors.black.withOpacity(0.3),
+                              ),
+                            ),
+                            // Action buttons
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: Row(
+                                children: [
+                                  IconButton(
+                                    onPressed: () => _previewImage(isFront: false),
+                                    icon: Icon(CupertinoIcons.zoom_in, color: Colors.white),
+                                    style: IconButton.styleFrom(
+                                      backgroundColor: Colors.black54,
+                                      padding: EdgeInsets.all(8),
+                                    ),
+                                  ),
+                                  SizedBox(width: 4),
+                                  IconButton(
+                                    onPressed: () => _removeFile(isFront: false),
+                                    icon: Icon(Icons.close, color: Colors.white),
+                                    style: IconButton.styleFrom(
+                                      backgroundColor: Colors.red.withOpacity(0.7),
+                                      padding: EdgeInsets.all(8),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // File info at bottom
+                            Positioned(
+                              bottom: 8,
+                              left: 8,
+                              right: 8,
+                              child: Container(
+                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'File Name: $backFileName',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      backFileSize ?? '',
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            // "Back View" label
+                            Positioned(
+                              top: 8,
+                              left: 8,
+                              child: Container(
+                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Color(0xFF4CAF50),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  'BACK VIEW',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                            : CustomPaint(
+                          painter: DashedBorderPainter(
                             color: isHovered ? Color(0xFF4CAF50) : Color(0xFF666666),
                             strokeWidth: 2,
                             dashLength: 8,
                             dashSpace: 4,
-                          )
-                              : null,
+                          ),
                           child: SizedBox(
                             width: double.infinity,
                             height: double.infinity,
-                            child: selectedBackFile == null
-                                ? _buildUploadContent(Iconsax.card_copy, 'Back-View')
-                                : _buildFileContent(
-                              fileName: backFileName,
-                              fileSize: backFileSize,
-                              onRemove: () => _removeFile(isFront: false),
-                            ),
+                            child: _buildUploadContent(Iconsax.card_copy, 'Back-View'),
                           ),
                         ),
                       ),
@@ -329,61 +545,125 @@ class _NICVerificationState extends State<NICVerification> {
       ],
     );
   }
+}
 
-  Widget _buildFileContent({
-    String? fileName,
-    String? fileSize,
-    required VoidCallback onRemove,
-  }) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          Icons.check_circle,
-          color: Color(0xFF4CAF50),
-          size: 50,
+// Image Preview Screen
+class _ImagePreviewScreen extends StatelessWidget {
+  final File imageFile;
+  final String title;
+
+  const _ImagePreviewScreen({
+    required this.imageFile,
+    required this.title,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        title: Text(
+          title,
+          style: TextStyle(color: Colors.white),
         ),
-        SizedBox(height: 15),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            fileName ?? '',
-            style: TextStyle(
-              color: Color(0xFF4CAF50),
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+        backgroundColor: Colors.black,
+        iconTheme: IconThemeData(color: Colors.white),
+        elevation: 0,
+      ),
+      body: Center(
+        child: InteractiveViewer(
+          minScale: 0.5,
+          maxScale: 4.0,
+          child: Container(
+            margin: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black54,
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                ),
+              ],
             ),
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
-            maxLines: 2,
-          ),
-        ),
-        SizedBox(height: 8),
-        Text(
-          fileSize ?? '',
-          style: TextStyle(
-            color: Color(0xFF999999),
-            fontSize: 14,
-          ),
-        ),
-        SizedBox(height: 15),
-        ElevatedButton(
-          onPressed: onRemove,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF666666),
-            foregroundColor: Colors.white,
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.file(
+                imageFile,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 300,
+                    width: 300,
+                    color: Colors.grey[800],
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          color: Colors.white,
+                          size: 50,
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          'Unable to load image',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
-            elevation: 0,
-          ),
-          child: Text(
-            'Remove Image',
-            style: TextStyle(fontSize: 14),
           ),
         ),
-      ],
+      ),
+      bottomNavigationBar: Container(
+        padding: EdgeInsets.all(16),
+        color: Colors.black,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            ElevatedButton.icon(
+              onPressed: () => Navigator.pop(context),
+              icon: Icon(Icons.close),
+              label: Text('Close'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey[800],
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                // You can add share functionality here if needed
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Share functionality can be added here'),
+                    backgroundColor: Colors.grey[800],
+                  ),
+                );
+              },
+              icon: Icon(Icons.share),
+              label: Text('Share'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF4E6BF5),
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
