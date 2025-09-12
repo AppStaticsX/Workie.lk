@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/pofile_setup/verification/worker/page_setup.dart';
 
 class WorkerVerificationStartPage extends StatefulWidget {
@@ -69,8 +70,8 @@ class _WorkerVerificationStartPageState extends State<WorkerVerificationStartPag
                 FadeTransition(
                   opacity: _fadeAnimation,
                   child: const Icon(
-                    Icons.verified_user_outlined,
-                    size: 120,
+                    Iconsax.verify,
+                    size: 140,
                     color: Color(0xFF4E6BF5),
                   ),
                 ),
@@ -96,13 +97,13 @@ class _WorkerVerificationStartPageState extends State<WorkerVerificationStartPag
                           ),
                         ),
 
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 12),
 
                         // Description
                         Text(
                           'Secure and streamlined verification process for worker profiles. Ensure authentic credentials and build trust in your workforce.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontSize: 16,
                             color: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.9),
                             height: 1.5,
@@ -144,10 +145,11 @@ class _WorkerVerificationStartPageState extends State<WorkerVerificationStartPag
                             ),
                             child: Text(
                               'Start Verification',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 18,
-                                color: Colors.white,
                                 fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                                letterSpacing: 1.4,
                               ),
                             ),
                           ),

@@ -323,7 +323,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
               context: context,
               isScrollControlled: true,
               builder: (context) => SizedBox(
-                height: MediaQuery.of(context).size.height * 0.65, // 50% of screen height
+                height: MediaQuery.of(context).size.height * 0.55, // 50% of screen height
                 child: CoverPicBottomsheet(
                   currentImageUrl: _userCoverImageUrl, // Pass current cover image URL
                   closeBottomSheet: () {

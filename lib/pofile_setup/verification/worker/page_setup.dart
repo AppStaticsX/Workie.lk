@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:workie/widgets/bottom_navigation.dart';
 import 'package:workie/pofile_setup/verification/worker/mobile_verification.dart';
 import 'package:workie/pofile_setup/verification/worker/nic_verification.dart';
-import 'package:workie/pofile_setup/verification/worker/portrait_verification.dart';
 
 class ProfileSetup extends StatefulWidget {
   const ProfileSetup({super.key});
@@ -13,15 +12,10 @@ class ProfileSetup extends StatefulWidget {
 
 class _ProfileSetupState extends State<ProfileSetup> {
   int _selectedIndex = 0;
-  bool _isPortraitSelected = false;
   bool _isNicSelected = false;
   bool _isSaving = false;
 
-  void _onPortraitSelectionChanged(bool isSelected) {
-    setState(() {
-      _isPortraitSelected = isSelected;
-    });
-  }
+  final int _maxIndex = 2;
 
   void _onNicSelectionChanged(bool isSelected) {
     setState(() {
@@ -31,26 +25,11 @@ class _ProfileSetupState extends State<ProfileSetup> {
 
   void _handleNextStep() {
     // Check validation based on current step
-    if (_selectedIndex == 0 && !_isPortraitSelected) {
+    if (_selectedIndex == 0 && !_isNicSelected) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              'Please select a portrait photo before proceeding',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.inverseSurface
-            ),
-          ),
-          backgroundColor: Theme.of(context).colorScheme.secondary,
-        ),
-      );
-      return;
-    }
-
-    if (_selectedIndex == 1 && !_isNicSelected) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              'Please upload both front and back images of your NIC/Driver License before proceeding.',
+            'Please upload both front and back images of your NIC/Driver License before proceeding.',
             style: TextStyle(
                 color: Theme.of(context).colorScheme.inverseSurface
             ),
@@ -72,22 +51,32 @@ class _ProfileSetupState extends State<ProfileSetup> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
+        backgroundColor: const Color(0xFF4E6BF5),
         surfaceTintColor: Colors.transparent,
         leading: const Icon(
           Icons.verified_user_outlined,
           size: 26,
         ),
-        title: const Text(
-          'Create & Verify Your Profile'
+        title: Text('Create & Verify Your Profile',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.white
+            )
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(4.0),
+          child: LinearProgressIndicator(
+            value: (_selectedIndex+1) / (_maxIndex),
+            backgroundColor: _selectedIndex == 0? Colors.transparent : Colors.grey.withValues(alpha: 0.3),
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Colors.white,
+            ),
+          ),
         ),
       ),
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          PortraitVerification(
-            onSelectionChanged: _onPortraitSelectionChanged,
-          ),
           NICVerification(
             onSelectionChanged: _onNicSelectionChanged,
           ),
@@ -97,16 +86,6 @@ class _ProfileSetupState extends State<ProfileSetup> {
       bottomNavigationBar: IndexedStack(
         index: _selectedIndex,
         children: [
-          BottomNavigation(
-            isSaving: _isSaving,
-            actionName: 'Next Step',
-            onTapAction: _handleNextStep,
-            onBackAction: () {
-              setState(() {
-                return;
-              });
-            },
-          ),
           BottomNavigation(
             isSaving: _isSaving,
             actionName: 'Next Step',

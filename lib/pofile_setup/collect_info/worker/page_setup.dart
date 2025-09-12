@@ -9,6 +9,7 @@ import 'package:workie/pofile_setup/collect_info/worker/add_personal_details_pag
 import 'package:workie/pofile_setup/collect_info/worker/add_skills_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_title_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/select_work_page.dart';
+import 'package:workie/pofile_setup/verification/worker/start_page.dart';
 import 'package:workie/widgets/bottom_navigation.dart';
 import 'package:workie/widgets/bottom_navigation_with_skip.dart';
 import 'package:workie/widgets/simple_bottom_navigation.dart';
@@ -326,11 +327,13 @@ class _ProfileSetupState extends State<ProfileSetup> {
   }
 
 // Update the _handleProfileCompletion method
+  // Update the _handleProfileCompletion method
   Future<void> _handleProfileCompletion() async {
-    if (_isCompletingProfile) return; // Prevent multiple calls
+    if (_isCompletingProfile || _isSaving) return; // Prevent multiple calls
 
     setState(() {
       _isCompletingProfile = true;
+      _isSaving = true; // Add this to show loading state in UI
     });
 
     try {
@@ -378,11 +381,6 @@ class _ProfileSetupState extends State<ProfileSetup> {
         return;
       }
 
-      // Show loading dialog
-      _showLoadingDialog('Completing your profile...');
-
-      // Save personal details and upload profile picture if provided
-      // Parse dateOfBirth as DateTime from controller (assume yyyy-MM-dd)
       DateTime? dob;
       try {
         dob = DateTime.parse(personalDetailsState.birthDayController.text);
@@ -391,13 +389,9 @@ class _ProfileSetupState extends State<ProfileSetup> {
       }
       if (dob == null) {
         _showSnackBar('Invalid date of birth format.');
-        if (mounted) {
-          if (Navigator.canPop(context)) {
-            Navigator.of(context).pop();
-          }
-        }
         return;
       }
+
       final profileResult = await ProfileService.savePersonalDetailsToProfile(
         userId: userId,
         dateOfBirth: dob,
@@ -412,92 +406,36 @@ class _ProfileSetupState extends State<ProfileSetup> {
         profileImage: personalDetailsState.profileImage,
         profileImageBytes: personalDetailsState.profileImageBytes,
       );
+
       if (kDebugMode) {
         print('savePersonalDetailsToProfile result: $profileResult');
       }
 
-      // Hide loading dialog
-      if (mounted) {
-        if (Navigator.canPop(context)) {
-          Navigator.of(context).pop();
-        }
-      }
-
       if (profileResult != null) {
-        _showSuccessDialog();
+        if (mounted) {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => WorkerVerificationStartPage()
+              )
+          );
+        }
       } else {
         _showSnackBar('Failed to complete profile. Please try again.');
       }
     } catch (e) {
-      if (mounted) {
-        if (Navigator.canPop(context)) {
-          Navigator.of(context).pop();
-        }
-      }
-
       if (kDebugMode) {
         print('Error completing profile: $e');
       }
       _showSnackBar('An error occurred while completing your profile.');
     } finally {
-      setState(() {
-        _isCompletingProfile = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isCompletingProfile = false;
+          _isSaving = false; // Reset both states
+        });
+      }
     }
-  }
-
-  void _showLoadingDialog(String message) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          content: Row(
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(width: 20),
-              Expanded(child: Text(message)),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _showSuccessDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Row(
-            children: [
-              Icon(
-                Icons.check_circle,
-                color: Colors.green,
-                size: 28,
-              ),
-              const SizedBox(width: 8),
-              const Text('Profile Completed!'),
-            ],
-          ),
-          content: const Text('Your profile has been successfully created and saved. You can now start using Workie.lk!'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close dialog
-                // Navigate to main app or dashboard
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                  '/dashboard',
-                      (route) => false,
-                );
-              },
-              child: const Text('Get Started'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   void _dismissKeyboard() {
@@ -513,9 +451,9 @@ class _ProfileSetupState extends State<ProfileSetup> {
         backgroundColor: const Color(0xFF4E6BF5),
         surfaceTintColor: Colors.transparent,
         leading: const Icon(
-          CupertinoIcons.person_crop_circle_badge_plus,
+          CupertinoIcons.person_2_fill,
           color: Colors.white,
-          size: 36,
+          size: 30,
         ),
         title: Text('Create & Verify Your Profile',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -526,7 +464,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4.0),
           child: LinearProgressIndicator(
-            value: (_selectedIndex) / (_maxIndex + 1),
+            value: (_selectedIndex) / (_maxIndex),
             backgroundColor: _selectedIndex == 0? Colors.transparent : Colors.grey.withValues(alpha: 0.3),
             valueColor: AlwaysStoppedAnimation<Color>(
               Colors.white,

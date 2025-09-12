@@ -99,25 +99,6 @@ class _NICVerificationState extends State<NICVerification> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Row(
-          children: [
-            Container(
-              width: MediaQuery.of(context).size.width * 2/3,
-              height: 2,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    const Color(0xFF4E6BF5).withValues(alpha: 0.3),
-                    const Color(0xFF4E6BF5),
-                  ],
-                ),
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(0),
-                ),
-              ),
-            ),
-          ],
-        ),
         // Scrollable content below
         Expanded(
           child: SingleChildScrollView(

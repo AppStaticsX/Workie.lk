@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
@@ -49,7 +48,7 @@ class CustomDashedCoverPhotoPickerState extends State<CustomDashedCoverPhotoPick
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   bool _isHovered = false;
-  String? _errorMessage;
+  String? errorMessage;
   File? _selectedImage;
   Uint8List? _webImageBytes;
   String? _networkImageUrl; // Add this field
@@ -115,7 +114,7 @@ class CustomDashedCoverPhotoPickerState extends State<CustomDashedCoverPhotoPick
   Future<void> _pickImage() async {
     try {
       setState(() {
-        _errorMessage = null;
+        errorMessage = null;
       });
 
       final XFile? image = await _picker.pickImage(
@@ -129,7 +128,7 @@ class CustomDashedCoverPhotoPickerState extends State<CustomDashedCoverPhotoPick
 
     } catch (e) {
       setState(() {
-        _errorMessage = 'Failed to pick image: ${e.toString()}';
+        errorMessage = 'Failed to pick image: ${e.toString()}';
       });
     }
   }
@@ -142,7 +141,7 @@ class CustomDashedCoverPhotoPickerState extends State<CustomDashedCoverPhotoPick
 
       if (fileSize > maxSizeInBytes) {
         setState(() {
-          _errorMessage = 'Image size must be less than 5MB. Current size: ${(fileSize / (1024 * 1024)).toStringAsFixed(1)}MB';
+          errorMessage = 'Over-size Image. Please pick a suitable image that meet minimum requirements';
         });
         widget.hasImage?.call(false);
         return;
@@ -173,7 +172,7 @@ class CustomDashedCoverPhotoPickerState extends State<CustomDashedCoverPhotoPick
 
         if (width < 1584 || height < 396) {
           setState(() {
-            _errorMessage = 'Image dimensions must be at least 1584x396 pixels. Current size: ${width}x$height';
+            errorMessage = 'Low-Resolution Image. Please pick a suitable image that meet minimum requirements';
           });
           widget.hasImage?.call(false);
           return;
@@ -183,7 +182,7 @@ class CustomDashedCoverPhotoPickerState extends State<CustomDashedCoverPhotoPick
           _webImageBytes = imageBytes;
           _selectedImage = null;
           _networkImageUrl = null; // Clear network image when local image is selected
-          _errorMessage = null;
+          errorMessage = null;
         });
 
         widget.hasImage?.call(true);
@@ -200,7 +199,7 @@ class CustomDashedCoverPhotoPickerState extends State<CustomDashedCoverPhotoPick
 
         if (width < 1584 || height < 396) {
           setState(() {
-            _errorMessage = 'Image dimensions must be at least 1584x396 pixels. Current size: ${width}x$height';
+            errorMessage = 'Low-Resolution Image. Please pick a suitable image that meet minimum requirements';
           });
           return;
         }
@@ -209,7 +208,7 @@ class CustomDashedCoverPhotoPickerState extends State<CustomDashedCoverPhotoPick
           _selectedImage = file;
           _webImageBytes = null;
           _networkImageUrl = null; // Clear network image when local image is selected
-          _errorMessage = null;
+          errorMessage = null;
         });
 
         widget.hasImage?.call(true);
@@ -218,7 +217,7 @@ class CustomDashedCoverPhotoPickerState extends State<CustomDashedCoverPhotoPick
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Failed to validate image: ${e.toString()}';
+        errorMessage = 'Failed to Validate Image';
       });
     }
   }
@@ -229,7 +228,7 @@ class CustomDashedCoverPhotoPickerState extends State<CustomDashedCoverPhotoPick
       _selectedImage = null;
       _webImageBytes = null;
       _networkImageUrl = null; // Also clear network image
-      _errorMessage = null;
+      errorMessage = null;
     });
     widget.hasImage?.call(false);
     widget.onImageSelected?.call(null);
@@ -418,17 +417,19 @@ class CustomDashedCoverPhotoPickerState extends State<CustomDashedCoverPhotoPick
             ),
           ),
         ),
-        if (_errorMessage != null)
+        if (errorMessage != null)
           Padding(
-            padding: const EdgeInsets.only(top: 12),
-            child: Text(
-              _errorMessage!,
-              style: TextStyle(
-                color: widget.errorTextColor,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+            padding: const EdgeInsets.only(top: 24),
+            child: Expanded(
+              child: Text(
+                errorMessage!,
+                style: TextStyle(
+                  color: widget.errorTextColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
             ),
           ),
       ],

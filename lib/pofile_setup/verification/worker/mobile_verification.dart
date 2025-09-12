@@ -169,26 +169,8 @@ class _MobileVerificationState extends State<MobileVerification>
       backgroundColor: colorScheme.surface,
       body: Column(
         children: [
-          // Enhanced progress bar with gradient
-          Row(
-            children: [
-              Container(
-                width: MediaQuery.of(context).size.width * 3/3,
-                height: 2,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      const Color(0xFF4E6BF5).withValues(alpha: 0.3),
-                      const Color(0xFF4E6BF5),
-                    ],
-                  ),
-                  borderRadius: const BorderRadius.vertical(
-                    bottom: Radius.circular(0),
-                  ),
-                ),
-              ),
-            ],
-          ),
+          // Progress bar
+          _ProgressBar(),
 
           // Main content
           Expanded(
@@ -202,219 +184,21 @@ class _MobileVerificationState extends State<MobileVerification>
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const SizedBox(height: 20),
-
-                      // Title with better styling
-                      Text(
-                        'Verify Your\nMobile Number',
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: colorScheme.onSurface,
-                          height: 1.2,
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // Subtitle
-                      Text(
-                        'We\'ll send you a verification code to confirm\nyour mobile number',
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurface.withValues(alpha: 0.7),
-                          height: 1.4,
-                        ),
-                      ),
-
-                      const SizedBox(height: 30),
-
-                      // Icon with enhanced styling
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4E6BF5).withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Iconsax.mobile_copy,
-                          size: 80,
-                          color: const Color(0xFF4E6BF5),
-                        ),
-                      ),
-
-                      const SizedBox(height: 40),
-
-                      // Mobile number input
-                      SimplePrefixTextfield(
-                        controller: _mobileNumberController,
-                        lableText: 'Mobile Number',
-                        prefixIconData: Icon(
-                          Iconsax.call_copy,
-                        ),
-                        obscureText: false,
-                        keyboardType: TextInputType.phone,
-                      ),
-
+                      _HeaderIcon(),
                       const SizedBox(height: 20),
-
-                      // Verification code section
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: SimplePrefixTextfield(
-                                controller: _verificationCodeController,
-                                hintText: 'Enter verification code',
-                                obscureText: false,
-                                keyboardType: TextInputType.number,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: SizedBox(
-                                height: 56,
-                                child: _isLoading
-                                    ? Container(
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: const Color(0xFF4E6BF5).withValues(alpha: 0.3),
-                                    ),
-                                    borderRadius: BorderRadius.circular(15),
-                                  ),
-                                  child: const Center(
-                                    child: SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor: AlwaysStoppedAnimation<Color>(
-                                          Color(0xFF4E6BF5),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                )
-                                    : OutlinedButton(
-                                  onPressed: _canResend || !_isCodeSent
-                                      ? _sendVerificationCode
-                                      : null,
-                                  style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                    side: BorderSide(
-                                      color: const Color(0xFF4E6BF5).withValues(alpha: 
-                                        _canResend || !_isCodeSent ? 1.0 : 0.3,
-                                      ),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    _isCodeSent
-                                        ? _canResend
-                                        ? 'Resend'
-                                        : '${_countdown}s'
-                                        : 'Send Code',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF4E6BF5).withValues(alpha: 
-                                        _canResend || !_isCodeSent ? 1.0 : 0.3,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Status message
+                      _TitleSection(),
+                      const SizedBox(height: 40),
+                      _MobileNumberInput(),
+                      const SizedBox(height: 20),
+                      _VerificationCodeSection(),
                       if (_isCodeSent) ...[
                         const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade50,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: Colors.green.shade200,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Iconsax.tick_circle_copy,
-                                color: Colors.green.shade600,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  'Code sent to +${_mobileNumberController.text}',
-                                  style: TextStyle(
-                                    color: Colors.green.shade700,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        _StatusMessage(),
                       ],
-
                       const SizedBox(height: 40),
-
-                      // Enhanced verify button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _verifyCode,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF4E6BF5),
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shadowColor: const Color(0xFF4E6BF5).withValues(alpha: 0.3),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                          ),
-                          child: _isLoading
-                              ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
-                              : const Text(
-                            'Verify Mobile Number',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                      ),
-
+                      _VerifyButton(),
                       const SizedBox(height: 24),
-
-                      // Help text
-                      Text(
-                        'Having trouble? Make sure your mobile number\nis correct and try again.',
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurface.withValues(alpha: 0.6),
-                          height: 1.4,
-                        ),
-                      ),
+                      _HelpText(),
                     ],
                   ),
                 ),
@@ -422,6 +206,252 @@ class _MobileVerificationState extends State<MobileVerification>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _ProgressBar() {
+    return Row(
+      children: [
+        Container(
+          width: MediaQuery.of(context).size.width * 3/3,
+          height: 2,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                const Color(0xFF4E6BF5).withValues(alpha: 0.3),
+                const Color(0xFF4E6BF5),
+              ],
+            ),
+            borderRadius: const BorderRadius.vertical(
+              bottom: Radius.circular(0),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _HeaderIcon() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.tertiary,
+        shape: BoxShape.circle,
+      ),
+      child: Icon(
+        Iconsax.mobile_copy,
+        size: 80,
+        color: Theme.of(context).colorScheme.inverseSurface,
+      ),
+    );
+  }
+
+  Widget _TitleSection() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Column(
+      children: [
+        Text(
+          'Verify Your\nMobile Number',
+          textAlign: TextAlign.center,
+          style: theme.textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: colorScheme.onSurface,
+            height: 1.2,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'We\'ll send you a verification code to confirm\nyour mobile number',
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onSurface.withValues(alpha: 0.7),
+            height: 1.4,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _MobileNumberInput() {
+    return SimplePrefixTextfield(
+      controller: _mobileNumberController,
+      lableText: 'Mobile Number',
+      prefixIconData: Icon(
+        Iconsax.mobile_copy,
+      ),
+      obscureText: false,
+      keyboardType: TextInputType.phone,
+    );
+  }
+
+  Widget _VerificationCodeSection() {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: SimplePrefixTextfield(
+              controller: _verificationCodeController,
+              hintText: 'Enter verification code',
+              obscureText: false,
+              keyboardType: TextInputType.number,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _SendCodeButton(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _SendCodeButton() {
+    return SizedBox(
+      height: 56,
+      child: _isLoading
+          ? _LoadingContainer()
+          : IconButton(
+        onPressed: _canResend || !_isCodeSent
+            ? _sendVerificationCode
+            : null,
+        style: IconButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          backgroundColor: _canResend || !_isCodeSent
+              ? const Color(0xFF4E6BF5)
+              : const Color(0xFF4E6BF5).withValues(alpha: 0.3),
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: const Color(0xFF4E6BF5).withValues(alpha: 0.3),
+          disabledForegroundColor: Colors.white.withValues(alpha: 0.7),
+        ),
+        icon: _getButtonIcon(),
+      ),
+    );
+  }
+
+  Widget _LoadingContainer() {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: const Color(0xFF4E6BF5).withValues(alpha: 0.3),
+        ),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: const Center(
+        child: SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Color(0xFF4E6BF5),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _getButtonIcon() {
+    if (_isCodeSent) {
+      return _canResend
+          ? const Icon(Icons.refresh, size: 20)
+          : Text(
+        '${_countdown}s',
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+      );
+    }
+    return const Icon(Icons.send, size: 28);
+  }
+
+  Widget _StatusMessage() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.green.shade50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: Colors.green.shade200,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Iconsax.tick_circle_copy,
+            color: Colors.green.shade600,
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Code sent to +${_mobileNumberController.text}',
+              style: TextStyle(
+                color: Colors.green.shade700,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _VerifyButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _verifyCode,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF4E6BF5),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shadowColor: const Color(0xFF4E6BF5).withValues(alpha: 0.3),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+        ),
+        child: _isLoading
+            ? const SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          ),
+        )
+            : const Text(
+          'Verify Mobile Number',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+            color: Colors.white,
+            letterSpacing: 1.4,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _HelpText() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Text(
+      'Having trouble? Make sure your mobile number\nis correct and try again.',
+      textAlign: TextAlign.center,
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: colorScheme.onSurface.withValues(alpha: 0.6),
+        height: 1.4,
       ),
     );
   }

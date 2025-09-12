@@ -445,14 +445,16 @@ class CustomDashedPhotoPickerState extends State<CustomDashedPhotoPicker>
         if (_errorMessage != null)
           Padding(
             padding: const EdgeInsets.only(top: 12),
-            child: Text(
-              _errorMessage!,
-              style: TextStyle(
-                color: widget.errorTextColor,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+            child: Expanded(
+              child: Text(
+                _errorMessage!,
+                style: TextStyle(
+                  color: widget.errorTextColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
             ),
           ),
       ],

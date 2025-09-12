@@ -88,7 +88,7 @@ class _CoverPicBottomsheetState extends State<CoverPicBottomsheet> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-              'Your Photo',
+              'Cover Photo',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold
               )
@@ -154,25 +154,23 @@ class _CoverPicBottomsheetState extends State<CoverPicBottomsheet> {
                     borderColor: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.5),
                     fit: BoxFit.none,
                   ),
-                  const SizedBox(height: 16),
                   (_selectedImage != null || _webImageBytes != null)
-                      ? const SizedBox()
-                      : const SizedBox(height: 16),
+                      ? const SizedBox(height: 16)
+                      : const SizedBox(height: 12),
                   _hasImage
                       ? _buildImageDeleteButton()
                       : _buildImageLimit(),
-                  const SizedBox(height: 24),
-                  _buildAlertText(context),
                   const SizedBox(height: 20),
                 ],
               ),
             ),
           ),
-          Column(
-            children: [
-              _buildBottomActionButtons(),
-              const SizedBox(height: 24)
-            ],
+          SafeArea(
+            child: Column(
+              children: [
+                _buildBottomActionButtons(),
+              ],
+            ),
           ),
         ],
       ),
@@ -184,7 +182,7 @@ class _CoverPicBottomsheetState extends State<CoverPicBottomsheet> {
       '1584 X 396 Min / 5 MB Max',
       style: TextStyle(
           fontSize: 16,
-          color: Colors.grey
+          color: Colors.grey,
       ),
     );
   }
@@ -222,80 +220,28 @@ class _CoverPicBottomsheetState extends State<CoverPicBottomsheet> {
     );
   }
 
-  Padding _buildAlertText(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: RichText(
-        textAlign: TextAlign.center,
-        text: TextSpan(
-          children: [
-            TextSpan(
-              text: 'Must be an actual photo of you.',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
-            ),
-            TextSpan(
-              text: '\nLogos, clip-art, group photos, and digitally-altered images',
-              style: TextStyle(
-                fontSize: 16,
-                color: Theme.of(context).colorScheme.inverseSurface,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            TextSpan(
-              text: ' are not allowed. It will cause account ',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
-            ),
-            TextSpan(
-              text: 'Rejection',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            TextSpan(
-              text: ' or ',
-              style: TextStyle(
-                fontSize: 16,
-                color: Theme.of(context).colorScheme.inverseSurface,
-                fontWeight: FontWeight.normal,
-              ),
-            ),
-            TextSpan(
-              text: 'Termination.',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildBottomActionButtons() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text(
-                'Cancel',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.grey,
-                    fontWeight: FontWeight.bold
-                )
-            )
+        ElevatedButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF353535),
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+            ),
+          ),
+          child: Text(
+              'Cancel',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold
+              )
+          ),
         ),
         const SizedBox(width: 24),
         ElevatedButton(
