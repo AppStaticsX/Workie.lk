@@ -8,13 +8,18 @@ import 'dart:async';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 
 class GoogleMapScreen extends StatefulWidget {
-  const GoogleMapScreen({super.key});
+  final VoidCallback onPressed;
+
+  const GoogleMapScreen({
+    super.key,
+    required this.onPressed
+  });
 
   @override
-  _GoogleMapScreenState createState() => _GoogleMapScreenState();
+  GoogleMapScreenState createState() => GoogleMapScreenState();
 }
 
-class _GoogleMapScreenState extends State<GoogleMapScreen> {
+class GoogleMapScreenState extends State<GoogleMapScreen> {
   GoogleMapController? _controller;
   TextEditingController _searchController = TextEditingController();
 
@@ -29,6 +34,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
   String _selectedAddress = '';
   bool _isLoading = false;
   MapType _currentMapType = MapType.normal;
+  String get pickedLocation => _selectedAddress;
 
   // Map type options
   final List<MapTypeOption> _mapTypeOptions = [
@@ -453,20 +459,9 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          // Handle location selection
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: Text('Location Selected'),
-                              content: Text('Location: $_selectedAddress'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  child: Text('OK'),
-                                ),
-                              ],
-                            ),
-                          );
+                          // Call the callback AND navigate back
+                          widget.onPressed(); // This was missing the ()
+                          Navigator.pop(context);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF4E6BF5),

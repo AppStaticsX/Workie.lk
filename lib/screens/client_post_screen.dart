@@ -80,7 +80,7 @@ class _ClientPostScreenState extends State<ClientPostScreen> {
   void _selectLocationOnMap() {
     Navigator.push(
         context, MaterialPageRoute(
-          builder: (context) => GoogleMapScreen()
+          builder: (context) => GoogleMapScreen(onPressed: (){},)
       )
     );
   }

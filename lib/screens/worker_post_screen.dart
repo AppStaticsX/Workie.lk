@@ -2,11 +2,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:pinput/pinput.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 import 'package:workie/screens/googlemap_screen.dart';
-import 'package:workie/widgets/add_hashtag_dialog.dart';
-
 import '../services/push_data/worker_post_service.dart';
 
 class WorkerPostScreen extends StatefulWidget {
@@ -22,6 +21,8 @@ class WorkerPostScreen extends StatefulWidget {
 }
 
 class _WorkerPostScreenState extends State<WorkerPostScreen> {
+  final GlobalKey<GoogleMapScreenState> _googleMapScreenKey = GlobalKey();
+
   Map<String, VideoPlayerController?> _videoControllers = {};
   final TextEditingController _textController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
@@ -118,9 +119,11 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
     if (token == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('You are not logged in.')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('You are not logged in.')),
+        );
+      }
       return;
     }
     try {
@@ -161,16 +164,20 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
         _isPosting = false;
       });
       if (widget.onPostSuccess != null) widget.onPostSuccess!();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Post created successfully!')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Post created successfully!')),
+        );
+      }
     } catch (e) {
       setState(() {
         _isPosting = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to create post: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to create post: $e')),
+        );
+      }
     }
   }
 
@@ -528,11 +535,27 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
                           color: Colors.grey[400],
                           size: 28,
                         ),
-                        onPressed: () {
-                          Navigator.push(
-                              context, MaterialPageRoute(
-                              builder: (context) => GoogleMapScreen())
+                        onPressed: () async {
+                          // Use await and handle the result properly
+                          await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => GoogleMapScreen(
+                                    key: _googleMapScreenKey,
+                                    onPressed: () {
+                                      final googleMapScreenState = _googleMapScreenKey.currentState;
+                                      if (googleMapScreenState != null &&
+                                          googleMapScreenState.pickedLocation.isNotEmpty) {
+                                        // Use text property instead of setText method
+                                        _textController.text = googleMapScreenState.pickedLocation;
+                                      }
+                                    },
+                                  )
+                              )
                           );
+
+                          // Refresh the UI after returning
+                          setState(() {});
                         },
                       ),
                     ],
