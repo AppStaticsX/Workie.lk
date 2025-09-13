@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:workie/screens/main_screen.dart';
 import 'package:workie/widgets/bottom_navigation.dart';
 import 'package:workie/pofile_setup/verification/worker/mobile_verification.dart';
 import 'package:workie/pofile_setup/verification/worker/nic_verification.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
+
+import '../../../services/push_data/nic_verification_service.dart';
 
 class ProfileSetup extends StatefulWidget {
   const ProfileSetup({super.key});
@@ -15,15 +20,23 @@ class _ProfileSetupState extends State<ProfileSetup> {
   bool _isNicSelected = false;
   bool _isSaving = false;
 
+  // Store uploaded images
+  File? _frontImage;
+  File? _backImage;
+  String? _frontImageUrl;
+  String? _backImageUrl;
+
   final int _maxIndex = 2;
 
-  void _onNicSelectionChanged(bool isSelected) {
+  void _onNicSelectionChanged(bool isSelected, {File? frontImage, File? backImage}) {
     setState(() {
       _isNicSelected = isSelected;
+      _frontImage = frontImage;
+      _backImage = backImage;
     });
   }
 
-  void _handleNextStep() {
+  Future<void> _handleNextStep() async {
     // Check validation based on current step
     if (_selectedIndex == 0 && !_isNicSelected) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -40,10 +53,98 @@ class _ProfileSetupState extends State<ProfileSetup> {
       return;
     }
 
-    // Proceed to next step if validation passes
-    setState(() {
-      _selectedIndex = _selectedIndex + 1;
-    });
+    // If on NIC verification step and images are selected, upload them
+    if (_selectedIndex == 0 && _isNicSelected && _frontImage != null && _backImage != null) {
+      setState(() {
+        _isSaving = true;
+      });
+
+      try {
+        // Get auth token
+        final prefs = await SharedPreferences.getInstance();
+        final token = prefs.getString('auth_token');
+
+        if (token == null) {
+          throw Exception('Authentication token not found. Please login again.');
+        }
+
+        // Upload NIC documents
+        final result = await NicVerificationService.uploadNicDocuments(
+          frontImage: _frontImage!,
+          backImage: _backImage!,
+          token: token,
+        );
+
+        if (result['success'] == true) {
+          // Store uploaded URLs for later use
+          _frontImageUrl = result['data']?['files']?['idPhotoFront']?['url'];
+          _backImageUrl = result['data']?['files']?['idPhotoBack']?['url'];
+
+          // Show success message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'NIC documents uploaded successfully!',
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.inverseSurface
+                  ),
+                ),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+
+          // Proceed to next step
+          setState(() {
+            _selectedIndex = _selectedIndex + 1;
+          });
+        } else {
+          // Show error message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  result['message'] ?? 'Failed to upload NIC documents. Please try again.',
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.inverseSurface
+                  ),
+                ),
+                backgroundColor: Colors.red,
+                duration: Duration(seconds: 5),
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Error uploading documents: ${e.toString()}',
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.inverseSurface
+                ),
+              ),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 5),
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isSaving = false;
+          });
+        }
+      }
+    } else {
+      // For other steps, just proceed normally
+      setState(() {
+        _selectedIndex = _selectedIndex + 1;
+      });
+    }
   }
 
   @override
@@ -88,17 +189,19 @@ class _ProfileSetupState extends State<ProfileSetup> {
         children: [
           BottomNavigation(
             isSaving: _isSaving,
-            actionName: 'Next Step',
-            onTapAction: _handleNextStep, // Use the same validation method
+            actionName: _isSaving ? 'Uploading...' : 'Next Step',
+            onTapAction: _handleNextStep,
             onBackAction: () {},
           ),
           BottomNavigation(
             isSaving: _isSaving,
-            actionName: 'test',
+            actionName: _isSaving ? 'Verifying...' : 'Verify Documents',
             onTapAction: () {
-              setState(() {
-                _selectedIndex = _selectedIndex + 1;
-              });
+              Navigator.pushReplacement(
+                  context, MaterialPageRoute(
+                    builder: (context) => MainScreen()
+                )
+              );
             },
             onBackAction: () {
               setState(() {

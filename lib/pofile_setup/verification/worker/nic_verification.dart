@@ -7,7 +7,7 @@ import 'dart:io';
 import '../../../widgets/imagesource_dialog.dart';
 
 class NICVerification extends StatefulWidget {
-  final Function(bool)? onSelectionChanged;
+  final Function(bool, {File? frontImage, File? backImage})? onSelectionChanged;
 
   const NICVerification({super.key, this.onSelectionChanged});
 
@@ -27,6 +27,15 @@ class _NICVerificationState extends State<NICVerification> {
   final ImagePicker _picker = ImagePicker();
 
   bool get bothImagesSelected => selectedFrontFile != null && selectedBackFile != null;
+
+  // Update the callback to pass the file objects
+  void _updateSelectionStatus() {
+    widget.onSelectionChanged?.call(
+      bothImagesSelected,
+      frontImage: selectedFrontFile,
+      backImage: selectedBackFile,
+    );
+  }
 
   Future<void> _pickFile({required bool isFront}) async {
     try {
@@ -50,16 +59,12 @@ class _NICVerificationState extends State<NICVerification> {
             backFileSize = _formatFileSize(fileSize);
           }
 
-          widget.onSelectionChanged?.call(bothImagesSelected);
+          _updateSelectionStatus();
         });
       }
     } catch (e) {
       //print('Error picking image: $e');
     }
-  }
-
-  Future<ImageSource?> _showImageSourceDialog() async {
-    return showImageSourceDialog(context);
   }
 
   void _removeFile({required bool isFront}) {
@@ -74,8 +79,12 @@ class _NICVerificationState extends State<NICVerification> {
         backFileSize = null;
       }
 
-      widget.onSelectionChanged?.call(bothImagesSelected);
+      _updateSelectionStatus(); // Updated to use new method
     });
+  }
+
+  Future<ImageSource?> _showImageSourceDialog() async {
+    return showImageSourceDialog(context);
   }
 
   void _previewImage({required bool isFront}) {
