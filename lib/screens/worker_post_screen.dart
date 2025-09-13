@@ -30,6 +30,7 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
   final List<File> _selectedVideos = [];
   List<String> selectedHashtags = [];
   bool _isPosting = false;
+  String _pickedLocationAdress = '' ?? 'Unkown';
 
   VideoPlayerController? _getVideoController(String videoPath) {
     if (!_videoControllers.containsKey(videoPath)) {
@@ -149,7 +150,7 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
         }).toList(),
         hashtags: selectedHashtags,
         privacy: 'public',
-        location: 'Colombo',
+        location: _pickedLocationAdress,
       );
 
       // Optionally clear UI and show success
@@ -547,7 +548,9 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
                                       if (googleMapScreenState != null &&
                                           googleMapScreenState.pickedLocation.isNotEmpty) {
                                         // Use text property instead of setText method
-                                        _textController.text = googleMapScreenState.pickedLocation;
+                                          setState(() {
+                                            _pickedLocationAdress = googleMapScreenState.pickedLocation;
+                                          });
                                       }
                                     },
                                   )
