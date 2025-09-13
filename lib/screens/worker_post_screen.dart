@@ -2,8 +2,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
+import 'package:workie/screens/googlemap_screen.dart';
 import 'package:workie/widgets/add_hashtag_dialog.dart';
+
+import '../services/push_data/worker_post_service.dart';
 
 class WorkerPostScreen extends StatefulWidget {
   final VoidCallback? onPostSuccess;
@@ -44,7 +48,7 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
     super.dispose();
   }
 
-  Future<void> _handlePost() async {
+  /*Future<void> _handlePost() async {
     await Future.delayed(Duration(seconds: 3));
     _textController.clear();
     setState(() {
@@ -61,7 +65,7 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
     if (widget.onPostSuccess != null) {
       widget.onPostSuccess!();
     }
-  }
+  }*/
 
   Future<void> _pickImageFromGallery() async {
     try {
@@ -110,6 +114,66 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
     }
   }
 
+  Future<void> _handleUploadPost() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    if (token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('You are not logged in.')),
+      );
+      return;
+    }
+    try {
+      // 1. Upload media files
+      final uploadedMedia = await WorkerPostService.uploadPostMedia(
+        files: [..._selectedImages, ..._selectedVideos], // <-- FIXED
+        token: token,
+      );
+
+      // 2. Create post with content and uploaded media info
+      final post = await WorkerPostService.createPost(
+        token: token,
+        content: _textController.text,
+        media: uploadedMedia.map((m) => {
+          'url': m['url'],
+          'publicId': m['publicId'],
+          'fileType': m['fileType'] ?? (m['mimetype']?.startsWith('video') == true ? 'video' : 'image'),
+          'fileName': m['fileName'] ?? m['originalName'] ?? '',
+          'folder': m['folder'] ?? 'posts',
+          'size': m['size'] ?? 0,
+          'mimetype': m['mimetype'] ?? '',
+          'uploadedAt': m['uploadedAt'] ?? DateTime.now().toIso8601String(),
+        }).toList(),
+        hashtags: selectedHashtags,
+        privacy: 'public',
+        location: 'Colombo',
+      );
+
+      // Optionally clear UI and show success
+      _textController.clear();
+      setState(() {
+        _selectedImages.clear();
+        _selectedVideos.clear();
+        for (var controller in _videoControllers.values) {
+          controller?.dispose();
+        }
+        _videoControllers.clear();
+        _isPosting = false;
+      });
+      if (widget.onPostSuccess != null) widget.onPostSuccess!();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Post created successfully!')),
+      );
+    } catch (e) {
+      setState(() {
+        _isPosting = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to create post: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -140,19 +204,19 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
         ),
         actions: [
           Container(
-            margin: const EdgeInsets.only(right: 4, top: 0, bottom: 0),
+            margin: const EdgeInsets.only(right: 12, top: 0, bottom: 0),
             child: ElevatedButton(
               onPressed: () {
                 setState(() {
                   _isPosting = true;
                 });
-                _handlePost();
+                _handleUploadPost();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF4E6BF5),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               ),
@@ -183,10 +247,6 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
               ),
             ),
           ),
-          IconButton(
-              onPressed: () => _textController.clear(),
-              icon: Icon(Iconsax.trash_copy)
-          )
         ],
       ),
       body: Column(
@@ -351,7 +411,7 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
                                 children: [
                                   if (controller != null && controller.value.isInitialized)
                                     AspectRatio(
-                                      aspectRatio: controller.value.aspectRatio,
+                                      aspectRatio: 1.0, // Changed from controller.value.aspectRatio to 1.0 for square
                                       child: VideoPlayer(controller),
                                     )
                                   else
@@ -359,7 +419,7 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
                                       color: Colors.grey[800],
                                       child: Center(
                                         child: Transform.scale(
-                                          scale: 1, // Makes it half the size
+                                          scale: 1,
                                           child: const Padding(
                                             padding: EdgeInsets.only(right: 4.0),
                                             child: CircularProgressIndicator(
@@ -456,9 +516,32 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
                           _pickVideoFromGallery();
                         },
                       ),
+                      Text(
+                        '|',
+                        style: TextStyle(
+                            fontSize: 24
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          Iconsax.location_copy,
+                          color: Colors.grey[400],
+                          size: 28,
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                              context, MaterialPageRoute(
+                              builder: (context) => GoogleMapScreen())
+                          );
+                        },
+                      ),
                     ],
                   ),
                   IconButton(
+                      onPressed: () => _textController.clear(),
+                      icon: Icon(Iconsax.trash_copy, size: 28, color: Colors.red,)
+                  )
+                  /*IconButton(
                     icon: Icon(
                       Iconsax.hashtag_copy,
                       color: Colors.grey[400],
@@ -477,7 +560,7 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
                         ),
                       );
                     },
-                  ),
+                  ),*/
                 ],
               ),
             ),
