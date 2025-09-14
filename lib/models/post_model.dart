@@ -1,10 +1,13 @@
+import 'package:flame_lottie/flame_lottie.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:video_player/video_player.dart';
+import 'package:workie/screens/media_gallery_screen.dart';
 import 'package:workie/widgets/comment_bottom_sheet.dart';
 
-import '../screens/image_gallery_screen.dart';
+import 'media_item_model.dart';
 
 class PostCardModel extends StatefulWidget {
   final String profileImageUrl;
@@ -13,10 +16,9 @@ class PostCardModel extends StatefulWidget {
   final String userTitle;
   final String timeAgo;
   final String connectionStatus;
-  final String shortContent;
-  final String? fullContent;
+  final String content; // Changed from shortContent and fullContent
   final bool isVerified;
-  final List<String> postImageUrls; // Changed from single image to list
+  final List<MediaItem> mediaUrls; // Changed from postImageUrls
   final List<String> hashtags;
   final int initialLikeCount;
   final int commentCount;
@@ -32,9 +34,8 @@ class PostCardModel extends StatefulWidget {
     required this.userTitle,
     required this.timeAgo,
     this.connectionStatus = '2nd',
-    required this.shortContent,
-    this.fullContent,
-    this.postImageUrls = const [], // Changed default value
+    required this.content, // Updated parameter
+    this.mediaUrls = const [], // Updated parameter
     this.hashtags = const [],
     this.initialLikeCount = 0,
     this.commentCount = 0,
@@ -54,11 +55,37 @@ class _PostCardModelState extends State<PostCardModel> {
   bool _isLiked = false;
   late int _likeCount;
   bool _isExpanded = false;
+  Map<String, VideoPlayerController> _videoControllers = {};
 
   @override
   void initState() {
     super.initState();
     _likeCount = widget.initialLikeCount;
+    _initializeVideoControllers();
+  }
+
+  void _initializeVideoControllers() {
+    for (int i = 0; i < widget.mediaUrls.length; i++) {
+      if (widget.mediaUrls[i].type == MediaType.video) {
+        final controller = VideoPlayerController.networkUrl(
+          Uri.parse(widget.mediaUrls[i].url),
+        );
+        _videoControllers[widget.mediaUrls[i].url] = controller;
+        controller.initialize().then((_) {
+          if (mounted) {
+            setState(() {});
+          }
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    for (var controller in _videoControllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
   }
 
   void _toggleLike() {
@@ -73,6 +100,19 @@ class _PostCardModelState extends State<PostCardModel> {
     setState(() {
       _isExpanded = !_isExpanded;
     });
+  }
+
+  // Helper method to get truncated content
+  String get _truncatedContent {
+    if (widget.content.length <= 95) {
+      return widget.content;
+    }
+    return '${widget.content.substring(0, 95)}...';
+  }
+
+  // Helper method to check if content needs truncation
+  bool get _needsTruncation {
+    return widget.content.length > 95;
   }
 
   @override
@@ -97,7 +137,7 @@ class _PostCardModelState extends State<PostCardModel> {
         children: [
           _buildHeader(),
           _buildContent(),
-          if (widget.postImageUrls.isNotEmpty) _buildPostImages(), // Updated method name
+          if (widget.mediaUrls.isNotEmpty) _buildPostMedia(),
           _buildEngagementStats(),
           _buildActionButtons(),
         ],
@@ -133,7 +173,7 @@ class _PostCardModelState extends State<PostCardModel> {
                     if (widget.isVerified)
                       Icon(
                           Iconsax.verify,
-                      size: 18
+                          size: 18
                       ),
                     const SizedBox(width: 4),
                     Text(
@@ -162,7 +202,7 @@ class _PostCardModelState extends State<PostCardModel> {
                   ),
                 ),
                 Text(
-                  '${widget.timeAgo} • 🌍',
+                  '${widget.timeAgo} • 🌐',
                   style: TextStyle(
                     color: Colors.grey,
                     fontSize: 11,
@@ -194,13 +234,13 @@ class _PostCardModelState extends State<PostCardModel> {
                 height: 1.4,
               ),
               children: [
-                TextSpan(text: widget.shortContent),
-                if (widget.fullContent != null && _isExpanded)
-                  TextSpan(text: widget.fullContent),
+                TextSpan(
+                  text: _isExpanded ? widget.content : _truncatedContent,
+                ),
               ],
             ),
           ),
-          if (widget.fullContent != null && widget.fullContent!.isNotEmpty)
+          if (_needsTruncation)
             GestureDetector(
               onTap: _toggleExpanded,
               child: Padding(
@@ -244,81 +284,86 @@ class _PostCardModelState extends State<PostCardModel> {
     );
   }
 
-  Widget _buildPostImages() {
-    if (widget.postImageUrls.isEmpty) return const SizedBox.shrink();
+  Widget _buildPostMedia() {
+    if (widget.mediaUrls.isEmpty) return const SizedBox.shrink();
 
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ImageGalleryScreen(
-              imageUrls: widget.postImageUrls,
-              initialIndex: 0,
-              profileImageUrl: widget.profileImageUrl,
-              userName: widget.userName,
-              isVerified: widget.isVerified,
-              connectionStatus: widget.connectionStatus,
-              userTitle: widget.userTitle,
-              timeAgo: widget.timeAgo,
-              fullContent: widget.fullContent,
-              shortContent: widget.shortContent,
+        // Extract image URLs for gallery
+        List<String> imageUrls = widget.mediaUrls
+            .where((media) => media.type == MediaType.image)
+            .map((media) => media.url)
+            .toList();
+
+        if (imageUrls.isNotEmpty) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MediaGalleryScreen(
+                initialIndex: 0,
+                profileImageUrl: widget.profileImageUrl,
+                userName: widget.userName,
+                isVerified: widget.isVerified,
+                connectionStatus: widget.connectionStatus,
+                userTitle: widget.userTitle,
+                timeAgo: widget.timeAgo,
+                fullContent: widget.content,
+                shortContent: _truncatedContent,
+                mediaItems: widget.mediaUrls,
+              ),
             ),
-          ),
-        );
+          );
+        }
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: SizedBox(
           width: double.infinity,
           height: 200,
-          child: _buildImageLayout(),
+          child: _buildMediaLayout(),
         ),
       ),
     );
   }
 
-  Widget _buildImageLayout() {
-    final imageCount = widget.postImageUrls.length;
+  Widget _buildMediaLayout() {
+    final mediaCount = widget.mediaUrls.length;
 
-    if (imageCount == 1) {
-      return _buildSingleImage(widget.postImageUrls[0]);
-    } else if (imageCount == 2) {
-      return _buildTwoImagesLayout();
-    } else if (imageCount == 3) {
-      return _buildThreeImagesLayout();
+    if (mediaCount == 1) {
+      return _buildSingleMedia(widget.mediaUrls[0]);
+    } else if (mediaCount == 2) {
+      return _buildTwoMediaLayout();
+    } else if (mediaCount == 3) {
+      return _buildThreeMediaLayout();
     } else {
-      // For 4 or more images, show first 3 and remaining count
-      return _buildFourOrMoreImagesLayout();
+      // For 4 or more media items, show first 3 and remaining count
+      return _buildFourOrMoreMediaLayout();
     }
   }
 
-  Widget _buildSingleImage(String imageUrl) {
+  Widget _buildSingleMedia(MediaItem media) {
     return Container(
       height: 200,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
-        image: DecorationImage(
-          image: NetworkImage(imageUrl),
-          fit: BoxFit.cover,
-        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: _buildMediaWidget(media),
       ),
     );
   }
 
-  Widget _buildTwoImagesLayout() {
+  Widget _buildTwoMediaLayout() {
     return Row(
       children: [
         Expanded(
           child: Container(
             height: 200,
             margin: const EdgeInsets.only(right: 1),
-            decoration: BoxDecoration(
+            child: ClipRRect(
               borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
-              image: DecorationImage(
-                image: NetworkImage(widget.postImageUrls[0]),
-                fit: BoxFit.cover,
-              ),
+              child: _buildMediaWidget(widget.mediaUrls[0]),
             ),
           ),
         ),
@@ -326,12 +371,9 @@ class _PostCardModelState extends State<PostCardModel> {
           child: Container(
             height: 200,
             margin: const EdgeInsets.only(left: 1),
-            decoration: BoxDecoration(
+            child: ClipRRect(
               borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
-              image: DecorationImage(
-                image: NetworkImage(widget.postImageUrls[1]),
-                fit: BoxFit.cover,
-              ),
+              child: _buildMediaWidget(widget.mediaUrls[1]),
             ),
           ),
         ),
@@ -339,7 +381,7 @@ class _PostCardModelState extends State<PostCardModel> {
     );
   }
 
-  Widget _buildThreeImagesLayout() {
+  Widget _buildThreeMediaLayout() {
     return Row(
       children: [
         Expanded(
@@ -347,12 +389,9 @@ class _PostCardModelState extends State<PostCardModel> {
           child: Container(
             height: 200,
             margin: const EdgeInsets.only(right: 1),
-            decoration: BoxDecoration(
+            child: ClipRRect(
               borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
-              image: DecorationImage(
-                image: NetworkImage(widget.postImageUrls[0]),
-                fit: BoxFit.cover,
-              ),
+              child: _buildMediaWidget(widget.mediaUrls[0]),
             ),
           ),
         ),
@@ -362,23 +401,17 @@ class _PostCardModelState extends State<PostCardModel> {
               Container(
                 height: 99,
                 margin: const EdgeInsets.only(left: 1, bottom: 1),
-                decoration: BoxDecoration(
+                child: ClipRRect(
                   borderRadius: const BorderRadius.only(topRight: Radius.circular(8)),
-                  image: DecorationImage(
-                    image: NetworkImage(widget.postImageUrls[1]),
-                    fit: BoxFit.cover,
-                  ),
+                  child: _buildMediaWidget(widget.mediaUrls[1]),
                 ),
               ),
               Container(
                 height: 99,
                 margin: const EdgeInsets.only(left: 1, top: 1),
-                decoration: BoxDecoration(
+                child: ClipRRect(
                   borderRadius: const BorderRadius.only(bottomRight: Radius.circular(8)),
-                  image: DecorationImage(
-                    image: NetworkImage(widget.postImageUrls[2]),
-                    fit: BoxFit.cover,
-                  ),
+                  child: _buildMediaWidget(widget.mediaUrls[2]),
                 ),
               ),
             ],
@@ -388,8 +421,8 @@ class _PostCardModelState extends State<PostCardModel> {
     );
   }
 
-  Widget _buildFourOrMoreImagesLayout() {
-    final remainingCount = widget.postImageUrls.length - 3;
+  Widget _buildFourOrMoreMediaLayout() {
+    final remainingCount = widget.mediaUrls.length - 3;
 
     return Row(
       children: [
@@ -398,12 +431,9 @@ class _PostCardModelState extends State<PostCardModel> {
           child: Container(
             height: 200,
             margin: const EdgeInsets.only(right: 1),
-            decoration: BoxDecoration(
+            child: ClipRRect(
               borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
-              image: DecorationImage(
-                image: NetworkImage(widget.postImageUrls[0]),
-                fit: BoxFit.cover,
-              ),
+              child: _buildMediaWidget(widget.mediaUrls[0]),
             ),
           ),
         ),
@@ -413,12 +443,9 @@ class _PostCardModelState extends State<PostCardModel> {
               Container(
                 height: 99,
                 margin: const EdgeInsets.only(left: 1, bottom: 1),
-                decoration: BoxDecoration(
+                child: ClipRRect(
                   borderRadius: const BorderRadius.only(topRight: Radius.circular(8)),
-                  image: DecorationImage(
-                    image: NetworkImage(widget.postImageUrls[1]),
-                    fit: BoxFit.cover,
-                  ),
+                  child: _buildMediaWidget(widget.mediaUrls[1]),
                 ),
               ),
               Stack(
@@ -426,12 +453,9 @@ class _PostCardModelState extends State<PostCardModel> {
                   Container(
                     height: 99,
                     margin: const EdgeInsets.only(left: 1, top: 1),
-                    decoration: BoxDecoration(
+                    child: ClipRRect(
                       borderRadius: const BorderRadius.only(bottomRight: Radius.circular(8)),
-                      image: DecorationImage(
-                        image: NetworkImage(widget.postImageUrls[2]),
-                        fit: BoxFit.cover,
-                      ),
+                      child: _buildMediaWidget(widget.mediaUrls[2]),
                     ),
                   ),
                   Container(
@@ -459,6 +483,62 @@ class _PostCardModelState extends State<PostCardModel> {
         ),
       ],
     );
+  }
+
+  Widget _buildMediaWidget(MediaItem media) {
+    if (media.type == MediaType.image) {
+      return Image.network(
+        media.url,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+      );
+    } else if (media.type == MediaType.video) {
+      final controller = _videoControllers[media.url];
+      if (controller != null && controller.value.isInitialized) {
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            VideoPlayer(controller),
+            Center(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  onPressed: () {
+                    setState(() {
+                      controller.value.isPlaying
+                          ? controller.pause()
+                          : controller.play();
+                    });
+                  },
+                  icon: Icon(
+                    controller.value.isPlaying
+                        ? Icons.pause
+                        : Icons.play_arrow,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      } else {
+        return Container(
+          color: Theme.of(context).colorScheme.secondary,
+          child: Center(
+            child: Lottie.asset(
+                'assets/animation/tiktok_loading.json',
+              width: 60,
+            ),
+          ),
+        );
+      }
+    }
+    return const SizedBox();
   }
 
   Widget _buildEngagementStats() {
@@ -499,7 +579,7 @@ class _PostCardModelState extends State<PostCardModel> {
                     ),
                     child: const Center(
                       child: Text(
-                        '👏',
+                        '👍',
                         style: TextStyle(fontSize: 8),
                       ),
                     ),
@@ -558,13 +638,13 @@ class _PostCardModelState extends State<PostCardModel> {
             color: Colors.grey,
             onTap: () {
               showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (BuildContext context) =>
-                    CommentBottomSheet(
-                      comments: widget.comments,
-                    )
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (BuildContext context) =>
+                      CommentBottomSheet(
+                        comments: widget.comments,
+                      )
               );
             },
           ),

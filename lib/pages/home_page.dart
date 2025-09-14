@@ -1,10 +1,11 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/models/post_model.dart';
 import 'package:workie/widgets/custom_icon_button.dart';
 import 'package:workie/widgets/custom_textfield.dart';
+import '../models/media_item_model.dart';
 import '../services/location_service.dart';
+import '../services/pull_data/post_data_service.dart';
 import '../widgets/circular_category_bar.dart';
 
 class HomeTabPage extends StatefulWidget {
@@ -19,6 +20,13 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
   final ScrollController _scrollController = ScrollController();
   late AnimationController _animationController;
   late Animation<double> _animation;
+
+  List<Map<String, dynamic>> _posts = [];
+  bool _isLoadingPosts = true;
+  bool _isLoadingMore = false;
+  int _currentPage = 1;
+  final int _postsPerPage = 10;
+  bool _hasMorePosts = true;
 
   String _currentLoction = '';
   bool _isUpdatingLocation = false;
@@ -52,6 +60,7 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
     _scrollController.addListener(_onScroll);
 
     _getLocation();
+    _loadPosts();
   }
 
   @override
@@ -75,9 +84,97 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
     });
   }
 
+  Future<void> _loadPosts({bool refresh = false}) async {
+    if (refresh) {
+      setState(() {
+        _currentPage = 1;
+        _hasMorePosts = true;
+        _isLoadingPosts = true;
+      });
+    }
+
+    try {
+      final newPosts = await PostDataService.getFeedPosts(
+        page: _currentPage,
+        limit: _postsPerPage,
+      );
+
+      setState(() {
+        if (refresh) {
+          _posts = newPosts.map((post) => PostDataService.formatPostForWidget(post)).toList();
+        } else {
+          _posts.addAll(newPosts.map((post) => PostDataService.formatPostForWidget(post)).toList());
+        }
+
+        _hasMorePosts = newPosts.length == _postsPerPage;
+        _currentPage++;
+        _isLoadingPosts = false;
+        _isLoadingMore = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingPosts = false;
+        _isLoadingMore = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load posts: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _loadMorePosts() async {
+    if (_isLoadingMore || !_hasMorePosts) return;
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    await _loadPosts();
+  }
+
+  Future<void> _onRefresh() async {
+    await _loadPosts(refresh: true);
+  }
+
+  void _handleLike(String postId) async {
+    try {
+      await PostDataService.toggleLike(postId: postId);
+      // Optionally update local state or reload posts
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to like post: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _handleComment(String postId) {
+    // Navigate to comment screen or show comment bottom sheet
+    print('Comment on post: $postId');
+  }
+
+  void _handleShare(String postId) {
+    // Handle share functionality
+    print('Share post: $postId');
+  }
+
   void _onScroll() {
     final currentOffset = _scrollController.offset;
     final difference = currentOffset - _lastScrollOffset;
+
+    if (currentOffset >= _scrollController.position.maxScrollExtent - 500) {
+      _loadMorePosts();
+    }
 
     // Only react if scroll difference is significant enough
     if (difference.abs() > 5.0) {
@@ -248,110 +345,60 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
               );
             },
           ),
-
-          // Main content - Now scrollable
+          // Main content - Now scrollable with real posts
           Expanded(
             child: Container(
-              color: Theme
-                  .of(context)
-                  .colorScheme
-                  .surface,
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                padding: const EdgeInsets.all(0),
-                child: Column(
-                  children: [
-                    PostCardModel(
-                      profileImageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-                      userName: 'Alex Johnson',
-                      userTitle: 'Senior Software Engineer at TechCorp',
-                      timeAgo: '2h',
-                      isVerified: true,
-                      shortContent: 'Excited to share that our team just launched a new feature that reduces load times by 40%! 🚀',
-                      fullContent: '\n\nBuilding scalable solutions requires patience, collaboration, and continuous learning. Here are 3 key lessons from this project:\n\n1️⃣ Performance optimization starts with understanding your users\n2️⃣ Small improvements compound into significant results\n3️⃣ Team collaboration beats individual brilliance every time\n\nWhat\'s your biggest learning from recent projects? Share in the comments! 👇',
-                      postImageUrls: ['https://images.pexels.com/photos/11427444/pexels-photo-11427444.jpeg',
-                        'https://images.pexels.com/photos/1249611/pexels-photo-1249611.jpeg',
-                        'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=600&h=300&fit=crop',
-                        'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=600&h=300&fit=crop',
-                        'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=600&h=300&fit=crop',
-                        'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=600&h=300&fit=crop',
-
-                      ],
-                      hashtags: const [
-                        'WebDevelopment',
-                        'Performance',
-                        'TeamWork',
-                        'TechInnovation'
-                      ],
-                      initialLikeCount: 127,
-                      commentCount: 23,
-                      shareCount: 8,
-                      onLike: () {},
-                      onComment: () {},
-                      onShare: () {},
-                      comments: [
-                        {
-                          'commentedUserProfileImgUrl': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Mrbeast_in_2025_1.png/500px-Mrbeast_in_2025_1.png',
-                          'commentedUserName': 'John Doe',
-                          'comment': 'This is a great post!',
-                          'ísVerified': false,
-                          'timestamp': '2h ago',
-                        },
-                        {
-                          'commentedUserProfileImgUrl': 'https://i.pinimg.com/474x/0c/f1/2d/0cf12d2c4ac1fc6a27e51e9b3c5e2db0.jpg',
-                          'commentedUserName': 'Sarah Wilson',
-                          'comment': 'I completely agree with this.',
-                          'ísVerified': true,
-                          'timestamp': '1h ago',
-                        },
-                        {
-                          'commentedUserProfileImgUrl': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/The_rock_read_one_%28cropped%29.jpg/500px-The_rock_read_one_%28cropped%29.jpg',
-                          'commentedUserName': 'Mike Johnson',
-                          'comment': 'Thanks for sharing this information.',
-                          'ísVerified': false,
-                          'timestamp': '30m ago',
-                        },
-                      ],
+              color: Theme.of(context).colorScheme.surface,
+              child: _isLoadingPosts
+                  ? const Center(
+                child: CircularProgressIndicator(),
+              )
+                  : RefreshIndicator(
+                onRefresh: _onRefresh,
+                child: _posts.isEmpty
+                    ? const Center(
+                  child: Text(
+                    'No posts available',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey,
                     ),
+                  ),
+                )
+                    : ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(0),
+                  itemCount: _posts.length + (_isLoadingMore ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == _posts.length) {
+                      // Loading indicator at bottom
+                      return const Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
 
-                    PostCardModel(
-                      profileImageUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-                      userName: 'Mike Chen',
-                      userTitle: 'Data Scientist at Analytics Pro',
-                      timeAgo: '6h',
-                      isVerified: true,
-                      shortContent: 'Excited to share insights from our latest machine learning model! 🤖📊',
-                      fullContent: '\n\nData science is not just about algorithms - it\'s about solving real problems.\n\nOur new model achieved:\n\n📈 95% accuracy improvement\n⚡ 60% faster processing\n💰 30% cost reduction\n🎯 Better user predictions\n\nThe key was understanding the business context, not just the technical metrics.',
-                      postImageUrls: ['https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=300&fit=crop'],
-                      hashtags: const ['DataScience', 'MachineLearning', 'AI', 'Analytics'],
-                      initialLikeCount: 156,
-                      commentCount: 31,
-                      shareCount: 12,
-                      onLike: () {},
-                      onComment: () {},
-                      onShare: () {}, comments: [],
-                    ),
-
-                    PostCardModel(
-                      profileImageUrl: 'https://i.pinimg.com/474x/0c/f1/2d/0cf12d2c4ac1fc6a27e51e9b3c5e2db0.jpg',
-                      userName: 'Sarah Wilson',
-                      userTitle: 'UX Designer at DesignCorp',
-                      timeAgo: '4h',
-                      isVerified: true,
-                      shortContent: 'Just finished designing a new mobile app interface! Clean, minimal, and user-friendly. 📱✨',
-                      fullContent: '\n\nDesign is not just what it looks like and feels like. Design is how it works.\n\nKey principles I followed:\n\n🎯 User-centered design\n🎨 Consistent visual hierarchy\n⚡ Optimized for performance\n🔍 Accessibility first\n\nWhat design trends are you excited about in 2025?',
-                      postImageUrls: ['https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&h=300&fit=crop'],
-                      hashtags: const ['UXDesign', 'MobileApp', 'UI', 'DesignTrends'],
-                      initialLikeCount: 89,
-                      commentCount: 15,
-                      shareCount: 5,
-                      onLike: () {},
-                      onComment: () {},
-                      onShare: () {}, comments: [],
-                    ),
-                    // Add more PostCardModel widgets here if needed
-                    // They will all be scrollable within this area
-                  ],
+                    final post = _posts[index];
+                    return PostCardModel(
+                      profileImageUrl: post['profileImageUrl'],
+                      userName: post['userName'],
+                      userTitle: post['userTitle'],
+                      timeAgo: post['timeAgo'],
+                      isVerified: post['isVerified'],
+                      content: post['content'],
+                      mediaUrls: post['mediaUrls'],
+                      hashtags: post['hashtags'],
+                      initialLikeCount: post['initialLikeCount'],
+                      commentCount: post['commentCount'],
+                      shareCount: post['shareCount'],
+                      onLike: () => _handleLike(post['id']),
+                      onComment: () => _handleComment(post['id']),
+                      onShare: () => _handleShare(post['id']),
+                      comments: post['comments'],
+                    );
+                  },
                 ),
               ),
             ),

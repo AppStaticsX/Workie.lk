@@ -1,10 +1,13 @@
+import 'package:flame_lottie/flame_lottie.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:video_player/video_player.dart';
+import '../models/media_item_model.dart';
 import '../widgets/dot_indicator.dart';
 
-class ImageGalleryScreen extends StatefulWidget {
-  final List<String> imageUrls;
+class MediaGalleryScreen extends StatefulWidget {
+  final List<MediaItem> mediaItems; // Changed from imageUrls
   final int initialIndex;
   final String profileImageUrl;
   final String userName;
@@ -15,9 +18,9 @@ class ImageGalleryScreen extends StatefulWidget {
   final String? fullContent;
   final String shortContent;
 
-  const ImageGalleryScreen({
+  const MediaGalleryScreen({
     super.key,
-    required this.imageUrls,
+    required this.mediaItems, // Changed parameter name
     this.initialIndex = 0,
     required this.profileImageUrl,
     required this.userName,
@@ -30,19 +33,46 @@ class ImageGalleryScreen extends StatefulWidget {
   });
 
   @override
-  State<ImageGalleryScreen> createState() => _ImageGalleryScreenState();
+  State<MediaGalleryScreen> createState() => _MediaGalleryScreenState();
 }
 
-class _ImageGalleryScreenState extends State<ImageGalleryScreen> {
+class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
   late PageController _pageController;
   late int _currentIndex;
   final bool _isExpanded = false;
+  Map<String, VideoPlayerController> _videoControllers = {};
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
     _pageController = PageController(initialPage: widget.initialIndex);
+    _initializeVideoControllers();
+  }
+
+  void _initializeVideoControllers() {
+    for (int i = 0; i < widget.mediaItems.length; i++) {
+      if (widget.mediaItems[i].type == MediaType.video) {
+        final controller = VideoPlayerController.networkUrl(
+          Uri.parse(widget.mediaItems[i].url),
+        );
+        _videoControllers[widget.mediaItems[i].url] = controller;
+        controller.initialize().then((_) {
+          if (mounted) {
+            setState(() {});
+          }
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    for (var controller in _videoControllers.values) {
+      controller.dispose();
+    }
+    _pageController.dispose();
+    super.dispose();
   }
 
   void _goToPage(int index) {
@@ -59,7 +89,7 @@ class _ImageGalleryScreenState extends State<ImageGalleryScreen> {
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: Column(
         children: [
-          // Image viewer
+          // Media viewer
           Expanded(
             child: Stack(
               children: [
@@ -69,38 +99,30 @@ class _ImageGalleryScreenState extends State<ImageGalleryScreen> {
                     setState(() {
                       _currentIndex = index;
                     });
+                    // Pause all videos when page changes
+                    for (var controller in _videoControllers.values) {
+                      if (controller.value.isPlaying) {
+                        controller.pause();
+                      }
+                    }
                   },
-                  itemCount: widget.imageUrls.length,
+                  itemCount: widget.mediaItems.length,
                   itemBuilder: (context, index) {
                     return InteractiveViewer(
                       child: Center(
-                        child: Image.network(
-                          widget.imageUrls[index],
-                          fit: BoxFit.contain,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return const Center(
-                              child: CircularProgressIndicator(color: Colors.white),
-                            );
-                          },
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Center(
-                              child: Icon(Icons.error, color: Colors.white, size: 50),
-                            );
-                          },
-                        ),
+                        child: _buildMediaWidget(widget.mediaItems[index]),
                       ),
                     );
                   },
                 ),
-                if (widget.imageUrls.length > 1)
+                if (widget.mediaItems.length > 1)
                   Positioned(
                     bottom: 210,
                     left: 0,
                     right: 0,
                     child: Center(
                       child: DotIndicator(
-                        itemCount: widget.imageUrls.length,
+                        itemCount: widget.mediaItems.length,
                         currentIndex: _currentIndex,
                         activeColor: Theme.of(context).colorScheme.primary,
                         inactiveColor: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.2),
@@ -114,17 +136,30 @@ class _ImageGalleryScreenState extends State<ImageGalleryScreen> {
                   child: Container(
                     decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(15), bottomRight: Radius.circular(15), topRight: Radius.circular(15), topLeft: Radius.circular(15))
+                        borderRadius: BorderRadius.circular(15)
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        '${_currentIndex + 1} of ${widget.imageUrls.length}',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.inversePrimary,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            widget.mediaItems[_currentIndex].type == MediaType.video
+                                ? Icons.videocam
+                                : Icons.image,
+                            color: Theme.of(context).colorScheme.inversePrimary,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${_currentIndex + 1} of ${widget.mediaItems.length}',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.inversePrimary,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -157,13 +192,144 @@ class _ImageGalleryScreenState extends State<ImageGalleryScreen> {
     );
   }
 
+  Widget _buildMediaWidget(MediaItem media) {
+    if (media.type == MediaType.image) {
+      return Image.network(
+        media.url,
+        fit: BoxFit.contain,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Center(
+            child: Lottie.asset(
+                'assets/animation/tiktok_loading.json',
+              width: 60
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return const Center(
+            child: Icon(Icons.error, color: Colors.white, size: 50),
+          );
+        },
+      );
+    } else if (media.type == MediaType.video) {
+      final controller = _videoControllers[media.url];
+      if (controller != null && controller.value.isInitialized) {
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            AspectRatio(
+              aspectRatio: controller.value.aspectRatio,
+              child: VideoPlayer(controller),
+            ),
+            // Play/Pause button
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.5),
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                onPressed: () {
+                  setState(() {
+                    controller.value.isPlaying
+                        ? controller.pause()
+                        : controller.play();
+                  });
+                },
+                icon: Icon(
+                  controller.value.isPlaying
+                      ? Icons.pause
+                      : Icons.play_arrow,
+                  color: Colors.white,
+                  size: 40,
+                ),
+              ),
+            ),
+            // Video progress indicator
+            Positioned(
+              bottom: 20,
+              left: 20,
+              right: 20,
+              child: VideoProgressIndicator(
+                controller,
+                allowScrubbing: true,
+                colors: VideoProgressColors(
+                  playedColor: Theme.of(context).colorScheme.primary,
+                  backgroundColor: Colors.grey.withValues(alpha: 0.3),
+                  bufferedColor: Colors.grey.withValues(alpha: 0.5),
+                ),
+              ),
+            ),
+            // Video duration
+            Positioned(
+              bottom: 30,
+              right: 25,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  _formatDuration(controller.value.duration),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      } else {
+        return Container(
+          color: Colors.grey.shade900,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Lottie.asset(
+                    'assets/animation/tiktok_loading.json',
+                    width: 60
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Loading video...',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    }
+    return const SizedBox();
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, "0");
+    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
+    String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
+
+    if (duration.inHours > 0) {
+      return "${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
+    } else {
+      return "$twoDigitMinutes:$twoDigitSeconds";
+    }
+  }
+
   Widget _buildBottomDetails() {
     return Padding(
       padding: const EdgeInsets.only(left: 16, top: 16, right: 70, bottom: 8),
       child: Container(
-          decoration: BoxDecoration(
+        decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.only(bottomLeft: Radius.zero, bottomRight: Radius.zero, topRight: Radius.circular(15), topLeft: Radius.circular(15))
+            borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.zero,
+                bottomRight: Radius.zero,
+                topRight: Radius.circular(15),
+                topLeft: Radius.circular(15)
+            )
         ),
         child: Padding(
           padding: const EdgeInsets.all(8.0),
@@ -190,7 +356,7 @@ class _ImageGalleryScreenState extends State<ImageGalleryScreen> {
                         ),
                         const SizedBox(width: 4),
                         if (widget.isVerified)
-                          Icon(
+                          const Icon(
                               Iconsax.verify,
                               size: 18
                           ),
@@ -215,14 +381,14 @@ class _ImageGalleryScreenState extends State<ImageGalleryScreen> {
                     ),
                     Text(
                       widget.userTitle,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.grey,
                         fontSize: 12,
                       ),
                     ),
                     Text(
-                      '${widget.timeAgo} • 🌍',
-                      style: TextStyle(
+                      '${widget.timeAgo} • 🌐',
+                      style: const TextStyle(
                         color: Colors.grey,
                         fontSize: 11,
                       ),
@@ -240,32 +406,32 @@ class _ImageGalleryScreenState extends State<ImageGalleryScreen> {
   Widget _buildActionButtons() {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(15)
+          color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(15)
       ),
       child: Column(
         children: [
           const SizedBox(height: 16),
           InkWell(
-            customBorder: CircleBorder(),
+            customBorder: const CircleBorder(),
             onTap: (){},
-            child: Icon(
+            child: const Icon(
               Iconsax.like_1_copy,
               size: 32,
             ),
           ),
           const SizedBox(height: 16),
           InkWell(
-            customBorder: CircleBorder(),
+            customBorder: const CircleBorder(),
             onTap: (){},
-            child: Icon(
+            child: const Icon(
               Iconsax.message_2_copy,
               size: 32,
             ),
           ),
           const SizedBox(height: 16),
           InkWell(
-            customBorder: CircleBorder(),
+            customBorder: const CircleBorder(),
             onTap: () async {
               try {
                 await SharePlus.instance.share(ShareParams(
@@ -279,7 +445,7 @@ class _ImageGalleryScreenState extends State<ImageGalleryScreen> {
                 }
               }
             },
-            child: Icon(
+            child: const Icon(
               Iconsax.send_2_copy,
               size: 32,
             ),
@@ -296,7 +462,12 @@ class _ImageGalleryScreenState extends State<ImageGalleryScreen> {
       child: Container(
         decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.only(bottomLeft: Radius.circular(15), bottomRight: Radius.circular(15), topRight: Radius.zero, topLeft: Radius.zero)
+            borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(15),
+                bottomRight: Radius.circular(15),
+                topRight: Radius.zero,
+                topLeft: Radius.zero
+            )
         ),
         child: Padding(
           padding: const EdgeInsets.all(8.0),

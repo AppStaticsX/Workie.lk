@@ -58,7 +58,8 @@ class _MainScreenState extends State<MainScreen> {
             children: [
               buildAnimatedNavIcon(Iconsax.home_copy, Iconsax.home_1, 0, 'Home'),
               buildAnimatedNavIcon(Iconsax.location_copy, Iconsax.location, 1, 'Explore'),
-              buildAnimatedNavIcon(Iconsax.add_square_copy, Iconsax.add_square, 2, 'Post'),
+              buildPlusNavIcon('assets/icon/1690183147_tic-16.png', 'assets/icon/1690183147_tic-16.png', 2),
+              //buildAnimatedNavIcon(Iconsax.add_square_copy, Iconsax.add_square, 2, 'Post'),
               buildAnimatedNavIcon(Iconsax.video_play_copy, Iconsax.video_play, 3, 'Reels'),
               buildAnimatedNavIcon(Iconsax.user_copy, Iconsax.user, 4, 'Profile'),
             ],
@@ -116,6 +117,43 @@ class _MainScreenState extends State<MainScreen> {
               ),
               child: Text(label),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+  Widget buildPlusNavIcon(String icon, String activeIcon, int index) {
+    bool isSelected = _selectedIndex == index;
+    return GestureDetector(
+      onTap: () => _navigateBottomBar(index),
+      child: Container(
+        padding: const EdgeInsets.only(bottom: 8, top: 1),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            // Animated icon switcher
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return ScaleTransition(
+                  scale: animation,
+                  child: child,
+                );
+              },
+              child: Image.asset(
+                  isSelected? activeIcon : icon,
+                key: ValueKey('${index}_$isSelected'),
+                width: isSelected? 52 : 48
+              )
+              /*Icon(
+                isSelected ? activeIcon : icon,
+                key: ValueKey('${index}_$isSelected'),
+                color: isSelected ? const Color(0xFF4E6BF5) : Colors.grey.shade600,
+                size: isSelected ? 28 : 24,
+              ),*/
+            ),
+            const SizedBox(height: 4),
           ],
         ),
       ),
