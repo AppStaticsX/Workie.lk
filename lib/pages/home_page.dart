@@ -3,7 +3,7 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/models/post_model.dart';
 import 'package:workie/widgets/custom_icon_button.dart';
 import 'package:workie/widgets/custom_textfield.dart';
-import '../models/media_item_model.dart';
+import 'package:shimmer_ai/shimmer_ai.dart';
 import '../services/location_service.dart';
 import '../services/pull_data/post_data_service.dart';
 import '../widgets/circular_category_bar.dart';
@@ -350,8 +350,12 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
             child: Container(
               color: Theme.of(context).colorScheme.surface,
               child: _isLoadingPosts
-                  ? const Center(
-                child: CircularProgressIndicator(),
+                  ? ListView.builder(
+                padding: const EdgeInsets.all(0),
+                itemCount: 5, // Show 5 shimmer posts
+                itemBuilder: (context, index) {
+                  return _buildPostShimmer();
+                },
               )
                   : RefreshIndicator(
                 onRefresh: _onRefresh,
@@ -400,6 +404,180 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
                     );
                   },
                 ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Shimmer loading widget for posts
+  // Shimmer loading widget for posts
+  Widget _buildPostShimmer() {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.tertiary,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Theme.of(context).colorScheme.tertiary),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header shimmer
+          Padding(
+            padding: const EdgeInsets.only(left: 16, top: 16, right: 16, bottom: 8),
+            child: Row(
+              children: [
+                // Profile image shimmer - circular
+                const SizedBox.shrink().withShimmerAi(
+                  loading: true,
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.grey.withValues(alpha: 0.4),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Name shimmer
+                      Text(' ').withShimmerAi(
+                        loading: true,
+                        width: 120,
+                        height: 16,
+                        margin: const EdgeInsets.only(bottom: 6),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          color: Colors.grey.withValues(alpha: 0.4),
+                        ),
+                      ),
+                      // Title shimmer
+                      Text(' ').withShimmerAi(
+                        loading: true,
+                        width: 160,
+                        height: 12,
+                        margin: const EdgeInsets.only(bottom: 4),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          color: Colors.grey.withValues(alpha: 0.4),
+                        ),
+                      ),
+                      // Time shimmer
+                      Text(' ').withShimmerAi(
+                        loading: true,
+                        width: 80,
+                        height: 11,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          color: Colors.grey.withValues(alpha: 0.4),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Content shimmer
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(' ').withShimmerAi(
+                  loading: true,
+                  width: double.infinity,
+                  height: 14,
+                  margin: const EdgeInsets.only(bottom: 6),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(4),
+                    color: Colors.grey.withValues(alpha: 0.4),
+                  ),
+                ),
+                Text(' ').withShimmerAi(
+                  loading: true,
+                  width: 280,
+                  height: 14,
+                  margin: const EdgeInsets.only(bottom: 6),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(4),
+                    color: Colors.grey.withValues(alpha: 0.4),
+                  ),
+                ),
+                Text(' ').withShimmerAi(
+                  loading: true,
+                  width: 200,
+                  height: 14,
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(4),
+                    color: Colors.grey.withValues(alpha: 0.4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Media shimmer
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: const SizedBox.shrink().withShimmerAi(
+              loading: true,
+              width: double.infinity,
+              height: 200,
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: Colors.grey.withValues(alpha: 0.4),
+              ),
+            ),
+          ),
+          // Engagement stats shimmer
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(' ').withShimmerAi(
+                  loading: true,
+                  width: 100,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(4),
+                    color: Colors.grey.withValues(alpha: 0.4),
+                  ),
+                ),
+                Text(' ').withShimmerAi(
+                  loading: true,
+                  width: 120,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(4),
+                    color: Colors.grey.withValues(alpha: 0.4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Action buttons shimmer
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: List.generate(4, (index) =>
+                  Text(' ').withShimmerAi(
+                    loading: true,
+                    width: 60,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(4),
+                      color: Colors.grey.withValues(alpha: 0.4),
+                    ),
+                  ),
               ),
             ),
           ),
