@@ -59,6 +59,16 @@ flutter:
    - assets/icon/profession/
    - assets/icon/profession/mono/
 
+  fonts:
+    - family: Google Sans
+      fonts:
+        - asset: assets/font/GoogleSans/GoogleSans-Regular.nohints.ttf
+        - asset: assets/font/GoogleSans/GoogleSans-Bold.nohints.ttf
+
+    - family: Google Sans Medium
+      fonts:
+        - asset: assets/font/GoogleSans/GoogleSans-Medium.nohints.ttf
+
 # Flutter launcher icons
 flutter_icons:
   android: "ic_launcher"

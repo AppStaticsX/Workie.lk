@@ -273,6 +273,7 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
               text: 'Must be an actual photo of you.',
               style: TextStyle(
                 fontSize: 16,
+                fontFamily: 'Google Sans',
                 color: Colors.grey,
               ),
             ),
@@ -280,6 +281,7 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
               text: '\nLogos, clip-art, group photos, and digitally-altered images',
               style: TextStyle(
                 fontSize: 16,
+                fontFamily: 'Google Sans',
                 color: Theme.of(context).colorScheme.inverseSurface,
                 fontWeight: FontWeight.w600,
               ),
@@ -288,6 +290,7 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
               text: ' are not allowed. It will cause account ',
               style: TextStyle(
                 fontSize: 16,
+                fontFamily: 'Google Sans',
                 color: Colors.grey,
               ),
             ),
@@ -295,6 +298,7 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
               text: 'Rejection',
               style: TextStyle(
                 fontSize: 16,
+                fontFamily: 'Google Sans',
                 color: Colors.red,
                 fontWeight: FontWeight.bold,
               ),
@@ -303,6 +307,7 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
               text: ' or ',
               style: TextStyle(
                 fontSize: 16,
+                fontFamily: 'Google Sans',
                 color: Theme.of(context).colorScheme.inverseSurface,
                 fontWeight: FontWeight.normal,
               ),
@@ -311,6 +316,7 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
               text: 'Termination.',
               style: TextStyle(
                 fontSize: 16,
+                fontFamily: 'Google Sans',
                 color: Colors.red,
                 fontWeight: FontWeight.bold,
               ),

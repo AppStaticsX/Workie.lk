@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:typed_data';
@@ -270,8 +271,8 @@ class DashedPhotoPickerState extends State<DashedPhotoPicker>
             children: [
               // User Icon
               Icon(
-                CupertinoIcons.person_crop_circle,
-                size: 60,
+                Iconsax.user_copy,
+                size: 100,
                 color: widget.iconColor,
               ),
               const SizedBox(height: 20),
@@ -284,9 +285,10 @@ class DashedPhotoPickerState extends State<DashedPhotoPicker>
                       text: 'Upload',
                       style: TextStyle(
                         color: widget.uploadTextColor,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w500,
-                        decoration: TextDecoration.underline,
+                        fontSize: 20,
+                        fontFamily: 'Google Sans',
+                        fontWeight: FontWeight.bold,
+                        //decoration: TextDecoration.underline,
                         decorationColor: widget.uploadTextColor,
                       ),
                     ),
@@ -294,7 +296,8 @@ class DashedPhotoPickerState extends State<DashedPhotoPicker>
                       text: ' or drop\nimage here',
                       style: TextStyle(
                         color: widget.textColor,
-                        fontSize: 24,
+                        fontFamily: 'Google Sans',
+                        fontSize: 18,
                         fontWeight: FontWeight.w400,
                       ),
                     ),

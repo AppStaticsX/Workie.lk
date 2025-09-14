@@ -172,7 +172,7 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
                 ),
 
                 Positioned(
-                    bottom: 24,
+                    bottom: 16,
                     left: 0,
                     right: 0,
                     child: _buildContent()
@@ -323,7 +323,7 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
       padding: const EdgeInsets.only(left: 16, top: 16, right: 70, bottom: 8),
       child: Container(
         decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
+            color: Colors.transparent,//Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
             borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.zero,
                 bottomRight: Radius.zero,
@@ -384,6 +384,7 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
                       style: const TextStyle(
                         color: Colors.grey,
                         fontSize: 12,
+                        height: 1.2
                       ),
                     ),
                     Text(
@@ -461,7 +462,7 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
       padding: const EdgeInsets.only(left: 16, right: 70),
       child: Container(
         decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
+            color: Colors.transparent,//Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
             borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(15),
                 bottomRight: Radius.circular(15),
@@ -477,9 +478,10 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
               RichText(
                 text: TextSpan(
                   style: TextStyle(
+                    fontFamily: 'Google Sans',
                     color: Theme.of(context).colorScheme.inversePrimary,
                     fontSize: 14,
-                    height: 1.4,
+                    //height: 1.4,
                   ),
                   children: [
                     TextSpan(text: widget.shortContent),

@@ -343,9 +343,10 @@ class CustomDashedCoverPhotoPickerState extends State<CustomDashedCoverPhotoPick
                       text: 'Upload',
                       style: TextStyle(
                         color: widget.uploadTextColor,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        decoration: TextDecoration.underline,
+                        fontSize: 20,
+                        fontFamily: 'Google Sans',
+                        fontWeight: FontWeight.bold,
+                        //decoration: TextDecoration.underline,
                         decorationColor: widget.uploadTextColor,
                       ),
                     ),
@@ -354,6 +355,7 @@ class CustomDashedCoverPhotoPickerState extends State<CustomDashedCoverPhotoPick
                       style: TextStyle(
                         color: widget.textColor,
                         fontSize: 18,
+                        fontFamily: 'Google Sans',
                         fontWeight: FontWeight.w400,
                       ),
                     ),

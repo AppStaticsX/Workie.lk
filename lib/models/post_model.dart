@@ -199,6 +199,7 @@ class _PostCardModelState extends State<PostCardModel> {
                   style: TextStyle(
                     color: Colors.grey,
                     fontSize: 12,
+                    height: 1.2
                   ),
                 ),
                 Text(
@@ -229,9 +230,10 @@ class _PostCardModelState extends State<PostCardModel> {
           RichText(
             text: TextSpan(
               style: TextStyle(
+                fontFamily: 'Google Sans',
                 color: Theme.of(context).colorScheme.inversePrimary,
                 fontSize: 15,
-                height: 1.4,
+                //height: 1.4,
               ),
               children: [
                 TextSpan(
