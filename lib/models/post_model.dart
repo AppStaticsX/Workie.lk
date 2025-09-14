@@ -502,6 +502,35 @@ class _PostCardModelState extends State<PostCardModel> {
           fit: StackFit.expand,
           children: [
             VideoPlayer(controller),
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: IconButton(
+                  onPressed: () {
+                    // Find the index of the current video in mediaUrls
+                    int videoIndex = widget.mediaUrls.indexWhere((item) => item.url == media.url);
+
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MediaGalleryScreen(
+                          initialIndex: videoIndex,
+                          profileImageUrl: widget.profileImageUrl,
+                          userName: widget.userName,
+                          isVerified: widget.isVerified,
+                          connectionStatus: widget.connectionStatus,
+                          userTitle: widget.userTitle,
+                          timeAgo: widget.timeAgo,
+                          fullContent: widget.content,
+                          shortContent: _truncatedContent,
+                          mediaItems: widget.mediaUrls,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: Icon(Iconsax.maximize_2_copy)
+              ),
+            ),
             Center(
               child: Container(
                 decoration: BoxDecoration(

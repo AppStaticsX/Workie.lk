@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workie/pages/explore_page.dart';
@@ -131,6 +132,16 @@ class _MainScreenState extends State<MainScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              height: 3,
+              width: isSelected ? 30 : 0,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.inverseSurface,
+                borderRadius: BorderRadius.circular(1.5),
+              ),
+            ),
             const SizedBox(height: 8),
             // Animated icon switcher
             AnimatedSwitcher(
@@ -144,7 +155,7 @@ class _MainScreenState extends State<MainScreen> {
               child: Image.asset(
                   isSelected? activeIcon : icon,
                 key: ValueKey('${index}_$isSelected'),
-                width: isSelected? 52 : 48
+                width: isSelected? 48 : 48
               )
               /*Icon(
                 isSelected ? activeIcon : icon,
@@ -152,17 +163,7 @@ class _MainScreenState extends State<MainScreen> {
                 color: isSelected ? const Color(0xFF4E6BF5) : Colors.grey.shade600,
                 size: isSelected ? 28 : 24,
               ),*/
-            ),
-            const SizedBox(height: 4),
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 200),
-              style: TextStyle(
-                color: isSelected ? const Color(0xFF4E6BF5) : Colors.grey.shade600,
-                fontSize: isSelected ? 12 : 10,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-              child: Text(lable),
-            ),
+            )
           ],
         ),
       ),
