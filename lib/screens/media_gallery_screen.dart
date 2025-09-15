@@ -165,24 +165,28 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
                   ),
                 ),
                 Positioned(
-                    bottom: 100,
-                    left: 0,
-                    right: 0,
-                    child: _buildBottomDetails()
-                ),
-
-                Positioned(
-                    bottom: 16,
-                    left: 0,
-                    right: 0,
-                    child: _buildContent()
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: SafeArea(
+                    child: SizedBox(
+                      height: 190,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildBottomDetails(),
+                          _buildContent(),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
 
                 Positioned(
                     bottom: 20,
                     left: MediaQuery.of(context).size.width -60,
                     right: 0,
-                    child: _buildActionButtons()
+                    child: SafeArea(child: _buildActionButtons())
                 ),
               ],
             ),
@@ -320,7 +324,7 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
 
   Widget _buildBottomDetails() {
     return Padding(
-      padding: const EdgeInsets.only(left: 16, top: 16, right: 70, bottom: 8),
+      padding: const EdgeInsets.only(left: 16, top: 16, right: 70, bottom: 0),
       child: Container(
         decoration: BoxDecoration(
             color: Colors.transparent,//Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
