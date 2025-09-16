@@ -202,12 +202,21 @@ class _PostCardModelState extends State<PostCardModel> {
                     height: 1.2
                   ),
                 ),
-                Text(
-                  '${widget.timeAgo} • 🌐',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 11,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      '${widget.timeAgo} • ',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 11,
+                      ),
+                    ),
+                    Icon(
+                      Iconsax.global_edit_copy,
+                      size: 12,
+                      color: Theme.of(context).colorScheme.primary
+                    )
+                  ],
                 ),
               ],
             ),
@@ -532,27 +541,30 @@ class _PostCardModelState extends State<PostCardModel> {
               ),
             ),
             Center(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  onPressed: () {
-                    setState(() {
-                      controller.value.isPlaying
-                          ? controller.pause()
-                          : controller.play();
-                    });
-                  },
-                  icon: Icon(
-                    controller.value.isPlaying
-                        ? Icons.pause
-                        : Icons.play_arrow,
-                    color: Colors.white,
-                    size: 30,
-                  ),
-                ),
+              child: ValueListenableBuilder(
+                valueListenable: controller,
+                builder: (context, VideoPlayerValue value, child) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      onPressed: () {
+                        if (value.isPlaying) {
+                          controller.pause();
+                        } else {
+                          controller.play();
+                        }
+                      },
+                      icon: Icon(
+                        value.isPlaying ? Icons.pause : Icons.play_arrow,
+                        color: Colors.white,
+                        size: 30,
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],
@@ -587,39 +599,16 @@ class _PostCardModelState extends State<PostCardModel> {
             children: [
               Row(
                 children: [
-                  Container(
-                    width: 16,
-                    height: 16,
-                    decoration: const BoxDecoration(
-                      color: Colors.blue,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.thumb_up,
-                      size: 10,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(width: 2),
-                  Container(
-                    width: 16,
-                    height: 16,
-                    decoration: const BoxDecoration(
-                      color: Colors.green,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Center(
-                      child: Text(
-                        '👍',
-                        style: TextStyle(fontSize: 8),
-                      ),
-                    ),
+                  const Icon(
+                    Iconsax.heart,
+                    size: 16,
+                    color: Colors.red,
                   ),
                 ],
               ),
               const SizedBox(width: 8),
               Text(
-                '$_likeCount reactions',
+                '$_likeCount Reactions',
                 style: TextStyle(
                   color: Colors.grey,
                   fontSize: 12,
@@ -630,7 +619,7 @@ class _PostCardModelState extends State<PostCardModel> {
           Row(
             children: [
               Text(
-                '${widget.commentCount} comments',
+                '${widget.commentCount} Comments',
                 style: TextStyle(
                   color: Colors.grey,
                   fontSize: 12,
@@ -638,7 +627,7 @@ class _PostCardModelState extends State<PostCardModel> {
               ),
               const SizedBox(width: 16),
               Text(
-                '${widget.shareCount} reposts',
+                '${widget.shareCount} Reposts',
                 style: TextStyle(
                   color: Colors.grey,
                   fontSize: 12,
@@ -658,7 +647,7 @@ class _PostCardModelState extends State<PostCardModel> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _buildActionButton(
-            icon: _isLiked ? Iconsax.like_1 : Iconsax.like_1_copy,
+            icon: _isLiked ? Iconsax.heart : Iconsax.heart_copy,
             label: 'Like',
             color: _isLiked ? Colors.red : Colors.grey,
             onTap: _toggleLike,

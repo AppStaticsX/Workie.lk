@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
+import 'package:workie/values/color.dart';
 import '../models/media_item_model.dart';
 import '../widgets/dot_indicator.dart';
 
@@ -227,27 +228,30 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
               child: VideoPlayer(controller),
             ),
             // Play/Pause button
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.5),
-                shape: BoxShape.circle,
-              ),
-              child: IconButton(
-                onPressed: () {
-                  setState(() {
-                    controller.value.isPlaying
-                        ? controller.pause()
-                        : controller.play();
-                  });
-                },
-                icon: Icon(
-                  controller.value.isPlaying
-                      ? Icons.pause
-                      : Icons.play_arrow,
-                  color: Colors.white,
-                  size: 40,
-                ),
-              ),
+            ValueListenableBuilder(
+              valueListenable: controller,
+              builder: (context, VideoPlayerValue value, child) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    onPressed: () {
+                      if (value.isPlaying) {
+                        controller.pause();
+                      } else {
+                        controller.play();
+                      }
+                    },
+                    icon: Icon(
+                      value.isPlaying ? Icons.pause : Icons.play_arrow,
+                      color: Colors.white,
+                      size: 40,
+                    ),
+                  ),
+                );
+              },
             ),
             // Video progress indicator
             Positioned(
@@ -421,7 +425,7 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
             customBorder: const CircleBorder(),
             onTap: (){},
             child: const Icon(
-              Iconsax.like_1_copy,
+              Iconsax.heart_copy,
               size: 32,
             ),
           ),
@@ -525,10 +529,33 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
   }
 
   Widget _expandedContent() {
-    return Padding(
-      padding: const EdgeInsets.only(right: 16.0, left: 16, bottom: 48, top: 16),
-      child: Text(
-          widget.fullContent ?? ''
+    return SizedBox(
+      width: MediaQuery.of(context).size.width,
+      child: Padding(
+        padding: const EdgeInsets.only(right: 16.0, left: 16, bottom: 48, top: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.textDarkGrey,
+                    borderRadius: BorderRadius.circular(3)
+                  ),
+                )
+              ],
+            ),
+            const SizedBox(height: 24),
+            Text(
+                widget.fullContent ?? ''
+            ),
+          ],
+        ),
       ),
     );
   }

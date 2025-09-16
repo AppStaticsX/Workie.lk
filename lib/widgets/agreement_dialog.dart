@@ -20,13 +20,13 @@ class AgreementDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CupertinoAlertDialog(
-      title: Text(title),
+      title: Text(title, style: TextStyle(fontFamily: 'Google Sans'),),
       content: Padding(
         padding: const EdgeInsets.only(top: AppDimension.paddingDefault),
         child: RichText(
           textAlign: TextAlign.center,
           text: TextSpan(
-            style: TextStyle(color: Theme.of(context).colorScheme.primary),
+            style: TextStyle(color: Theme.of(context).colorScheme.primary, fontFamily: 'Google Sans'),
             children: [
               TextSpan(
                 text: contentText),

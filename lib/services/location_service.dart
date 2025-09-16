@@ -11,19 +11,20 @@ class LocationService {
       barrierDismissible: false, // User must tap button
       builder: (BuildContext context) {
         return CupertinoAlertDialog(
-          title: const Text('Location Services Disabled'),
-          content: const Text(
+          title: const Text('Location Services Disabled', style: TextStyle(fontFamily: 'Google Sans'),),
+          content: Text(
             'Location services are currently disabled. Please enable them in your device settings to use this feature.',
+              style: TextStyle(fontFamily: 'Google Sans', color: Theme.of(context).colorScheme.primary, fontSize: 14)
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: const Text('Cancel', style: TextStyle(fontFamily: 'Google Sans', fontWeight: FontWeight.bold),),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: const Text('Open Settings'),
+              child: const Text('Open Settings', style: TextStyle(fontFamily: 'Google Sans', fontWeight: FontWeight.bold),),
               onPressed: () {
                 Navigator.of(context).pop();
                 Geolocator.openLocationSettings();
@@ -42,19 +43,20 @@ class LocationService {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return CupertinoAlertDialog(
-          title: const Text('Location Permission Required'),
-          content: const Text(
+          title: const Text('Location Permission Required', style: TextStyle(fontFamily: 'Google Sans', fontWeight: FontWeight.bold),),
+          content: Text(
             'This app needs location permission to work properly. Please grant location access.',
+            style: TextStyle(fontFamily: 'Google Sans', fontSize: 14, color: Theme.of(context).colorScheme.primary),
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.bold)),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: const Text('Grant Permission'),
+              child: const Text('Allow', style: TextStyle(fontWeight: FontWeight.bold)),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -72,19 +74,20 @@ class LocationService {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return CupertinoAlertDialog(
-          title: const Text('Location Permission Permanently Denied'),
-          content: const Text(
+          title: const Text('Location Permission Denied', style: TextStyle(fontFamily: 'Google Sans', fontWeight: FontWeight.bold)),
+          content: Text(
             'Location permissions are permanently denied. Please enable them manually in app settings.',
+            style: TextStyle(fontFamily: 'Google Sans', color: Theme.of(context).colorScheme.primary, fontSize: 14),
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.bold)),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: const Text('Open App Settings'),
+              child: const Text('Open App Settings', style: TextStyle(fontWeight: FontWeight.bold)),
               onPressed: () {
                 Navigator.of(context).pop();
                 Geolocator.openAppSettings();
@@ -126,12 +129,12 @@ class LocationService {
         context: context,
         builder: (BuildContext context) {
           return CupertinoAlertDialog(
-            title: const Text('Location Error'),
-            content: Text('Failed to get location: ${e.toString()}'),
+            title: const Text('Location Error', style: TextStyle(fontFamily: 'Google Sans', fontWeight: FontWeight.bold),),
+            content: Text('Failed to get location: ${e.toString()}', style: TextStyle(fontFamily: 'Google Sans', color: Theme.of(context).colorScheme.primary, fontSize: 14),),
             actions: <CupertinoDialogAction>[
               CupertinoDialogAction(
                 isDefaultAction: true,
-                child: const Text('OK'),
+                child: const Text('OK', style: TextStyle(fontWeight: FontWeight.bold),),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
