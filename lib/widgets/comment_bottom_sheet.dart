@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:shimmer_ai/shimmer_ai.dart';
+
+import '../services/pull_data/get_user_data.dart';
 
 class CommentBottomSheet extends StatefulWidget {
   final List<Map<String, dynamic>> comments;
@@ -14,6 +17,24 @@ class CommentBottomSheet extends StatefulWidget {
 }
 
 class _CommentBottomSheetState extends State<CommentBottomSheet> {
+
+  String _userAvatarUrl = '';
+  
+  @override
+  void initState() {
+    _getUserData();
+    super.initState();
+  }
+
+  Future<void> _getUserData() async {
+    final userPhotos = await GetUserDataService.getCurrentUserPhotos();
+    if (userPhotos != null) {
+      setState(() {
+        _userAvatarUrl = userPhotos['profilePicture']!;
+      });
+    }
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -164,21 +185,28 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
             ),
           ),
           // Comment input
-          SafeArea(
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                border: Border(
-                  top: BorderSide(color: Colors.grey[200]!),
-                ),
+          Container(
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: 16,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 16, // Add keyboard padding
+            ),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              border: Border(
+                top: BorderSide(color: Colors.grey[200]!),
               ),
+            ),
+            child: SafeArea(
               child: Row(
                 children: [
                   CircleAvatar(
-                    radius: 16,
+                    radius: 22,
                     backgroundColor: Colors.grey[300],
-                    child: const Text('Me'),
+                    child: Image.network(_userAvatarUrl).withShimmerAi(
+                        loading: true
+                    )
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -186,7 +214,7 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                       decoration: InputDecoration(
                         hintText: 'Add a comment...',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
                             color: Colors.grey,
                           ),
@@ -205,9 +233,10 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                     onPressed: () {
                       // Handle send comment
                     },
-                    icon: const Icon(
-                      Icons.send,
-                      color: Colors.blue,
+                    icon: Icon(
+                      Iconsax.send_1_copy,
+                      size: 28,
+                      color: Theme.of(context).colorScheme.inverseSurface,
                     ),
                   ),
                 ],

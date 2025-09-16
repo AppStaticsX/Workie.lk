@@ -1,3 +1,6 @@
+import 'dart:math';
+import 'dart:math' as math;
+
 import 'package:flame_lottie/flame_lottie.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -214,17 +217,32 @@ class _PostCardModelState extends State<PostCardModel> {
                     Icon(
                       Iconsax.global_edit_copy,
                       size: 12,
-                      color: Theme.of(context).colorScheme.primary
+                      color: Colors.blue//Theme.of(context).colorScheme.primary
                     )
                   ],
                 ),
               ],
             ),
           ),
-          IconButton(
-            icon: Icon(Icons.more_horiz, color: Colors.grey.shade400),
-            onPressed: () {},
-          ),
+          PopupMenuButton<String>(
+            icon: Transform.rotate(angle: math.pi/2,
+            child: Icon(Iconsax.more_copy, color: Colors.grey.shade400)),
+            onSelected: (String result) {
+              // Handle menu item selection
+              print('Selected: $result');
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'option1',
+                child: ListTile(
+                  leading: Icon(Iconsax.save_add_copy, size: 20),
+                  title: Text('Save Post', style: TextStyle(fontSize: 16)),
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ],
+          )
         ],
       ),
     );
