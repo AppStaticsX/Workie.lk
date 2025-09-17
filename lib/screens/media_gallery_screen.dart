@@ -18,6 +18,11 @@ class MediaGalleryScreen extends StatefulWidget {
   final String timeAgo;
   final String? fullContent;
   final String shortContent;
+  final bool isLikedByCurrentUser;
+  final int initialLikeCount;
+  final VoidCallback? onLike;
+  final VoidCallback? onComment;
+  final Function(bool isLiked, int likeCount)? onLikeStateChanged;
 
   const MediaGalleryScreen({
     super.key,
@@ -31,6 +36,11 @@ class MediaGalleryScreen extends StatefulWidget {
     required this.timeAgo,
     required this.fullContent,
     required this.shortContent,
+    this.isLikedByCurrentUser = false,
+    this.initialLikeCount = 0,
+    this.onLike,
+    this.onComment,
+    this.onLikeStateChanged,
   });
 
   @override
@@ -43,12 +53,17 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
   final bool _isExpanded = false;
   Map<String, VideoPlayerController> _videoControllers = {};
 
+  late bool _isLiked;
+  late int _likeCount;
+
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
     _pageController = PageController(initialPage: widget.initialIndex);
     _initializeVideoControllers();
+    _isLiked = widget.isLikedByCurrentUser;
+    _likeCount = widget.initialLikeCount;
   }
 
   void _initializeVideoControllers() {
@@ -67,8 +82,22 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
     }
   }
 
+  void _toggleLike() {
+    setState(() {
+      _isLiked = !_isLiked;
+      _likeCount = _isLiked ? _likeCount + 1 : _likeCount - 1;
+    });
+
+    // Call the callback if provided
+    widget.onLike?.call();
+
+    // Update parent state
+    widget.onLikeStateChanged?.call(_isLiked, _likeCount);
+  }
+
   @override
   void dispose() {
+    widget.onLikeStateChanged?.call(_isLiked, _likeCount);
     for (var controller in _videoControllers.values) {
       controller.dispose();
     }
@@ -423,10 +452,13 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
           const SizedBox(height: 16),
           InkWell(
             customBorder: const CircleBorder(),
-            onTap: (){},
-            child: const Icon(
-              Iconsax.heart_copy,
+            onTap: () {
+              _toggleLike();
+            },
+            child: Icon(
+              _isLiked ? Iconsax.heart : Iconsax.heart_copy,
               size: 32,
+              color: _isLiked ? Colors.red : Theme.of(context).colorScheme.inversePrimary,
             ),
           ),
           const SizedBox(height: 16),

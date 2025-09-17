@@ -100,11 +100,16 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
         limit: _postsPerPage,
       );
 
+      // Format all posts asynchronously
+      final formattedPosts = await Future.wait(
+          newPosts.map((post) => PostDataService.formatPostForWidget(post))
+      );
+
       setState(() {
         if (refresh) {
-          _posts = newPosts.map((post) => PostDataService.formatPostForWidget(post)).toList();
+          _posts = formattedPosts;
         } else {
-          _posts.addAll(newPosts.map((post) => PostDataService.formatPostForWidget(post)).toList());
+          _posts.addAll(formattedPosts);
         }
 
         _hasMorePosts = newPosts.length == _postsPerPage;
@@ -423,6 +428,8 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
                       onComment: () => _handleComment(post['id']),
                       onShare: () => _handleShare(post['id']),
                       comments: post['comments'],
+                      isLikedByCurrentUser: post['isLikedByCurrentUser'] ?? false,
+                      likes: post['likes'] ?? [],
                       onCommentsUpdated: (updatedComments) {
                         // ADD THIS
                         setState(() {

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 import 'dart:math' as math;
 
@@ -6,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 import 'package:workie/screens/media_gallery_screen.dart';
 import 'package:workie/widgets/comment_bottom_sheet.dart';
@@ -31,6 +33,8 @@ class PostCardModel extends StatefulWidget {
   final VoidCallback? onLike;
   final VoidCallback? onComment;
   final VoidCallback? onShare;
+  final bool isLikedByCurrentUser; // Add this parameter
+  final List<Map<String, dynamic>> likes;
 
   const PostCardModel({
     super.key,
@@ -52,6 +56,8 @@ class PostCardModel extends StatefulWidget {
     required this.comments,
     required this.postId,
     this.onCommentsUpdated,
+    this.isLikedByCurrentUser = false, // Add this
+    this.likes = const [],
   });
 
   @override
@@ -64,13 +70,53 @@ class _PostCardModelState extends State<PostCardModel> {
   bool _isExpanded = false;
   Map<String, VideoPlayerController> _videoControllers = {};
   late int _commentCount;
+  String? _currentUserId;
 
   @override
   void initState() {
     super.initState();
     _likeCount = widget.initialLikeCount;
     _commentCount = widget.commentCount;
+    _isLiked = widget.isLikedByCurrentUser; // Set initial like status
     _initializeVideoControllers();
+    _getCurrentUserId();
+  }
+
+  void _getCurrentUserId() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token != null) {
+        // Decode JWT to get user ID
+        final parts = token.split('.');
+        if (parts.length == 3) {
+          final payload = json.decode(
+              utf8.decode(base64Url.decode(base64Url.normalize(parts[1])))
+          );
+          _currentUserId = payload['id'];
+
+          // Check if current user has liked this post
+          _checkIfUserLikedPost();
+        }
+      }
+    } catch (e) {
+      print('Error getting current user ID: $e');
+    }
+  }
+
+  void _checkIfUserLikedPost() {
+    if (_currentUserId != null && widget.likes.isNotEmpty) {
+      final userLiked = widget.likes.any((like) =>
+      like['userId'].toString() == _currentUserId.toString()
+      );
+
+      if (mounted) {
+        setState(() {
+          _isLiked = userLiked;
+        });
+      }
+    }
   }
 
   void _initializeVideoControllers() {
@@ -86,6 +132,15 @@ class _PostCardModelState extends State<PostCardModel> {
           }
         });
       }
+    }
+  }
+
+  void _handleLikeStateChanged(bool isLiked, int likeCount) {
+    if (mounted) {
+      setState(() {
+        _isLiked = isLiked;
+        _likeCount = likeCount;
+      });
     }
   }
 
@@ -345,6 +400,15 @@ class _PostCardModelState extends State<PostCardModel> {
                 fullContent: widget.content,
                 shortContent: _truncatedContent,
                 mediaItems: widget.mediaUrls,
+                isLikedByCurrentUser: widget.isLikedByCurrentUser,
+                initialLikeCount: widget.initialLikeCount,
+                onLikeStateChanged: _handleLikeStateChanged,
+                onLike: () {
+                  _toggleLike();
+                },
+                onComment: () {
+                  // Handle comment action
+                },
               ),
             ),
           );
@@ -557,6 +621,9 @@ class _PostCardModelState extends State<PostCardModel> {
                           fullContent: widget.content,
                           shortContent: _truncatedContent,
                           mediaItems: widget.mediaUrls,
+                          isLikedByCurrentUser: _isLiked, // Use current state
+                          initialLikeCount: _likeCount, // Use current state
+                          onLikeStateChanged: _handleLikeStateChanged, // Add this callback
                         ),
                       ),
                     );

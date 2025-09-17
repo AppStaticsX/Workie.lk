@@ -39,6 +39,28 @@ class PostDataService {
     }
   }
 
+  static Future<String?> getCurrentUserId() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token != null) {
+        // Decode JWT to get user ID
+        final parts = token.split('.');
+        if (parts.length == 3) {
+          final payload = json.decode(
+              utf8.decode(base64Url.decode(base64Url.normalize(parts[1])))
+          );
+          return payload['id'];
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error getting current user ID: $e');
+      return null;
+    }
+  }
+
   /// Get posts by specific user
   static Future<List<Map<String, dynamic>>> getUserPosts({
     required String userId,
@@ -213,8 +235,11 @@ class PostDataService {
   }
 
   /// Convert backend post data to PostCardModel format
-  static Map<String, dynamic> formatPostForWidget(Map<String, dynamic> backendPost) {
+  static Future<Map<String, dynamic>> formatPostForWidget(Map<String, dynamic> backendPost) async {
     try {
+      // Get current user ID
+      final currentUserId = await getCurrentUserId();
+
       // Handle user info - check both userInfo and userId populated data
       final userInfo = backendPost['userInfo'] ?? {};
       final userId = backendPost['userId'];
@@ -258,9 +283,19 @@ class PostDataService {
           'commentedUserProfileImgUrl': commentUserInfo['profilePicture'] ?? '',
           'commentedUserName': '${commentUserInfo['firstName'] ?? ''} ${commentUserInfo['lastName'] ?? ''}'.trim(),
           'comment': comment['comment'] ?? '',
-          'ísVerified': true, // You can add verification logic here
+          'ísVerified': false,
           'timestamp': _formatTimestamp(comment['commentedAt']),
         });
+      }
+
+      // Handle likes and check if current user liked
+      final likesList = backendPost['likes'] ?? [];
+      bool isLikedByCurrentUser = false;
+
+      if (currentUserId != null && likesList.isNotEmpty) {
+        isLikedByCurrentUser = likesList.any((like) =>
+        like['userId'].toString() == currentUserId.toString()
+        );
       }
 
       // Handle hashtags
@@ -280,9 +315,9 @@ class PostDataService {
         'userName': '$firstName $lastName'.trim().isNotEmpty
             ? '$firstName $lastName'.trim()
             : 'Unknown User',
-        'userTitle': 'Professional Carpenter Specializing in Custom Furniture & Woodcraft', // You can get this from user profile later
+        'userTitle': 'Professional Carpenter Specializing in Custom Furniture & Woodcraft',
         'timeAgo': _formatTimestamp(backendPost['createdAt']),
-        'isVerified': true, // You can add verification logic here
+        'isVerified': true,
         'content': content,
         'mediaUrls': mediaItems,
         'hashtags': <String>['CustomFurniture', 'Woodworking', 'Woodcraft', 'CarpentryLife'],
@@ -290,6 +325,8 @@ class PostDataService {
         'commentCount': backendPost['engagement']?['commentsCount'] ?? backendPost['comments']?.length ?? 0,
         'shareCount': backendPost['engagement']?['sharesCount'] ?? backendPost['shares']?.length ?? 0,
         'comments': formattedComments,
+        'isLikedByCurrentUser': isLikedByCurrentUser, // Add this
+        'likes': List<Map<String, dynamic>>.from(likesList), // Add this
       };
     } catch (e) {
       print('Error formatting post: $e');
@@ -308,6 +345,8 @@ class PostDataService {
         'commentCount': 0,
         'shareCount': 0,
         'comments': <Map<String, dynamic>>[],
+        'isLikedByCurrentUser': false, // Add this
+        'likes': <Map<String, dynamic>>[], // Add this
       };
     }
   }
