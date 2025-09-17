@@ -13,6 +13,8 @@ import 'package:workie/widgets/comment_bottom_sheet.dart';
 import 'media_item_model.dart';
 
 class PostCardModel extends StatefulWidget {
+  final String postId;
+  final Function(List<Map<String, dynamic>>)? onCommentsUpdated;
   final String profileImageUrl;
   final List<Map<String, dynamic>> comments;
   final String userName;
@@ -48,6 +50,8 @@ class PostCardModel extends StatefulWidget {
     this.onShare,
     required this.isVerified,
     required this.comments,
+    required this.postId,
+    this.onCommentsUpdated,
   });
 
   @override
@@ -59,11 +63,13 @@ class _PostCardModelState extends State<PostCardModel> {
   late int _likeCount;
   bool _isExpanded = false;
   Map<String, VideoPlayerController> _videoControllers = {};
+  late int _commentCount;
 
   @override
   void initState() {
     super.initState();
     _likeCount = widget.initialLikeCount;
+    _commentCount = widget.commentCount;
     _initializeVideoControllers();
   }
 
@@ -676,13 +682,21 @@ class _PostCardModelState extends State<PostCardModel> {
             color: Colors.grey,
             onTap: () {
               showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (BuildContext context) =>
-                      CommentBottomSheet(
-                        comments: widget.comments,
-                      )
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (BuildContext context) => CommentBottomSheet(
+                  initialComments: widget.comments, // FIXED: Use initialComments
+                  postId: widget.postId, // FIXED: Pass postId
+                  onCommentsUpdated: (updatedComments) {
+                    // FIXED: Update local state
+                    setState(() {
+                      _commentCount = updatedComments.length;
+                    });
+                    // Call parent callback if provided
+                    widget.onCommentsUpdated?.call(updatedComments);
+                  },
+                ),
               );
             },
           ),

@@ -7,6 +7,7 @@ import 'package:shimmer_ai/shimmer_ai.dart';
 import '../services/location_service.dart';
 import '../services/pull_data/post_data_service.dart';
 import '../widgets/circular_category_bar.dart';
+import '../widgets/comment_bottom_sheet.dart';
 
 class HomeTabPage extends StatefulWidget {
   const HomeTabPage({super.key});
@@ -159,8 +160,28 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
   }
 
   void _handleComment(String postId) {
-    // Navigate to comment screen or show comment bottom sheet
-    print('Comment on post: $postId');
+    // Find the post in the list
+    final postIndex = _posts.indexWhere((post) => post['id'] == postId);
+    if (postIndex == -1) return;
+
+    final post = _posts[postIndex];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => CommentBottomSheet(
+        initialComments: post['comments'] ?? [],
+        postId: postId,
+        onCommentsUpdated: (updatedComments) {
+          // Update the post's comments in the local state
+          setState(() {
+            _posts[postIndex]['comments'] = updatedComments;
+            _posts[postIndex]['commentCount'] = updatedComments.length;
+          });
+        },
+      ),
+    );
   }
 
   void _handleShare(String postId) {
@@ -386,6 +407,7 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
 
                     final post = _posts[index];
                     return PostCardModel(
+                      postId: post['id'],
                       profileImageUrl: post['profileImageUrl'],
                       userName: post['userName'],
                       userTitle: post['userTitle'],
@@ -401,6 +423,13 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
                       onComment: () => _handleComment(post['id']),
                       onShare: () => _handleShare(post['id']),
                       comments: post['comments'],
+                      onCommentsUpdated: (updatedComments) {
+                        // ADD THIS
+                        setState(() {
+                          _posts[index]['comments'] = updatedComments;
+                          _posts[index]['commentCount'] = updatedComments.length;
+                        });
+                      },
                     );
                   },
                 ),

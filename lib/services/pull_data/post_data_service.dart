@@ -141,7 +141,6 @@ class PostDataService {
       throw Exception('Network error: $e');
     }
   }
-
   /// Add comment to a post
   static Future<Map<String, dynamic>> addComment({
     required String postId,
@@ -167,7 +166,7 @@ class PostDataService {
         }),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
           return data;
@@ -175,7 +174,8 @@ class PostDataService {
           throw Exception(data['message'] ?? 'Failed to add comment');
         }
       } else {
-        throw Exception('Failed to add comment: ${response.statusCode}');
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['message'] ?? 'Failed to add comment: ${response.statusCode}');
       }
     } catch (e) {
       throw Exception('Network error: $e');
@@ -258,7 +258,7 @@ class PostDataService {
           'commentedUserProfileImgUrl': commentUserInfo['profilePicture'] ?? '',
           'commentedUserName': '${commentUserInfo['firstName'] ?? ''} ${commentUserInfo['lastName'] ?? ''}'.trim(),
           'comment': comment['comment'] ?? '',
-          'ísVerified': false, // You can add verification logic here
+          'ísVerified': true, // You can add verification logic here
           'timestamp': _formatTimestamp(comment['commentedAt']),
         });
       }
