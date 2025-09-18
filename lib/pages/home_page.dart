@@ -19,6 +19,7 @@ class HomeTabPage extends StatefulWidget {
 class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin {
 
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
   late AnimationController _animationController;
   late Animation<double> _animation;
 
@@ -332,7 +333,7 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
       ),
       body: Column(
         children: [
-          _WidgetSearchBar(isCategoryBarVisible: _isCategoryBarVisible),
+          _WidgetSearchBar(isCategoryBarVisible: _isCategoryBarVisible, searchController: _searchController),
           AnimatedBuilder(
             animation: _animation,
             builder: (context, child) {
@@ -625,7 +626,10 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
 
 class _WidgetSearchBar extends StatelessWidget {
   final bool isCategoryBarVisible;
-  const _WidgetSearchBar({required this.isCategoryBarVisible});
+  final TextEditingController searchController;
+
+  const _WidgetSearchBar({
+    required this.isCategoryBarVisible, required this.searchController});
 
   @override
   Widget build(BuildContext context) {
@@ -649,6 +653,7 @@ class _WidgetSearchBar extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.only(right: 8.0),
                     child: CustomTextfield(
+                      controller: searchController,
                       obscureText: false,
                       prefixIconData: const Icon(Iconsax.search_normal_copy),
                       hintText: 'Search',
