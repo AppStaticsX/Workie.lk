@@ -2,6 +2,7 @@ import 'package:flame_lottie/flame_lottie.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:tiktok_double_tap_like/double_tap_like_widget.dart';
 import 'package:video_player/video_player.dart';
 import 'package:workie/values/color.dart';
 import '../models/media_item_model.dart';
@@ -234,95 +235,103 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
 
   Widget _buildMediaWidget(MediaItem media) {
     if (media.type == MediaType.image) {
-      return Image.network(
-        media.url,
-        fit: BoxFit.contain,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Center(
-            child: Lottie.asset(
-                'assets/animation/tiktok_loading.json',
-              width: 60
-            ),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) {
-          return const Center(
-            child: Icon(Icons.error, color: Colors.white, size: 50),
-          );
-        },
+      return DoubleTapLikeWidget(
+        onLike: (int value) {_isLiked? null : _toggleLike();},
+        likeWidget: Icon(Iconsax.heart, color: Colors.red, size: 150),
+        child: Image.network(
+          media.url,
+          fit: BoxFit.contain,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Center(
+              child: Lottie.asset(
+                  'assets/animation/tiktok_loading.json',
+                width: 60
+              ),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) {
+            return const Center(
+              child: Icon(Icons.error, color: Colors.white, size: 50),
+            );
+          },
+        ),
       );
     } else if (media.type == MediaType.video) {
       final controller = _videoControllers[media.url];
       if (controller != null && controller.value.isInitialized) {
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            AspectRatio(
-              aspectRatio: controller.value.aspectRatio,
-              child: VideoPlayer(controller),
-            ),
-            // Play/Pause button
-            ValueListenableBuilder(
-              valueListenable: controller,
-              builder: (context, VideoPlayerValue value, child) {
-                return Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.5),
-                    shape: BoxShape.circle,
+        return DoubleTapLikeWidget(
+          onLike: (int value) {_isLiked? null : _toggleLike();},
+          likeWidget: Icon(Iconsax.heart, color: Colors.red, size: 150),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              AspectRatio(
+                aspectRatio: controller.value.aspectRatio,
+                child: VideoPlayer(controller),
+              ),
+              // Play/Pause button
+              ValueListenableBuilder(
+                valueListenable: controller,
+                builder: (context, VideoPlayerValue value, child) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      onPressed: () {
+                        if (value.isPlaying) {
+                          controller.pause();
+                        } else {
+                          controller.play();
+                        }
+                      },
+                      icon: Icon(
+                        value.isPlaying ? Icons.pause : Icons.play_arrow,
+                        color: Colors.white,
+                        size: 40,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              // Video progress indicator
+              Positioned(
+                bottom: 20,
+                left: 20,
+                right: 20,
+                child: VideoProgressIndicator(
+                  controller,
+                  allowScrubbing: true,
+                  colors: VideoProgressColors(
+                    playedColor: Theme.of(context).colorScheme.primary,
+                    backgroundColor: Colors.grey.withValues(alpha: 0.3),
+                    bufferedColor: Colors.grey.withValues(alpha: 0.5),
                   ),
-                  child: IconButton(
-                    onPressed: () {
-                      if (value.isPlaying) {
-                        controller.pause();
-                      } else {
-                        controller.play();
-                      }
-                    },
-                    icon: Icon(
-                      value.isPlaying ? Icons.pause : Icons.play_arrow,
+                ),
+              ),
+              // Video duration
+              Positioned(
+                bottom: 30,
+                right: 25,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    _formatDuration(controller.value.duration),
+                    style: const TextStyle(
                       color: Colors.white,
-                      size: 40,
+                      fontSize: 12,
                     ),
                   ),
-                );
-              },
-            ),
-            // Video progress indicator
-            Positioned(
-              bottom: 20,
-              left: 20,
-              right: 20,
-              child: VideoProgressIndicator(
-                controller,
-                allowScrubbing: true,
-                colors: VideoProgressColors(
-                  playedColor: Theme.of(context).colorScheme.primary,
-                  backgroundColor: Colors.grey.withValues(alpha: 0.3),
-                  bufferedColor: Colors.grey.withValues(alpha: 0.5),
                 ),
               ),
-            ),
-            // Video duration
-            Positioned(
-              bottom: 30,
-              right: 25,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.7),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  _formatDuration(controller.value.duration),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         );
       } else {
         return Container(
