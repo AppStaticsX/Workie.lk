@@ -273,18 +273,33 @@ class PostDataService {
         ));
       }
 
-      // Handle comments
+      // Handle comments and check if current user commented
       final commentsList = backendPost['comments'] ?? [];
       List<Map<String, dynamic>> formattedComments = [];
+      bool hasUserCommented = false;
 
       for (var comment in commentsList) {
         final commentUserInfo = comment['userInfo'] ?? {};
+        final commentUserId = comment['userId'];
+
+        // Check if this comment is by the current user
+        if (currentUserId != null) {
+          if (commentUserId != null && commentUserId.toString() == currentUserId.toString()) {
+            hasUserCommented = true;
+          } else if (commentUserInfo['userId'] != null &&
+              commentUserInfo['userId'].toString() == currentUserId.toString()) {
+            hasUserCommented = true;
+          }
+        }
+
         formattedComments.add({
+          'userId': commentUserId, // Include userId in formatted comment
           'commentedUserProfileImgUrl': commentUserInfo['profilePicture'] ?? '',
           'commentedUserName': '${commentUserInfo['firstName'] ?? ''} ${commentUserInfo['lastName'] ?? ''}'.trim(),
           'comment': comment['comment'] ?? '',
           'ísVerified': false,
           'timestamp': _formatTimestamp(comment['commentedAt']),
+          'userInfo': commentUserInfo, // Include full userInfo
         });
       }
 
@@ -325,8 +340,9 @@ class PostDataService {
         'commentCount': backendPost['engagement']?['commentsCount'] ?? backendPost['comments']?.length ?? 0,
         'shareCount': backendPost['engagement']?['sharesCount'] ?? backendPost['shares']?.length ?? 0,
         'comments': formattedComments,
-        'isLikedByCurrentUser': isLikedByCurrentUser, // Add this
-        'likes': List<Map<String, dynamic>>.from(likesList), // Add this
+        'isLikedByCurrentUser': isLikedByCurrentUser,
+        'hasUserCommented': hasUserCommented, // Add this flag
+        'likes': List<Map<String, dynamic>>.from(likesList),
       };
     } catch (e) {
       print('Error formatting post: $e');
@@ -345,8 +361,9 @@ class PostDataService {
         'commentCount': 0,
         'shareCount': 0,
         'comments': <Map<String, dynamic>>[],
-        'isLikedByCurrentUser': false, // Add this
-        'likes': <Map<String, dynamic>>[], // Add this
+        'isLikedByCurrentUser': false,
+        'hasUserCommented': false, // Add this
+        'likes': <Map<String, dynamic>>[],
       };
     }
   }

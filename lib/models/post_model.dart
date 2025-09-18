@@ -1,7 +1,5 @@
 import 'dart:convert';
-import 'dart:math';
 import 'dart:math' as math;
-
 import 'package:flame_lottie/flame_lottie.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -71,6 +69,7 @@ class _PostCardModelState extends State<PostCardModel> {
   Map<String, VideoPlayerController> _videoControllers = {};
   late int _commentCount;
   String? _currentUserId;
+  bool _hasUserCommented = false;
 
   @override
   void initState() {
@@ -98,10 +97,14 @@ class _PostCardModelState extends State<PostCardModel> {
 
           // Check if current user has liked this post
           _checkIfUserLikedPost();
+          // Check if current user has commented on this post
+          _checkIfUserCommentedPost();
         }
       }
     } catch (e) {
-      print('Error getting current user ID: $e');
+      if (kDebugMode) {
+        print('Error getting current user ID: $e');
+      }
     }
   }
 
@@ -116,6 +119,54 @@ class _PostCardModelState extends State<PostCardModel> {
           _isLiked = userLiked;
         });
       }
+    }
+  }
+
+  void _checkIfUserCommentedPost() {
+    if (_currentUserId != null && widget.comments.isNotEmpty) {
+      final userCommented = widget.comments.any((comment) {
+        // Check both userId and userInfo for user identification
+        if (comment['userId'] != null) {
+          return comment['userId'].toString() == _currentUserId.toString();
+        }
+        // If userId is not available, check userInfo
+        if (comment['userInfo'] != null) {
+          final userInfo = comment['userInfo'];
+          if (userInfo['userId'] != null) {
+            return userInfo['userId'].toString() == _currentUserId.toString();
+          }
+        }
+        return false;
+      });
+
+      if (mounted) {
+        setState(() {
+          _hasUserCommented = userCommented;
+        });
+      }
+    }
+  }
+
+  void _handleCommentStateChanged(List<Map<String, dynamic>> updatedComments) {
+    if (mounted) {
+      setState(() {
+        _commentCount = updatedComments.length;
+        // Check if user has commented in the updated list
+        if (_currentUserId != null) {
+          _hasUserCommented = updatedComments.any((comment) {
+            if (comment['userId'] != null) {
+              return comment['userId'].toString() == _currentUserId.toString();
+            }
+            if (comment['userInfo'] != null) {
+              final userInfo = comment['userInfo'];
+              if (userInfo['userId'] != null) {
+                return userInfo['userId'].toString() == _currentUserId.toString();
+              }
+            }
+            return false;
+          });
+        }
+      });
     }
   }
 
@@ -290,7 +341,9 @@ class _PostCardModelState extends State<PostCardModel> {
             child: Icon(Iconsax.more_copy, color: Colors.grey.shade400)),
             onSelected: (String result) {
               // Handle menu item selection
-              print('Selected: $result');
+              if (kDebugMode) {
+                print('Selected: $result');
+              }
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
               const PopupMenuItem<String>(
@@ -400,8 +453,9 @@ class _PostCardModelState extends State<PostCardModel> {
                 fullContent: widget.content,
                 shortContent: _truncatedContent,
                 mediaItems: widget.mediaUrls,
-                isLikedByCurrentUser: widget.isLikedByCurrentUser,
-                initialLikeCount: widget.initialLikeCount,
+                isLikedByCurrentUser: _isLiked, // Use current state instead of widget property
+                initialLikeCount: _likeCount,
+                hasUserCommented: _hasUserCommented,
                 onLikeStateChanged: _handleLikeStateChanged,
                 onLike: () {
                   _toggleLike();
@@ -409,6 +463,7 @@ class _PostCardModelState extends State<PostCardModel> {
                 onComment: () {
                   // Handle comment action
                 },
+                commentCount: _commentCount,
               ),
             ),
           );
@@ -624,6 +679,8 @@ class _PostCardModelState extends State<PostCardModel> {
                           isLikedByCurrentUser: _isLiked, // Use current state
                           initialLikeCount: _likeCount, // Use current state
                           onLikeStateChanged: _handleLikeStateChanged, // Add this callback
+                          hasUserCommented: _hasUserCommented,
+                          commentCount: _commentCount,
                         ),
                       ),
                     );
@@ -698,8 +755,8 @@ class _PostCardModelState extends State<PostCardModel> {
                 ],
               ),
               const SizedBox(width: 8),
-              Text(
-                '$_likeCount Reactions',
+              Text( _isLiked?
+                'You & ${_likeCount - 1} Others' : '$_likeCount Reactions',
                 style: TextStyle(
                   color: Colors.grey,
                   fontSize: 12,
@@ -710,7 +767,12 @@ class _PostCardModelState extends State<PostCardModel> {
           Row(
             children: [
               Text(
-                '${widget.commentCount} Comments',
+                // Update comment text based on user comment status
+                /*_hasUserCommented
+                    ? (_commentCount > 1
+                    ? 'You & ${_commentCount - 1} Others Commented'
+                    : 'You Commented')*/
+                    '$_commentCount Comments',
                 style: TextStyle(
                   color: Colors.grey,
                   fontSize: 12,
@@ -744,9 +806,9 @@ class _PostCardModelState extends State<PostCardModel> {
             onTap: _toggleLike,
           ),
           _buildActionButton(
-            icon: Iconsax.message_2_copy,
+            icon: _hasUserCommented? Iconsax.message_2 : Iconsax.message_2_copy,
             label: 'Comment',
-            color: Colors.grey,
+            color: _hasUserCommented? Theme.of(context).colorScheme.inverseSurface : Colors.grey,
             onTap: () {
               showModalBottomSheet(
                 context: context,
@@ -756,11 +818,8 @@ class _PostCardModelState extends State<PostCardModel> {
                   initialComments: widget.comments, // FIXED: Use initialComments
                   postId: widget.postId, // FIXED: Pass postId
                   onCommentsUpdated: (updatedComments) {
-                    // FIXED: Update local state
-                    setState(() {
-                      _commentCount = updatedComments.length;
-                    });
-                    // Call parent callback if provided
+                    // Update both local state and parent callback
+                    _handleCommentStateChanged(updatedComments);
                     widget.onCommentsUpdated?.call(updatedComments);
                   },
                 ),

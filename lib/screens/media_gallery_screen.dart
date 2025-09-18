@@ -23,6 +23,8 @@ class MediaGalleryScreen extends StatefulWidget {
   final VoidCallback? onLike;
   final VoidCallback? onComment;
   final Function(bool isLiked, int likeCount)? onLikeStateChanged;
+  final bool hasUserCommented;
+  final int commentCount;
 
   const MediaGalleryScreen({
     super.key,
@@ -41,6 +43,8 @@ class MediaGalleryScreen extends StatefulWidget {
     this.onLike,
     this.onComment,
     this.onLikeStateChanged,
+    this.hasUserCommented = false,
+    this.commentCount = 0,
   });
 
   @override
@@ -55,6 +59,7 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
 
   late bool _isLiked;
   late int _likeCount;
+  late bool _hasUserCommented;
 
   @override
   void initState() {
@@ -64,6 +69,7 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
     _initializeVideoControllers();
     _isLiked = widget.isLikedByCurrentUser;
     _likeCount = widget.initialLikeCount;
+    _hasUserCommented = widget.hasUserCommented;
   }
 
   void _initializeVideoControllers() {
@@ -465,9 +471,10 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
           InkWell(
             customBorder: const CircleBorder(),
             onTap: (){},
-            child: const Icon(
-              Iconsax.message_2_copy,
+            child: Icon(
+              _hasUserCommented ? Iconsax.message_2 : Iconsax.message_2_copy,
               size: 32,
+              color: Theme.of(context).colorScheme.inversePrimary,
             ),
           ),
           const SizedBox(height: 16),
