@@ -37,6 +37,9 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
   double _lastScrollOffset = 0.0;
   final double _scrollThreshold = 10.0;
 
+  bool _isSearching = false;
+  List<Map<String, dynamic>> _originalPosts = [];
+
   @override
   void initState() {
     super.initState();
@@ -71,6 +74,80 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
     _scrollController.dispose();
     _animationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _searchPosts() async {
+    final query = _searchController.text.trim();
+
+    // If search is empty, restore original posts
+    if (query.isEmpty) {
+      _clearSearch();
+      return;
+    }
+
+    setState(() {
+      _isSearching = true;
+      _isLoadingPosts = true;
+    });
+
+    try {
+      // Store original posts if not already stored
+      if (_originalPosts.isEmpty && _posts.isNotEmpty) {
+        _originalPosts = List.from(_posts);
+      }
+
+      final searchResults = await PostDataService.searchPostsByContent(query);
+
+      if (searchResults.isNotEmpty) {
+        // Format all matching posts
+        final formattedPosts = await Future.wait(
+          searchResults.map((post) => PostDataService.formatPostForWidget(post)),
+        );
+
+        setState(() {
+          _posts = formattedPosts;
+          _isLoadingPosts = false;
+        });
+      } else {
+        setState(() {
+          _posts = [];
+          _isLoadingPosts = false;
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No posts found matching your search'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      setState(() {
+        _isLoadingPosts = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Search failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _clearSearch() {
+    setState(() {
+      _searchController.clear();
+      _isSearching = false;
+      if (_originalPosts.isNotEmpty) {
+        _posts = List.from(_originalPosts);
+        _originalPosts.clear();
+      }
+    });
   }
 
   void _getLocation() async {
@@ -333,7 +410,12 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
       ),
       body: Column(
         children: [
-          _WidgetSearchBar(isCategoryBarVisible: _isCategoryBarVisible, searchController: _searchController),
+          _WidgetSearchBar(
+            isCategoryBarVisible: _isCategoryBarVisible,
+            searchController: _searchController,
+            onSearch: _searchPosts,
+            onClear: _clearSearch,
+          ),
           AnimatedBuilder(
             animation: _animation,
             builder: (context, child) {
@@ -627,9 +709,15 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
 class _WidgetSearchBar extends StatelessWidget {
   final bool isCategoryBarVisible;
   final TextEditingController searchController;
+  final VoidCallback? onSearch;
+  final VoidCallback? onClear;
 
   const _WidgetSearchBar({
-    required this.isCategoryBarVisible, required this.searchController});
+    required this.isCategoryBarVisible,
+    required this.searchController,
+    this.onSearch,
+    this.onClear,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -649,16 +737,21 @@ class _WidgetSearchBar extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-              child: InkWell(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: CustomTextfield(
-                      controller: searchController,
-                      obscureText: false,
-                      prefixIconData: const Icon(Iconsax.search_normal_copy),
-                      hintText: 'Search',
-                    ),
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: CustomTextfield(
+                  controller: searchController,
+                  obscureText: false,
+                  prefixIconData: const Icon(Iconsax.search_normal_copy),
+                  hintText: 'Search posts...',
+                  onSubmitted: (_) => onSearch?.call(),
+                  suffixIconData: searchController.text.isNotEmpty
+                      ? IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: onClear,
                   )
+                      : null,
+                ),
               )
           ),
           CustomIconButton(

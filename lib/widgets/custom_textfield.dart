@@ -3,6 +3,7 @@ import '../values/color.dart';
 
 class CustomTextfield extends StatelessWidget {
   final TextEditingController? controller;
+  final void Function(String)? onSubmitted;
   final String? lableText;
   final String? hintText;
   final Icon? prefixIconData;
@@ -13,6 +14,7 @@ class CustomTextfield extends StatelessWidget {
 
   const CustomTextfield({
     super.key,
+    this.onSubmitted,
     this.controller,
     this.lableText,
     this.hintText,
@@ -31,6 +33,7 @@ class CustomTextfield extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TextFormField(
+            onFieldSubmitted: onSubmitted,
             obscureText: obscureText,
             controller: controller,
             style: TextStyle(

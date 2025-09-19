@@ -396,4 +396,34 @@ class PostDataService {
       return '0m';
     }
   }
+
+  /// Search posts by content
+  static Future<List<Map<String, dynamic>>> searchPostsByContent(String query) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      final uri = Uri.parse('$baseUrl/posts/search?content=${Uri.encodeComponent(query)}');
+      final response = await http.get(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          return List<Map<String, dynamic>>.from(data['data']);
+        } else {
+          throw Exception(data['message'] ?? 'Failed to search posts');
+        }
+      } else {
+        throw Exception('Failed to search posts: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Network error: $e');
+    }
+  }
 }
