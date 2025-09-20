@@ -438,6 +438,7 @@ class _NICVerificationState extends State<NICVerification> {
       text: TextSpan(
         style: TextStyle(
           fontSize: 18,
+          fontFamily: 'Google Sans',
           fontWeight: FontWeight.w500,
           color: isHovered ? Colors.white : Color(0xFFcccccc),
           height: 1.4,
@@ -448,6 +449,7 @@ class _NICVerificationState extends State<NICVerification> {
             style: TextStyle(
               color: const Color(0xFF4E6BF5),
               fontWeight: FontWeight.bold,
+              fontFamily: 'Google Sans',
             ),
           ),
           TextSpan(text: ' or Take\nImage Here'),
@@ -524,6 +526,7 @@ class _NICVerificationState extends State<NICVerification> {
       style: TextStyle(
         fontSize: 16,
         color: color,
+        fontFamily: 'Google Sans',
         fontWeight: fontWeight,
       ),
     );
