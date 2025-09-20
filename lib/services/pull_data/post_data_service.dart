@@ -248,17 +248,50 @@ class PostDataService {
       String lastName = '';
       String email = '';
       String profilePicture = '';
+      String userTitle = '';
 
       if (userInfo.isNotEmpty) {
         firstName = userInfo['firstName'] ?? '';
         lastName = userInfo['lastName'] ?? '';
         email = userInfo['email'] ?? '';
         profilePicture = userInfo['profilePicture'] ?? '';
+
+        // Try to get title from userInfo profile
+        if (userInfo['profile'] != null && userInfo['profile']['title'] != null) {
+          userTitle = userInfo['profile']['title'];
+        }
       } else if (userId != null && userId is Map) {
         firstName = userId['firstName'] ?? '';
         lastName = userId['lastName'] ?? '';
         email = userId['email'] ?? '';
         profilePicture = userId['profilePicture'] ?? '';
+
+        // Try to get title from userId profile
+        if (userId['profile'] != null && userId['profile']['title'] != null) {
+          userTitle = userId['profile']['title'];
+        }
+      }
+
+      // If title is still empty, try to get it from the post's profile data
+      if (userTitle.isEmpty && backendPost['profile'] != null) {
+        userTitle = backendPost['profile']['title'] ?? '';
+      }
+
+      // If title is still empty, try to get it from userProfile field
+      if (userTitle.isEmpty && backendPost['userProfile'] != null) {
+        userTitle = backendPost['userProfile']['title'] ?? '';
+      }
+
+      // Default title based on user type if still empty
+      if (userTitle.isEmpty) {
+        final userType = userInfo['userType'] ?? userId?['userType'];
+        if (userType == 'worker') {
+          userTitle = 'Skilled Worker';
+        } else if (userType == 'employer') {
+          userTitle = 'Employer';
+        } else {
+          userTitle = 'Workie User';
+        }
       }
 
       // Handle media
@@ -330,7 +363,7 @@ class PostDataService {
         'userName': '$firstName $lastName'.trim().isNotEmpty
             ? '$firstName $lastName'.trim()
             : 'Unknown User',
-        'userTitle': 'Professional Carpenter Specializing in Custom Furniture & Woodcraft',
+        'userTitle': userTitle,//'Professional Carpenter Specializing in Custom Furniture & Woodcraft',
         'timeAgo': _formatTimestamp(backendPost['createdAt']),
         'isVerified': true,
         'content': content,
@@ -351,7 +384,7 @@ class PostDataService {
         'id': backendPost['_id'] ?? '',
         'profileImageUrl': 'https://via.placeholder.com/150',
         'userName': 'Unknown User',
-        'userTitle': 'Worker',
+        'userTitle': 'Professional Carpenter Specializing in Custom Furniture & Woodcraft',
         'timeAgo': '0m',
         'isVerified': true,
         'content': backendPost['content'] ?? 'No content',

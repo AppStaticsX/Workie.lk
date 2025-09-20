@@ -286,7 +286,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
                         onPressed: () => Navigator.of(context).pop(),
                         child: const Text(
                           'Use Different Email',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Google Sans'),
                         ),
                       ),
                       TextButton(
@@ -298,7 +298,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
                         },
                         child: const Text(
                           'Log In',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Google Sans'),
                         ),
                       ),
                     ],
@@ -711,6 +711,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
               text: TextSpan(
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.primary,
+                  fontFamily: 'Google Sans',
                   fontSize: 13,
                 ),
                 children: [

@@ -16,6 +16,7 @@ import '../../../services/add_skills_service.dart';
 import '../../../services/hive_service.dart';
 import '../../../services/overview_service.dart';
 import '../../../services/profile_service.dart';
+import '../../../services/title_service.dart';
 import '../../../services/work_category_service.dart';
 import 'start_page.dart';
 
@@ -31,6 +32,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
   final GlobalKey<AddPersonalDetailsPageState> _personalDetailsKey = GlobalKey();
   final GlobalKey<AddOverviewPageState> _overviewDetailsKey = GlobalKey();
   final GlobalKey<AddSkillsPageState> _addSkillsKey = GlobalKey();
+  final GlobalKey<AddTitlePageState> _addTitleKey = GlobalKey();
 
   // Current step in the profile setup process
   int _selectedIndex = 0;
@@ -97,7 +99,8 @@ class _ProfileSetupState extends State<ProfileSetup> {
           _showSnackBar('Please enter your professional title to continue.');
           return;
         }
-        break;
+        _saveTitle(); // Add this call
+        return;
       case 4:
         final overviewState = _overviewDetailsKey.currentState;
         if (overviewState == null || overviewState.overviewController.text.trim().length < 100) {
@@ -250,6 +253,54 @@ class _ProfileSetupState extends State<ProfileSetup> {
         backgroundColor: Theme.of(context).colorScheme.secondary,
       ),
     );
+  }
+
+  // Save user's title to backend
+  Future<void> _saveTitle() async {
+    final titleState = _addTitleKey.currentState;
+    if (titleState?.professionController.text.trim().isEmpty ?? true) {
+      _showSnackBar('Please enter your professional title to continue.');
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      final title = titleState!.professionController.text.trim();
+
+      // Validate title
+      final validationError = TitleService.validateTitle(title);
+      if (validationError != null) {
+        _showSnackBar(validationError);
+        return;
+      }
+
+      final result = await TitleService.saveTitle(title: title);
+
+      if (result['success'] == true) {
+        // Navigate to next page after successful save
+        if (_selectedIndex < _maxIndex) {
+          setState(() {
+            _selectedIndex++;
+          });
+        }
+      } else {
+        _showSnackBar(result['message'] ?? 'Failed to save title');
+      }
+    } catch (e) {
+      // Extract the actual error message
+      String errorMessage = e.toString();
+      if (errorMessage.startsWith('Exception: ')) {
+        errorMessage = errorMessage.substring(11);
+      }
+      _showSnackBar(errorMessage);
+    } finally {
+      setState(() {
+        _isSaving = false;
+      });
+    }
   }
 
   // Save user's overview text to backend
@@ -451,6 +502,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
             },
           ),
           AddTitlePage(
+            key: _addTitleKey,
             onTextChanged: (hasTitle) {
               setState(() {
                 _hasTitle = hasTitle;

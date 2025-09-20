@@ -737,21 +737,23 @@ class _WidgetSearchBar extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: CustomTextfield(
-                  controller: searchController,
-                  obscureText: false,
-                  prefixIconData: const Icon(Iconsax.search_normal_copy),
-                  hintText: 'Search posts...',
-                  onSubmitted: (_) => onSearch?.call(),
-                  suffixIconData: searchController.text.isNotEmpty
-                      ? IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: onClear,
+              child: InkWell(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: CustomTextfield(
+                      controller: searchController,
+                      obscureText: false,
+                      prefixIconData: const Icon(Iconsax.search_status_1_copy),
+                      hintText: 'Search posts...',
+                      onSubmitted: (_) => onSearch?.call(),
+                      suffixIconData: searchController.text.isNotEmpty
+                          ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: onClear,
+                      )
+                          : null,
+                    ),
                   )
-                      : null,
-                ),
               )
           ),
           CustomIconButton(

@@ -38,6 +38,7 @@ class FullScreenPopupDialog extends StatelessWidget {
             title,
             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
               fontWeight: FontWeight.bold,
+              fontFamily: 'Google Sans',
               color: Theme.of(context).colorScheme.inverseSurface
             ),
           ),
@@ -45,7 +46,7 @@ class FullScreenPopupDialog extends StatelessWidget {
             textAlign: TextAlign.center,
             subTitle,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+                fontFamily: 'Google Sans',
                 color: Theme.of(context).colorScheme.inverseSurface
             ),
           )

@@ -331,11 +331,13 @@ class AddressData {
 /// Model class for profile data
 class ProfileData {
   final String? bio;
+  final String? title;
   final List<String>? workerCategories;
   final Map<String, dynamic>? ratings;
   final int? completedJobs;
 
   ProfileData({
+    this.title,
     this.bio,
     this.workerCategories,
     this.ratings,
@@ -345,6 +347,7 @@ class ProfileData {
   factory ProfileData.fromJson(Map<String, dynamic> json) {
     return ProfileData(
       bio: json['bio'],
+      title: json['title'],
       workerCategories: json['workerCategories'] != null 
           ? List<String>.from(json['workerCategories']) 
           : null,

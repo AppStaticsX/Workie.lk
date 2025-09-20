@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:workie/values/color.dart';
 import 'package:workie/widgets/simple_textfeild.dart';
 
+import '../../../services/title_service.dart';
+
 class AddTitlePage extends StatefulWidget {
   final ValueChanged<bool>? onTextChanged;
 
@@ -11,29 +13,49 @@ class AddTitlePage extends StatefulWidget {
   });
 
   @override
-  State<AddTitlePage> createState() => _AddTitlePageState();
+  State<AddTitlePage> createState() => AddTitlePageState();
 }
 
-class _AddTitlePageState extends State<AddTitlePage> {
-  final TextEditingController _professionController = TextEditingController();
+class AddTitlePageState extends State<AddTitlePage> {
+  final TextEditingController professionController = TextEditingController();
   int _letterCount = 0;
 
   @override
   void initState() {
     super.initState();
-    _professionController.addListener(_countLetters);
+    professionController.addListener(_countLetters);
+    //_loadExistingTitle();
   }
 
   void _countLetters() {
     setState(() {
-      String text = _professionController.text;
+      String text = professionController.text;
       _letterCount = text.length;
       _notifyParent();
     });
   }
 
+  /// Load existing title if available
+  Future<void> _loadExistingTitle() async {
+    try {
+      final result = await TitleService.getUserProfile();
+      if (result['success'] == true && result['data'] != null) {
+        final profile = result['data']['profile'];
+        if (profile != null && profile['title'] != null) {
+          setState(() {
+            professionController.text = profile['title'];
+            _countLetters();
+          });
+        }
+      }
+    } catch (e) {
+      // Silent fail - user can still enter new title
+      print('Error loading existing title: $e');
+    }
+  }
+
   void _notifyParent() {
-    widget.onTextChanged?.call(_professionController.text.isNotEmpty);
+    widget.onTextChanged?.call(professionController.text.isNotEmpty);
   }
 
   @override
@@ -74,7 +96,7 @@ class _AddTitlePageState extends State<AddTitlePage> {
               lengthLimit: 99,
               focusBorderColor: Theme.of(context).colorScheme.inverseSurface,
                 paddingHorizontal: 0,
-                controller: _professionController,
+                controller: professionController,
                 hintText: 'Ex: Skilled Carpenter for Custom Furniture & Wood Work',
                 obscureText: false,
                 maxLines: 2,

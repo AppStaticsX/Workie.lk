@@ -22,6 +22,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
   String _userCity = '';
   String _userProvince = '';
   String _userAvatarUrl = '';
+  String _userTitle = '';
   String _userCoverImageUrl = '';
 
   @override
@@ -38,6 +39,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
         _fullName = userData.fullName;
         _userCity = userData.address!.city!;
         _userProvince = userData.address!.state!;
+        _userTitle = userData.profile!.title!;
       });
     }
 
@@ -141,9 +143,9 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
               Icon(Iconsax.verify)
             ],
           ),
-          if (selectedRole == 'employer')
+          if (selectedRole == 'job_seeker')
             Text(
-                'Professional Carpenter Specializing in Custom Furniture and Woodcraft',
+                _userTitle,
                 style: TextStyle(
                     color: Theme.of(context).colorScheme.inverseSurface,
                     fontSize: 15,
