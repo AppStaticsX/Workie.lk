@@ -285,6 +285,7 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                       : 'Add Photo',
                   style: TextStyle(
                       fontSize: 14,
+                      fontWeight: FontWeight.bold,
                       color: Theme.of(context).colorScheme.inverseSurface
                   ),
                 )
@@ -304,7 +305,7 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
           children: [
             const Text(
               'Date of Birth *',
-              style: TextStyle(fontSize: 16),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,),
             ),
             if (_isBirthDayEmpty)
               const Text(
@@ -419,7 +420,7 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
           children: [
             const Text(
               'Street Address *',
-              style: TextStyle(fontSize: 16),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,),
             ),
             if (_isStreetAddressEmpty)
               const Text(
@@ -478,7 +479,7 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
           children: [
             const Text(
               'Apartment / Suite',
-              style: TextStyle(fontSize: 16),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,),
             ),
             if (_isApartmentOrSuiteEmpty || !_isApartmentOrSuiteEmpty)
               Text(
@@ -540,7 +541,7 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                 children: [
                   const Text(
                     'City / Town *',
-                    style: TextStyle(fontSize: 16),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,),
                   ),
                   if (_isCityEmpty)
                     const Text(
@@ -557,7 +558,7 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                 children: [
                   const Text(
                     'Province *',
-                    style: TextStyle(fontSize: 16),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,),
                   ),
                   if (_isStateOrProvinceEmpty)
                     const Text(
@@ -676,7 +677,7 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
           children: [
             const Text(
               'ZIP / Postal Code *',
-              style: TextStyle(fontSize: 16),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,),
             ),
             if (_isPostalCodeEmpty)
               const Text(
@@ -701,7 +702,6 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
             textStyle: TextStyle(
               fontSize: 20,
               color: Theme.of(context).colorScheme.inverseSurface,
-              fontWeight: FontWeight.w600,
             ),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.tertiary,
@@ -720,7 +720,6 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
             textStyle: TextStyle(
               fontSize: 20,
               color: Theme.of(context).colorScheme.inverseSurface,
-              fontWeight: FontWeight.w600,
             ),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.tertiary,
@@ -739,7 +738,6 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
             textStyle: const TextStyle(
               fontSize: 20,
               color: Colors.black,
-              fontWeight: FontWeight.w600,
             ),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.tertiary,
@@ -775,8 +773,8 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
         Row(
           children: [
             const Text(
-              'Phone *',
-              style: TextStyle(fontSize: 16),
+              'Mobile Number *',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,),
             ),
             if (_isPhoneNumberEmpty)
               const Text(
@@ -830,8 +828,11 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                   });
                 },
                 decoration: InputDecoration(
-                  hintText: 'Ex: 712211251',
+                  floatingLabelBehavior: FloatingLabelBehavior.always,
+                  hintText: '712211251',
                   hintStyle: const TextStyle(color: Colors.grey),
+                  prefixText: '+94 ',
+                  prefixStyle: TextStyle(color: Theme.of(context).colorScheme.inverseSurface, fontSize: 16),
                   filled: true,
                   fillColor: Theme.of(context).colorScheme.tertiary,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
