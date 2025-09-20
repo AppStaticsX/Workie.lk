@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -38,7 +39,7 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.height * 0.75,
+      height: _hasImage? MediaQuery.of(context).size.height * 0.9 : MediaQuery.of(context).size.height * 0.8,
       padding: const EdgeInsets.symmetric(horizontal: 24),
       decoration: const BoxDecoration(
           borderRadius: BorderRadius.only(
@@ -147,6 +148,19 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
                               icon: Icon(
                                 Iconsax.refresh
                               )
+                          ),
+                          IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _imgAngle = _imgAngle - 90;
+                                });
+                              },
+                              icon: Transform.flip(
+                                flipX: true,
+                                child: Icon(
+                                    Iconsax.refresh
+                                ),
+                              )
                           )
                         ],
                       )
@@ -163,8 +177,8 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
           ),
           Column(
             children: [
-              _buildBottomActionButtons(),
-              const SizedBox(height: 24)
+              const SizedBox(height: 16),
+              SafeArea(child: _buildBottomActionButtons()),
             ],
           ),
         ],
@@ -222,6 +236,7 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
                   'Delete current Image',
                   style: TextStyle(
                     fontSize: 16,
+                    fontWeight: FontWeight.bold,
                     color: const Color(0xFF4E6BF5),
                   ),
                 )

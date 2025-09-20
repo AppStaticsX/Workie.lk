@@ -179,7 +179,7 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                   child: kIsWeb && profileImageBytes != null
                       ? ClipRect(
                         child: Transform.rotate(
-                          angle: profileImageAngle! - 45,
+                          angle: profileImageAngle!,
                           child: Transform.scale(
                             scale: profileImageScale,
                             child: Image.
@@ -193,7 +193,7 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                       : profileImage != null
                       ? ClipRect(
                           child: Transform.rotate(
-                            angle: profileImageAngle! - 45,
+                            angle: profileImageAngle!,
                             child: Transform.scale(
                               scale: profileImageScale,
                               child: Image.

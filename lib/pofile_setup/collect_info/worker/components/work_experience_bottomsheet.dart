@@ -165,7 +165,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.height * 0.75,
+      height: MediaQuery.of(context).size.height * 0.8,
       padding: const EdgeInsets.symmetric(horizontal: 24),
       decoration: const BoxDecoration(
           borderRadius: BorderRadius.only(
@@ -190,7 +190,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-              'Add Your Work Experience',
+              'Add Work Experience',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold
               )
@@ -239,8 +239,8 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
           ),
           Column(
             children: [
-              _buildBottomActionButtons(),
-              const SizedBox(height: 24)
+              const SizedBox(height: 16),
+              SafeArea(child: _buildBottomActionButtons()),
             ],
           ),
         ],
@@ -255,7 +255,8 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
         const Text(
           'Your Job Title *',
           style: TextStyle(
-              fontSize: 16
+              fontSize: 16,
+            fontWeight: FontWeight.bold
           ),
         ),
         const SizedBox(height: 4),
@@ -334,7 +335,8 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
         const Text(
           'Where You Worked *',
           style: TextStyle(
-              fontSize: 16
+              fontSize: 16,
+              fontWeight: FontWeight.bold
           ),
         ),
         const SizedBox(height: 4),
@@ -413,7 +415,8 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
         const Text(
           'Workplace Location *',
           style: TextStyle(
-              fontSize: 16
+              fontSize: 16,
+              fontWeight: FontWeight.bold
           ),
         ),
         const SizedBox(height: 4),
@@ -508,9 +511,9 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
               width: _isChecked? 1.5 : 2,
-              color: _isChecked? Theme.of(context).primaryColor : Colors.grey
+              color: _isChecked? const Color(0xFF4E6BF5) : Colors.grey
           ),
-          color: _isChecked ? Theme.of(context).primaryColor : Colors.transparent,
+          color: _isChecked? const Color(0xFF4E6BF5) : Theme.of(context).primaryColor,
         ),
         child: _isChecked
             ? const Icon(Icons.check, size: 16, color: Colors.white,)
@@ -526,7 +529,8 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
         const Text(
           'Work Started *',
           style: TextStyle(
-              fontSize: 16
+              fontSize: 16,
+              fontWeight: FontWeight.bold
           ),
         ),
         const SizedBox(height: 4),
@@ -596,7 +600,8 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
         const Text(
           'Work Ended *',
           style: TextStyle(
-              fontSize: 16
+              fontSize: 16,
+              fontWeight: FontWeight.bold
           ),
         ),
         const SizedBox(height: 4),
@@ -752,7 +757,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
         int selectedMonthIndex = DateTime.now().month - 1;
 
         return CupertinoAlertDialog(
-          title: const Text('Select Month'),
+          title: const Text('Select Month', style: TextStyle(fontFamily: 'Google Sans', fontWeight: FontWeight.bold, fontSize: 20),),
           content: SizedBox(
             height: 200,
             child: CupertinoPicker(
@@ -767,7 +772,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
                 return Center(
                   child: Text(
                     monthNames[index],
-                    style: const TextStyle(fontSize: 18),
+                    style: const TextStyle(fontSize: 18, fontFamily: 'Google Sans'),
                   ),
                 );
               }),
@@ -775,13 +780,13 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
           ),
           actions: [
             CupertinoDialogAction(
-              child: const Text('Cancel'),
+              child: const Text('Cancel', style: TextStyle(fontFamily: 'Google Sans', fontWeight: FontWeight.bold)),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             CupertinoDialogAction(
-              child: const Text('Select'),
+              child: const Text('Select', style: TextStyle(fontFamily: 'Google Sans', fontWeight: FontWeight.bold)),
               onPressed: () {
                 Navigator.of(context).pop();
                 onMonthSelected(monthNames[selectedMonthIndex]);
@@ -805,7 +810,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
         final initialIndex = 50; // Current year is at index 50
 
         return CupertinoAlertDialog(
-          title: const Text('Select Year'),
+          title: const Text('Select Year', style: TextStyle(fontFamily: 'Google Sans', fontWeight: FontWeight.bold, fontSize: 20)),
           content: SizedBox(
             height: 200,
             child: CupertinoPicker(
@@ -821,7 +826,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
                 return Center(
                   child: Text(
                     year.toString(),
-                    style: const TextStyle(fontSize: 18),
+                    style: const TextStyle(fontSize: 18, fontFamily: 'Google Sans'),
                   ),
                 );
               }),
@@ -829,13 +834,13 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
           ),
           actions: [
             CupertinoDialogAction(
-              child: const Text('Cancel'),
+              child: const Text('Cancel', style: TextStyle(fontFamily: 'Google Sans', fontWeight: FontWeight.bold)),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             CupertinoDialogAction(
-              child: const Text('Select'),
+              child: const Text('Select', style: TextStyle(fontFamily: 'Google Sans', fontWeight: FontWeight.bold)),
               onPressed: () {
                 Navigator.of(context).pop();
                 onYearSelected(selectedYear.toString());
@@ -860,6 +865,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
                 'Cancel',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: Colors.grey,
+                  fontWeight: FontWeight.bold
                 )
             )
         ),
@@ -880,6 +886,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
               'Save',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: Colors.white,
+                fontWeight: FontWeight.bold
               )
           ),
         ),
