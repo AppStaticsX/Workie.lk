@@ -226,7 +226,7 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.height * 0.75,
+      height: MediaQuery.of(context).size.height * 0.8,
       padding: const EdgeInsets.symmetric(horizontal: 24),
       decoration: const BoxDecoration(
           borderRadius: BorderRadius.only(
@@ -297,8 +297,8 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
           ),
           Column(
             children: [
-              _buildBottomActionButtons(),
-              const SizedBox(height: 24)
+              const SizedBox(height: 16),
+              SafeArea(child: _buildBottomActionButtons()),
             ],
           ),
         ],
@@ -312,7 +312,7 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
       children: [
         const Text(
           'Certificate (Optional)',
-          style: TextStyle(fontSize: 16),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
         const Text(
@@ -489,7 +489,8 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
         const Text(
           'School / Institute *',
           style: TextStyle(
-              fontSize: 16
+              fontSize: 16,
+              fontWeight: FontWeight.bold
           ),
         ),
         const SizedBox(height: 4),
@@ -554,7 +555,8 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
         const Text(
           'Diploma / Course *',
           style: TextStyle(
-              fontSize: 16
+              fontSize: 16,
+              fontWeight: FontWeight.bold
           ),
         ),
         const SizedBox(height: 4),
@@ -619,7 +621,8 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
         const Text(
           'Field of Study *',
           style: TextStyle(
-              fontSize: 16
+              fontSize: 16,
+              fontWeight: FontWeight.bold
           ),
         ),
         const SizedBox(height: 4),
@@ -684,7 +687,8 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
         const Text(
           'Years Attended *',
           style: TextStyle(
-              fontSize: 16
+              fontSize: 16,
+              fontWeight: FontWeight.bold
           ),
         ),
         const SizedBox(height: 4),
@@ -829,7 +833,7 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
         int initialIndex = 25;
 
         return CupertinoAlertDialog(
-          title: const Text('Select Year'),
+          title: const Text('Select Year', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, fontFamily: 'Google Sans'),),
           content: SizedBox(
             height: 200,
             child: CupertinoPicker(
@@ -845,7 +849,7 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
                 return Center(
                   child: Text(
                     year.toString(),
-                    style: const TextStyle(fontSize: 18),
+                    style: const TextStyle(fontSize: 18, fontFamily: 'Google Sans'),
                   ),
                 );
               }),
@@ -853,13 +857,13 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
           ),
           actions: [
             CupertinoDialogAction(
-              child: const Text('Cancel'),
+              child: const Text('Cancel', style: TextStyle(fontFamily: 'Google Sans', fontWeight: FontWeight.bold)),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             CupertinoDialogAction(
-              child: const Text('Select'),
+              child: const Text('Select', style: TextStyle(fontFamily: 'Google Sans', fontWeight: FontWeight.bold)),
               onPressed: () {
                 Navigator.of(context).pop();
                 onYearSelected(selectedYear.toString());
@@ -884,6 +888,7 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
                 'Cancel',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: Colors.grey,
+                    fontWeight: FontWeight.bold
                 )
             )
         ),
@@ -920,6 +925,7 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
               'Save',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: Colors.white,
+                fontWeight: FontWeight.bold
               )
           ),
         ),
