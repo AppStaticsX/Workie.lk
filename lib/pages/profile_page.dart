@@ -108,7 +108,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                     // Profile picture
                     _profileImage(context),
 
-                    _editProfileButton(),
+                    //_editProfileButton(),
                     // Edit button for profile picture
                     _profileImagePicker(context),
                   ],
@@ -116,6 +116,14 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
               ),
               // Profile content section
               _profileContent(context),
+              _statsContent(),
+              const SizedBox(height: 12),
+              Container(
+                width: MediaQuery.of(context).size.width,
+                color: Theme.of(context).colorScheme.secondary,
+                height: 12,
+              )
+
             ],
           ),
         ),
@@ -123,9 +131,61 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     );
   }
 
+  Widget _statsContent() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(Iconsax.star),
+                Text('4.9', style: TextStyle(fontSize: 18),),
+                Text('(23 Reviews)', style: TextStyle(fontSize: 14),)
+              ],
+            ),
+          ),
+          Container(
+            height: 50,
+            width: 1,
+            color: Colors.grey.shade300,
+            margin: EdgeInsets.symmetric(horizontal: 12),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(Iconsax.briefcase),
+                Text('23', style: TextStyle(fontSize: 18),),
+                Text('Total Works', style: TextStyle(fontSize: 14),)
+              ],
+            ),
+          ),
+          Container(
+            height: 50,
+            width: 1,
+            color: Colors.grey.shade300,
+            margin: EdgeInsets.symmetric(horizontal: 12),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(Iconsax.money_2),
+                Text('50.5K', style: TextStyle(fontSize: 18),),
+                Text('Total Earning', style: TextStyle(fontSize: 14),)
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
   Padding _profileContent(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -155,10 +215,10 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
           const SizedBox(height: 2),
           Text(
               '$_userCity, $_userProvince Province',
-              style: Theme.of(context).textTheme.bodyMedium
+              style: Theme.of(context).textTheme.bodyLarge
                   ?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textDarkGrey
+                  color: AppColors.textDarkGrey,
               )
           ),
           const SizedBox(height: 8),

@@ -222,7 +222,7 @@ class _PostCardModelState extends State<PostCardModel> {
     if (widget.content.length <= 95) {
       return widget.content;
     }
-    return '${widget.content.substring(0, 95)}...';
+    return widget.content.substring(0, 95);
   }
 
   // Helper method to check if content needs truncation
@@ -280,7 +280,7 @@ class _PostCardModelState extends State<PostCardModel> {
                       widget.userName,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        fontSize: 15,
+                        fontSize: 16,
                         color: Theme.of(context).colorScheme.inversePrimary,
                       ),
                     ),
@@ -368,22 +368,34 @@ class _PostCardModelState extends State<PostCardModel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          RichText(
-            text: TextSpan(
-              style: TextStyle(
-                fontFamily: 'Google Sans',
-                color: Theme.of(context).colorScheme.inversePrimary,
-                fontSize: 15,
-                //height: 1.4,
-              ),
-              children: [
-                TextSpan(
-                  text: _isExpanded ? widget.content : _truncatedContent,
+          GestureDetector(
+            onDoubleTap: _toggleExpanded,
+            child: RichText(
+              text: TextSpan(
+                style: TextStyle(
+                  fontFamily: 'Google Sans',
+                  color: Theme.of(context).colorScheme.inversePrimary,
+                  fontSize: 15,
+                  //height: 1.4,
                 ),
-              ],
+                children: [
+                  TextSpan(
+                    text: _isExpanded ? widget.content : _truncatedContent,
+                  ),
+                  if (_needsTruncation)
+                  TextSpan(
+                    text: _isExpanded ? ' ...less' : '...more',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          if (_needsTruncation)
+          /*if (_needsTruncation)
             GestureDetector(
               onTap: _toggleExpanded,
               child: Padding(
@@ -397,7 +409,7 @@ class _PostCardModelState extends State<PostCardModel> {
                   ),
                 ),
               ),
-            ),
+            ),*/
           if (widget.hashtags.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 4),
