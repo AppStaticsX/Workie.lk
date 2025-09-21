@@ -9,7 +9,7 @@ import '../models/media_item_model.dart';
 import '../widgets/dot_indicator.dart';
 
 class MediaGalleryScreen extends StatefulWidget {
-  final List<MediaItem> mediaItems; // Changed from imageUrls
+  final List<MediaItem> mediaItems;
   final int initialIndex;
   final String profileImageUrl;
   final String userName;
@@ -17,8 +17,7 @@ class MediaGalleryScreen extends StatefulWidget {
   final String connectionStatus;
   final String userTitle;
   final String timeAgo;
-  final String? fullContent;
-  final String shortContent;
+  final String content; // Changed from fullContent and shortContent
   final bool isLikedByCurrentUser;
   final int initialLikeCount;
   final VoidCallback? onLike;
@@ -29,7 +28,7 @@ class MediaGalleryScreen extends StatefulWidget {
 
   const MediaGalleryScreen({
     super.key,
-    required this.mediaItems, // Changed parameter name
+    required this.mediaItems,
     this.initialIndex = 0,
     required this.profileImageUrl,
     required this.userName,
@@ -37,8 +36,7 @@ class MediaGalleryScreen extends StatefulWidget {
     required this.connectionStatus,
     required this.userTitle,
     required this.timeAgo,
-    required this.fullContent,
-    required this.shortContent,
+    required this.content, // Updated parameter
     this.isLikedByCurrentUser = false,
     this.initialLikeCount = 0,
     this.onLike,
@@ -246,7 +244,7 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
             return Center(
               child: Lottie.asset(
                   'assets/animation/tiktok_loading.json',
-                width: 60
+                  width: 60
               ),
             );
           },
@@ -375,7 +373,7 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
       padding: const EdgeInsets.only(left: 16, top: 16, right: 70, bottom: 0),
       child: Container(
         decoration: BoxDecoration(
-            color: Colors.transparent,//Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
+            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
             borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.zero,
                 bottomRight: Radius.zero,
@@ -414,19 +412,11 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
                           ),
                         const SizedBox(width: 4),
                         Text(
-                          '•',
-                          style: TextStyle(
-                            color: Colors.blue.shade600,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
                           widget.connectionStatus,
                           style: TextStyle(
                             color: Colors.blue.shade600,
                             fontSize: 12,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
@@ -434,17 +424,23 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
                     Text(
                       widget.userTitle,
                       style: const TextStyle(
-                        color: Colors.grey,
-                        fontSize: 12,
-                        height: 1.2
+                          color: Colors.grey,
+                          fontSize: 12,
+                          height: 1.2
                       ),
                     ),
-                    Text(
-                      '${widget.timeAgo} • 🌐',
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontSize: 11,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          widget.timeAgo,
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 11,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(Iconsax.global, size: 12,)
+                      ],
                     ),
                   ],
                 ),
@@ -514,11 +510,17 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
   }
 
   Widget _buildContent() {
+    // Check if content exceeds 95 characters
+    final bool shouldShowMore = widget.content.length > 95;
+    final String displayContent = shouldShowMore
+        ? widget.content.substring(0, 95)
+        : widget.content;
+
     return Padding(
       padding: const EdgeInsets.only(left: 16, right: 70),
       child: Container(
         decoration: BoxDecoration(
-            color: Colors.transparent,//Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
+            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
             borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(15),
                 bottomRight: Radius.circular(15),
@@ -531,43 +533,39 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              RichText(
-                text: TextSpan(
-                  style: TextStyle(
-                    fontFamily: 'Google Sans',
-                    color: Theme.of(context).colorScheme.inversePrimary,
-                    fontSize: 14,
-                    //height: 1.4,
-                  ),
-                  children: [
-                    TextSpan(text: widget.shortContent),
-                    if (widget.fullContent != null && _isExpanded)
-                      TextSpan(text: widget.fullContent),
-                  ],
-                ),
-              ),
-              if (widget.fullContent != null && widget.fullContent!.isNotEmpty)
-                GestureDetector(
-                  onTap: (){
+              GestureDetector(
+                onTap: () {
+                  if (shouldShowMore) {
                     showModalBottomSheet(
                         context: context,
                         isScrollControlled: true,
                         isDismissible: true,
                         builder: (context) => _expandedContent()
                     );
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 0),
-                    child: Text(
-                      _isExpanded ? '...less' : '...more',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
+                  }
+                },
+                child: RichText(
+                  text: TextSpan(
+                    style: TextStyle(
+                      fontFamily: 'Google Sans',
+                      color: Theme.of(context).colorScheme.inversePrimary,
+                      fontSize: 14,
+                      //height: 1.4,
                     ),
+                    children: [
+                      TextSpan(text: displayContent),
+                      if (shouldShowMore)
+                        TextSpan(text: '...more',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        )
+                    ],
                   ),
                 ),
+              ),
               const SizedBox(height: 8),
             ],
           ),
@@ -592,15 +590,15 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
                   width: 36,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.textDarkGrey,
-                    borderRadius: BorderRadius.circular(3)
+                      color: AppColors.textDarkGrey,
+                      borderRadius: BorderRadius.circular(3)
                   ),
                 )
               ],
             ),
             const SizedBox(height: 24),
             Text(
-                widget.fullContent ?? ''
+                widget.content
             ),
           ],
         ),

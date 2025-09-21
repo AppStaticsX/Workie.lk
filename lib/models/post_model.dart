@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flame_lottie/flame_lottie.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
@@ -40,7 +41,7 @@ class PostCardModel extends StatefulWidget {
     required this.userName,
     required this.userTitle,
     required this.timeAgo,
-    this.connectionStatus = '2nd',
+    this.connectionStatus = '2ND',
     required this.content, // Updated parameter
     this.mediaUrls = const [], // Updated parameter
     this.hashtags = const [],
@@ -304,7 +305,7 @@ class _PostCardModelState extends State<PostCardModel> {
                       style: TextStyle(
                         color: Colors.blue.shade600,
                         fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
@@ -320,16 +321,17 @@ class _PostCardModelState extends State<PostCardModel> {
                 Row(
                   children: [
                     Text(
-                      '${widget.timeAgo} • ',
+                      widget.timeAgo == 'Just Now'?
+                      '${widget.timeAgo} • ' : '${widget.timeAgo} Ago • ',
                       style: TextStyle(
                         color: Colors.grey,
                         fontSize: 11,
                       ),
                     ),
                     Icon(
-                      Iconsax.global_edit_copy,
+                      Iconsax.global_edit,
                       size: 12,
-                      color: Colors.blue//Theme.of(context).colorScheme.primary
+                      color: Theme.of(context).colorScheme.inverseSurface
                     )
                   ],
                 ),
@@ -337,8 +339,8 @@ class _PostCardModelState extends State<PostCardModel> {
             ),
           ),
           PopupMenuButton<String>(
-            icon: Transform.rotate(angle: math.pi/2,
-            child: Icon(Iconsax.more_copy, color: Colors.grey.shade400)),
+            icon: Transform.rotate(angle: math.pi,
+            child: Icon(CupertinoIcons.dot_radiowaves_left_right, color: Colors.grey.shade400)),
             onSelected: (String result) {
               // Handle menu item selection
               if (kDebugMode) {
@@ -368,40 +370,28 @@ class _PostCardModelState extends State<PostCardModel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GestureDetector(
-            onDoubleTap: _toggleExpanded,
-            child: RichText(
-              text: TextSpan(
-                style: TextStyle(
-                  fontFamily: 'Google Sans',
-                  color: Theme.of(context).colorScheme.inversePrimary,
-                  fontSize: 15,
-                  //height: 1.4,
-                ),
-                children: [
-                  TextSpan(
-                    text: _isExpanded ? widget.content : _truncatedContent,
-                  ),
-                  if (_needsTruncation)
-                  TextSpan(
-                    text: _isExpanded ? ' ...less' : '...more',
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
+          RichText(
+            text: TextSpan(
+              style: TextStyle(
+                fontFamily: 'Google Sans',
+                color: Theme.of(context).colorScheme.inversePrimary,
+                fontSize: 15,
+                //height: 1.4,
               ),
+              children: [
+                TextSpan(
+                  text: _isExpanded ? widget.content : _truncatedContent,
+                ),
+              ],
             ),
           ),
-          /*if (_needsTruncation)
+          if (_needsTruncation)
             GestureDetector(
               onTap: _toggleExpanded,
               child: Padding(
                 padding: const EdgeInsets.only(top: 0),
                 child: Text(
-                  _isExpanded ? '...less' : '...more',
+                  _isExpanded ? '' : '...Expand Content',
                   style: TextStyle(
                     color: Colors.grey.shade600,
                     fontSize: 15,
@@ -409,7 +399,7 @@ class _PostCardModelState extends State<PostCardModel> {
                   ),
                 ),
               ),
-            ),*/
+            ),
           if (widget.hashtags.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 4),
@@ -462,8 +452,7 @@ class _PostCardModelState extends State<PostCardModel> {
                 connectionStatus: widget.connectionStatus,
                 userTitle: widget.userTitle,
                 timeAgo: widget.timeAgo,
-                fullContent: widget.content,
-                shortContent: _truncatedContent,
+                content: widget.content,
                 mediaItems: widget.mediaUrls,
                 isLikedByCurrentUser: _isLiked, // Use current state instead of widget property
                 initialLikeCount: _likeCount,
@@ -685,8 +674,7 @@ class _PostCardModelState extends State<PostCardModel> {
                           connectionStatus: widget.connectionStatus,
                           userTitle: widget.userTitle,
                           timeAgo: widget.timeAgo,
-                          fullContent: widget.content,
-                          shortContent: _truncatedContent,
+                          content: widget.content,
                           mediaItems: widget.mediaUrls,
                           isLikedByCurrentUser: _isLiked, // Use current state
                           initialLikeCount: _likeCount, // Use current state
@@ -767,8 +755,14 @@ class _PostCardModelState extends State<PostCardModel> {
                 ],
               ),
               const SizedBox(width: 8),
-              Text( _isLiked?
-                'You & ${_likeCount - 1} Others' : '$_likeCount Reactions',
+              Text(
+                _isLiked
+                    ? (_likeCount == 1
+                    ? 'You liked this'
+                    : 'You & ${_likeCount - 1} ${_likeCount - 1 == 1 ? 'Other' : 'Others'}')
+                    : (_likeCount == 0
+                    ? 'No reactions yet'
+                    : '$_likeCount ${_likeCount == 1 ? 'Reaction' : 'Reactions'}'),
                 style: TextStyle(
                   color: Colors.grey,
                   fontSize: 12,

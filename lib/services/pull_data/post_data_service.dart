@@ -379,13 +379,13 @@ class PostDataService {
   /// Format timestamp to relative time
   static String _formatTimestamp(dynamic timestamp) {
     try {
-      if (timestamp == null) return '0m';
+      if (timestamp == null) return 'Just Now';
 
       DateTime dateTime;
       if (timestamp is String) {
         dateTime = DateTime.parse(timestamp);
       } else {
-        return '0m';
+        return 'Just Now';
       }
 
       final now = DateTime.now();
@@ -398,10 +398,10 @@ class PostDataService {
       } else if (difference.inMinutes > 0) {
         return '${difference.inMinutes}m';
       } else {
-        return '1m';
+        return 'Just Now';
       }
     } catch (e) {
-      return '0m';
+      return 'Just Now';
     }
   }
 

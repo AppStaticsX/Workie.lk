@@ -59,7 +59,7 @@ class _MainScreenState extends State<MainScreen> {
             children: [
               buildAnimatedNavIcon(Iconsax.home_copy, Iconsax.home_1, 0, 'Home'),
               buildAnimatedNavIcon(Iconsax.location_copy, Iconsax.location, 1, 'Explore'),
-              buildPlusNavIcon('assets/icon/1690183147_tic-16.png', 'assets/icon/1690183147_tic-16.png', 2, 'Post'),
+              buildPlusNavIcon('assets/icon/menu_button.png', 'assets/icon/menu_button.png', 2, 'Post'),
               //buildAnimatedNavIcon(Iconsax.add_square_copy, Iconsax.add_square, 2, 'Post'),
               buildAnimatedNavIcon(Iconsax.video_play_copy, Iconsax.video_play, 3, 'Reels'),
               buildAnimatedNavIcon(Iconsax.user_copy, Iconsax.user, 4, 'Profile'),
@@ -155,7 +155,9 @@ class _MainScreenState extends State<MainScreen> {
               child: Image.asset(
                   isSelected? activeIcon : icon,
                 key: ValueKey('${index}_$isSelected'),
-                width: isSelected? 48 : 48
+                width: isSelected? 24 : 24,
+                color: isSelected ? const Color(0xFF4E6BF5) : Colors.grey.shade600, // Add this line
+                colorBlendMode: BlendMode.srcIn, // Optional: controls how color is applied
               )
               /*Icon(
                 isSelected ? activeIcon : icon,
@@ -163,7 +165,19 @@ class _MainScreenState extends State<MainScreen> {
                 color: isSelected ? const Color(0xFF4E6BF5) : Colors.grey.shade600,
                 size: isSelected ? 28 : 24,
               ),*/
-            )
+
+            ),
+            const SizedBox(height: 4),
+            // Animated text
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
+              style: TextStyle(
+                color: isSelected ? const Color(0xFF4E6BF5) : Colors.grey.shade600,
+                fontSize: isSelected ? 10 : 10,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+              child: Text(lable),
+            ),
           ],
         ),
       ),
