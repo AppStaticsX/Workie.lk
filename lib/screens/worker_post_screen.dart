@@ -203,7 +203,7 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
                   'New Post',
                   style: TextStyle(
                     color: Colors.white,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],

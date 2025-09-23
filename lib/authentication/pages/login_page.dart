@@ -349,7 +349,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
                   const SizedBox(height: 24),
                   _buildLoginButton(),
                   _buildActionButtons(),
-                  const SizedBox(height: 16),
                   _buildDivider(),
                   const SizedBox(height: 4),
                   _buildSocialLogin(),
@@ -690,7 +689,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
 
   Widget _buildDivider() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 60.0, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 48.0, vertical: 8),
       child: Row(
         children: [
           Expanded(

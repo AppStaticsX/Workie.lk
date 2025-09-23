@@ -34,6 +34,7 @@ class PostCardModel extends StatefulWidget {
   final VoidCallback? onShare;
   final bool isLikedByCurrentUser; // Add this parameter
   final List<Map<String, dynamic>> likes;
+  final double bRadius;
 
   const PostCardModel({
     super.key,
@@ -57,6 +58,7 @@ class PostCardModel extends StatefulWidget {
     this.onCommentsUpdated,
     this.isLikedByCurrentUser = false, // Add this
     this.likes = const [],
+    required this.bRadius,
   });
 
   @override
@@ -237,7 +239,7 @@ class _PostCardModelState extends State<PostCardModel> {
       margin: const EdgeInsets.symmetric(vertical: 4),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.tertiary,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.only(topRight: Radius.circular(12), topLeft: Radius.circular(12), bottomLeft: Radius.circular(widget.bRadius), bottomRight: Radius.circular(widget.bRadius) ),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withValues(alpha: 0.1),
@@ -310,12 +312,29 @@ class _PostCardModelState extends State<PostCardModel> {
                     ),
                   ],
                 ),
-                Text(
-                  widget.userTitle,
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 12,
-                    height: 1.2
+                ShaderMask(
+                  shaderCallback: (bounds) {
+                    return LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      stops: const [0.0, 0.7, 1.0],
+                      colors: [
+                        Colors.black,
+                        Colors.black,
+                        Colors.transparent,
+                      ],
+                    ).createShader(Rect.fromLTWH(0, bounds.height * 0.5, bounds.width, bounds.height * 0.5));
+                  },
+                  blendMode: BlendMode.dstIn,
+                  child: Text(
+                    widget.userTitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis, // Shows ... when text overflows
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 12,
+                      height: 1.2,
+                    ),
                   ),
                 ),
                 Row(

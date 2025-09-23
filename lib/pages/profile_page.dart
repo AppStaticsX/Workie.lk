@@ -1,14 +1,25 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workie/pages/components/cover_pic_bottomsheet.dart';
+import 'package:workie/pages/components/profile_page_post_helper.dart';
 import 'package:workie/pages/components/profile_pic_bottomsheet.dart';
 import 'package:workie/values/color.dart';
 import '../services/pull_data/get_user_data.dart';
+import '../services/pull_data/current_user_posts.dart';
+import '../models/post_model.dart';
+import '../services/pull_data/post_data_service.dart';
 
 class ProfileTabPage extends StatefulWidget {
-  const ProfileTabPage({super.key});
+
+  final VoidCallback? onCreatePost;
+
+  const ProfileTabPage({
+    super.key,
+    this.onCreatePost
+  });
 
   @override
   State<ProfileTabPage> createState() => _ProfileTabPageState();
@@ -25,11 +36,50 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
   String _userTitle = '';
   String _userCoverImageUrl = '';
 
+  String _selectedChipLable = 'Posts';
+
+  // Add this variable to track selected chip
+  int selectedChipIndex = 0;
+  final List<String> chipLabels = ['Posts', 'Videos', 'Photos'];
+
+  // Add these variables for posts
+  List<Map<String, dynamic>> _userPosts = [];
+  bool _isLoadingPosts = false;
+  int _totalPostsCount = 0;
+
   @override
   void initState() {
     _loadUserRole();
     _getUserData();
+    _loadUserPosts();
     super.initState();
+  }
+
+  Future<void> _loadUserPosts() async {
+    setState(() {
+      _isLoadingPosts = true;
+    });
+
+    try {
+      final posts = await CurrentUserPostsService.getCurrentUserPostsFormatted(
+        page: 1,
+        limit: 1, // Only load the latest post
+      );
+      final postsCount = await CurrentUserPostsService.getCurrentUserPostsCount();
+
+      setState(() {
+        _userPosts = posts;
+        _totalPostsCount = postsCount;
+        _isLoadingPosts = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingPosts = false;
+      });
+      if (kDebugMode) {
+        print('Error loading user posts: $e');
+      }
+    }
   }
 
   Future<void> _getUserData() async {
@@ -62,6 +112,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
   Future<void> _refreshData() async {
     await _loadUserRole();
     await _getUserData();
+    await _loadUserPosts();
   }
 
   @override
@@ -122,7 +173,14 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                 width: MediaQuery.of(context).size.width,
                 color: Theme.of(context).colorScheme.secondary,
                 height: 12,
-              )
+              ),
+              _myMediaContents(context),
+              const SizedBox(height: 12),
+              Container(
+                width: MediaQuery.of(context).size.width,
+                color: Theme.of(context).colorScheme.secondary,
+                height: 12,
+              ),
 
             ],
           ),
@@ -131,6 +189,352 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     );
   }
 
+
+
+  Widget _myMediaContents(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'My Posts',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold
+                    )
+                  ),
+                  Text(
+                    '$_totalPostsCount Posts',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                      height: 1
+                    ),
+                  )
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: OutlinedButton(
+                  onPressed: widget.onCreatePost,
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(
+                        width: 2,
+                      color: Theme.of(context).colorScheme.inverseSurface,
+                    ),
+                  ),
+                  child: Text(
+                      'Create-Post',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5
+                    ),
+                  )
+              ),
+            )
+          ],
+        ),
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Row(
+            children: [
+              for (int i = 0; i < chipLabels.length; i++) ...[
+                ChoiceChip(
+                  label: Text(
+                    chipLabels[i],
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.5,
+                      color: selectedChipIndex == i ? Colors.black : null,
+                    ),
+                  ),
+                  selected: selectedChipIndex == i,
+                  onSelected: (selected) {
+                    setState(() {
+                      selectedChipIndex = i;
+                    });
+                    // You can add logic here to filter content based on selection
+                    print('Selected: ${chipLabels[i]}');
+                    setState(() {
+                      _selectedChipLable = chipLabels[i];
+                    });
+
+                  },
+                  selectedColor: const Color(0xFF36C897),
+                  showCheckmark: false,
+                  backgroundColor: Theme.of(context).colorScheme.surface,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20.0),
+                  ),
+                ),
+                if (i < chipLabels.length - 1) const SizedBox(width: 12),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Posts content based on selected chip
+        _buildPostsContent(),
+
+        // Option 1: Using conditional rendering with if statement
+        if (!_isLoadingPosts && _filterPostsByChip().isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Container(
+              decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.tertiary,
+                  borderRadius: const BorderRadius.only(
+                      bottomRight: Radius.circular(12),
+                      bottomLeft: Radius.circular(12)
+                  )
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                          PageRouteBuilder(
+                            pageBuilder: (context, animation, secondaryAnimation) => ProfilePagePostHelper(),
+                            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                              const begin = Offset(1.0, 0.0); // Start from right
+                              const end = Offset.zero; // End at current position
+                              const curve = Curves.easeInOut;
+
+                              var tween = Tween(begin: begin, end: end).chain(
+                                CurveTween(curve: curve),
+                              );
+
+                              return SlideTransition(
+                                position: animation.drive(tween),
+                                child: child,
+                              );
+                            },
+                            transitionDuration: const Duration(milliseconds: 300),
+                          )
+                        );
+                      },
+                      child: Row(
+                        children: [
+                          Text(
+                              'Show All $_selectedChipLable', // Using null-aware operator with fallback
+                              style: Theme.of(context).textTheme.titleSmall
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(CupertinoIcons.arrow_right)
+                        ],
+                      )
+                  )
+                ],
+              ),
+            ),
+          ),
+
+// Option 2: Alternative using Visibility widget (uncomment to use instead)
+// Visibility(
+//   visible: !_isLoadingPosts,
+//   child: Padding(
+//     padding: const EdgeInsets.symmetric(horizontal: 16.0),
+//     child: Container(
+//       decoration: BoxDecoration(
+//         color: Theme.of(context).colorScheme.tertiary,
+//         borderRadius: const BorderRadius.only(
+//           bottomRight: Radius.circular(12),
+//           bottomLeft: Radius.circular(12)
+//         )
+//       ),
+//       child: Row(
+//         mainAxisAlignment: MainAxisAlignment.center,
+//         children: [
+//           TextButton(
+//             onPressed: () {
+//               // Add your onPressed logic here
+//             },
+//             child: Row(
+//               children: [
+//                 Text(
+//                   'Show All ${_selectedChipLabel ?? "Items"}',
+//                   style: Theme.of(context).textTheme.titleSmall
+//                 ),
+//                 const SizedBox(width: 8),
+//                 const Icon(CupertinoIcons.arrow_right)
+//               ],
+//             )
+//           )
+//         ],
+//       ),
+//     ),
+//   ),
+// )
+      ],
+    );
+  }
+
+  Widget _buildPostsContent() {
+    if (_isLoadingPosts) {
+      return const Padding(
+        padding: EdgeInsets.all(32.0),
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_userPosts.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(
+                selectedChipIndex == 0 
+                    ? Iconsax.document_text_copy
+                    : selectedChipIndex == 1 
+                        ? Iconsax.video_play_copy
+                        : Iconsax.gallery_copy,
+                size: 48,
+                color: Colors.grey.shade400,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                selectedChipIndex == 0 
+                    ? 'No posts yet'
+                    : selectedChipIndex == 1 
+                        ? 'No videos yet'
+                        : 'No photos yet',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Share your first ${chipLabels[selectedChipIndex].toLowerCase()} to get started!',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey.shade500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    List<Map<String, dynamic>> filteredPosts = _filterPostsByChip();
+
+    if (filteredPosts.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(
+                selectedChipIndex == 1 ? Iconsax.video_play_copy : Iconsax.gallery_copy,
+                size: 48,
+                color: Colors.grey.shade400,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No ${chipLabels[selectedChipIndex].toLowerCase()} yet',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Column(
+        children: [
+          // Show only the first (latest) post from filtered posts
+          if (filteredPosts.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 0),
+              child: PostCardModel(
+                postId: filteredPosts[0]['id'] ?? '',
+                profileImageUrl: filteredPosts[0]['profileImageUrl'] ?? '',
+                userName: filteredPosts[0]['userName'] ?? '',
+                userTitle: filteredPosts[0]['userTitle'] ?? '',
+                timeAgo: filteredPosts[0]['timeAgo'] ?? '',
+                content: filteredPosts[0]['content'] ?? '',
+                mediaUrls: List.from(filteredPosts[0]['mediaUrls'] ?? []),
+                hashtags: List<String>.from(filteredPosts[0]['hashtags'] ?? []),
+                initialLikeCount: filteredPosts[0]['initialLikeCount'] ?? 0,
+                commentCount: filteredPosts[0]['commentCount'] ?? 0,
+                shareCount: filteredPosts[0]['shareCount'] ?? 0,
+                isVerified: filteredPosts[0]['isVerified'] ?? false,
+                comments: List<Map<String, dynamic>>.from(filteredPosts[0]['comments'] ?? []),
+                isLikedByCurrentUser: filteredPosts[0]['isLikedByCurrentUser'] ?? false,
+                likes: List<Map<String, dynamic>>.from(filteredPosts[0]['likes'] ?? []),
+                onLike: () => _handlePostLike(filteredPosts[0]['id']),
+                onComment: () => _handlePostComment(filteredPosts[0]['id']),
+                onShare: () => _handlePostShare(filteredPosts[0]['id']),
+                bRadius: 0,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  List<Map<String, dynamic>> _filterPostsByChip() {
+    switch (selectedChipIndex) {
+      case 0: // Posts - show all posts
+        return _userPosts;
+      case 1: // Videos - show only posts with videos
+        return _userPosts.where((post) {
+          final mediaUrls = post['mediaUrls'] as List?;
+          return mediaUrls?.any((media) => media.type?.toString() == 'MediaType.video') ?? false;
+        }).toList();
+      case 2: // Photos - show only posts with images
+        return _userPosts.where((post) {
+          final mediaUrls = post['mediaUrls'] as List?;
+          return mediaUrls?.any((media) => media.type?.toString() == 'MediaType.image') ?? false;
+        }).toList();
+      default:
+        return _userPosts;
+    }
+  }
+
+  void _handlePostLike(String postId) async {
+    try {
+      await PostDataService.toggleLike(postId: postId);
+      // Refresh posts to update like status
+      await _loadUserPosts();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error toggling like: $e');
+      }
+    }
+  }
+
+  void _handlePostComment(String postId) {
+    // Comment handling is managed by the PostCardModel itself
+    if (kDebugMode) {
+      print('Comment on post: $postId');
+    }
+  }
+
+  void _handlePostShare(String postId) {
+    // Handle post sharing
+    if (kDebugMode) {
+      print('Share post: $postId');
+    }
+  }
   Widget _statsContent() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),

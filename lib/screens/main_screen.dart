@@ -43,7 +43,11 @@ class _MainScreenState extends State<MainScreen> {
             _navigateBottomBar(0);
           }),
           const ActivityTabPage(),
-          const ProfileTabPage(),
+          ProfileTabPage(onCreatePost: (){
+            setState(() {
+              _navigateBottomBar(2);
+            });
+          }),
         ],
       ), // Display the selected page
       bottomNavigationBar: SafeArea(
@@ -116,7 +120,7 @@ class _MainScreenState extends State<MainScreen> {
                 fontSize: isSelected ? 12 : 10,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
-              child: Text(label),
+              child: Text(label, style: TextStyle(fontFamily: 'Google Sans'),),
             ),
           ],
         ),
@@ -173,7 +177,7 @@ class _MainScreenState extends State<MainScreen> {
               duration: const Duration(milliseconds: 200),
               style: TextStyle(
                 color: isSelected ? const Color(0xFF4E6BF5) : Colors.grey.shade600,
-                fontSize: isSelected ? 10 : 10,
+                fontSize: isSelected ? 12 : 10,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
               child: Text(lable),

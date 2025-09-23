@@ -1,0 +1,259 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
+import '../../services/pull_data/current_user_posts.dart';
+import '../../models/post_model.dart';
+import '../../models/media_item_model.dart';
+import '../../services/pull_data/post_data_service.dart';
+
+class ProfilePagePostHelper extends StatefulWidget {
+  const ProfilePagePostHelper({super.key});
+
+  @override
+  State<ProfilePagePostHelper> createState() => _ProfilePagePostHelperState();
+}
+
+class _ProfilePagePostHelperState extends State<ProfilePagePostHelper> {
+  List<Map<String, dynamic>> _userPosts = [];
+  bool _isLoadingPosts = false;
+  int _totalPostsCount = 0;
+  int selectedChipIndex = 0;
+  final List<String> chipLabels = ['Posts', 'Videos', 'Photos'];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAllUserPosts();
+  }
+
+  Future<void> _loadAllUserPosts() async {
+    setState(() {
+      _isLoadingPosts = true;
+    });
+
+    try {
+      final posts = await CurrentUserPostsService.getCurrentUserPostsFormatted(
+        page: 1,
+        limit: 10, // Load all posts (adjust limit as needed)
+      );
+      final postsCount = await CurrentUserPostsService.getCurrentUserPostsCount();
+
+      setState(() {
+        _userPosts = posts;
+        _totalPostsCount = postsCount;
+        _isLoadingPosts = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingPosts = false;
+      });
+      if (kDebugMode) {
+        print('Error loading user posts: $e');
+      }
+    }
+  }
+
+  List<Map<String, dynamic>> _filterPostsByChip() {
+    switch (selectedChipIndex) {
+      case 0: // Posts - show all posts
+        return _userPosts;
+      case 1: // Videos - show only posts with videos
+        return _userPosts.where((post) {
+          final mediaUrls = post['mediaUrls'] as List?;
+          return mediaUrls?.any((media) => media.type == MediaType.video) ?? false;
+        }).toList();
+      case 2: // Photos - show only posts with images
+        return _userPosts.where((post) {
+          final mediaUrls = post['mediaUrls'] as List?;
+          return mediaUrls?.any((media) => media.type == MediaType.image) ?? false;
+        }).toList();
+      default:
+        return _userPosts;
+    }
+  }
+
+  void _handlePostLike(String postId) async {
+    try {
+      await PostDataService.toggleLike(postId: postId);
+      // Refresh posts to update like status
+      await _loadAllUserPosts();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error toggling like: $e');
+      }
+    }
+  }
+
+  void _handlePostComment(String postId) {
+    // Comment handling is managed by the PostCardModel itself
+    if (kDebugMode) {
+      print('Comment on post: $postId');
+    }
+  }
+
+  void _handlePostShare(String postId) {
+    // Handle post sharing
+    if (kDebugMode) {
+      print('Share post: $postId');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF4E6BF5),
+        surfaceTintColor: const Color(0xFF4E6BF5),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: Text(
+          'All Posts ($_totalPostsCount)',
+          style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white
+          ),
+        ),
+      ),
+      body: Column(
+        children: [
+          // Filter chips
+          Container(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                for (int i = 0; i < chipLabels.length; i++) ...[
+                  ChoiceChip(
+                    label: Text(
+                      chipLabels[i],
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                        color: selectedChipIndex == i ? Colors.black : null,
+                      ),
+                    ),
+                    selected: selectedChipIndex == i,
+                    onSelected: (selected) {
+                      setState(() {
+                        selectedChipIndex = i;
+                      });
+                    },
+                    selectedColor: const Color(0xFF36C897),
+                    showCheckmark: false,
+                    backgroundColor: Theme.of(context).colorScheme.surface,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                  ),
+                  if (i < chipLabels.length - 1) const SizedBox(width: 12),
+                ],
+              ],
+            ),
+          ),
+          // Posts content
+          Expanded(
+            child: _buildPostsContent(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPostsContent() {
+    if (_isLoadingPosts) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    if (_userPosts.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Iconsax.document_text_copy,
+              size: 64,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No posts yet',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Share your first post to get started!',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.grey.shade500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    List<Map<String, dynamic>> filteredPosts = _filterPostsByChip();
+
+    if (filteredPosts.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              selectedChipIndex == 1 ? Iconsax.video_play_copy : Iconsax.gallery_copy,
+              size: 64,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No ${chipLabels[selectedChipIndex].toLowerCase()} yet',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadAllUserPosts,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 0.0),
+        itemCount: filteredPosts.length,
+        itemBuilder: (context, index) {
+          final post = filteredPosts[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: PostCardModel(
+              postId: post['id'] ?? '',
+              profileImageUrl: post['profileImageUrl'] ?? '',
+              userName: post['userName'] ?? '',
+              userTitle: post['userTitle'] ?? '',
+              timeAgo: post['timeAgo'] ?? '',
+              content: post['content'] ?? '',
+              mediaUrls: List.from(post['mediaUrls'] ?? []),
+              hashtags: List<String>.from(post['hashtags'] ?? []),
+              initialLikeCount: post['initialLikeCount'] ?? 0,
+              commentCount: post['commentCount'] ?? 0,
+              shareCount: post['shareCount'] ?? 0,
+              isVerified: post['isVerified'] ?? false,
+              comments: List<Map<String, dynamic>>.from(post['comments'] ?? []),
+              isLikedByCurrentUser: post['isLikedByCurrentUser'] ?? false,
+              likes: List<Map<String, dynamic>>.from(post['likes'] ?? []),
+              onLike: () => _handlePostLike(post['id']),
+              onComment: () => _handlePostComment(post['id']),
+              onShare: () => _handlePostShare(post['id']),
+              bRadius: 12, // Add border radius for individual posts
+            ),
+          );
+        },
+      ),
+    );
+  }
+}

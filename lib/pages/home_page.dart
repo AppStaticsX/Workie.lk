@@ -519,7 +519,7 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
                           _posts[index]['comments'] = updatedComments;
                           _posts[index]['commentCount'] = updatedComments.length;
                         });
-                      },
+                      }, bRadius: 12,
                     );
                   },
                 ),
