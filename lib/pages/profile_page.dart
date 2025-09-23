@@ -484,6 +484,8 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                 onComment: () => _handlePostComment(filteredPosts[0]['id']),
                 onShare: () => _handlePostShare(filteredPosts[0]['id']),
                 bRadius: 0,
+                popupMenuItemIcon: Iconsax.trash_copy,
+                popupMenuItemIconColor: Colors.red,
               ),
             ),
         ],

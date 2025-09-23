@@ -520,6 +520,8 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
                           _posts[index]['commentCount'] = updatedComments.length;
                         });
                       }, bRadius: 12,
+                      popupMenuItemIcon: Iconsax.save_add_copy,
+                      //popupMenuItemIconColor: Theme.of(context).colorScheme.inverseSurface,
                     );
                   },
                 ),

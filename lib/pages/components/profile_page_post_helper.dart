@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
@@ -249,7 +250,9 @@ class _ProfilePagePostHelperState extends State<ProfilePagePostHelper> {
               onLike: () => _handlePostLike(post['id']),
               onComment: () => _handlePostComment(post['id']),
               onShare: () => _handlePostShare(post['id']),
-              bRadius: 12, // Add border radius for individual posts
+              bRadius: 12,
+              popupMenuItemIcon: Iconsax.trash_copy,
+              popupMenuItemIconColor: Colors.red,
             ),
           );
         },

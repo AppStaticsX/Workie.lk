@@ -35,6 +35,8 @@ class PostCardModel extends StatefulWidget {
   final bool isLikedByCurrentUser; // Add this parameter
   final List<Map<String, dynamic>> likes;
   final double bRadius;
+  final IconData popupMenuItemIcon;
+  final Color? popupMenuItemIconColor;
 
   const PostCardModel({
     super.key,
@@ -59,6 +61,8 @@ class PostCardModel extends StatefulWidget {
     this.isLikedByCurrentUser = false, // Add this
     this.likes = const [],
     required this.bRadius,
+    required this.popupMenuItemIcon,
+    this.popupMenuItemIconColor,
   });
 
   @override
@@ -367,11 +371,11 @@ class _PostCardModelState extends State<PostCardModel> {
               }
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              const PopupMenuItem<String>(
+              PopupMenuItem<String>(
                 value: 'option1',
                 child: ListTile(
-                  leading: Icon(Iconsax.save_add_copy, size: 20),
-                  title: Text('Save Post', style: TextStyle(fontSize: 16)),
+                  leading: Icon(widget.popupMenuItemIcon, size: 20, color: widget.popupMenuItemIconColor),
+                  title: const Text('Save Post', style: TextStyle(fontSize: 16)),
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
