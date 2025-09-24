@@ -4,8 +4,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:io';
+import 'dart:async';
 import 'package:workie/models/education_model.dart';
-import 'package:workie/services/file_cache_service.dart'; // Add this import
+import 'package:workie/services/file_cache_service.dart';
+import 'package:workie/services/google_places_service.dart';
 
 class EducationBottomsheet extends StatefulWidget {
   final VoidCallback closeBottomSheet;
@@ -46,6 +48,14 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
   final FocusNode courseFocusNode = FocusNode();
   final FocusNode fieldOfStudyFocusNode = FocusNode();
 
+  // Autocomplete related variables
+  final GooglePlacesService _placesService = GooglePlacesService();
+  List<PlaceAutocomplete> _schoolSuggestions = [];
+  bool _isLoadingSuggestions = false;
+  Timer? _debounceTimer;
+  final LayerLink _layerLink = LayerLink();
+  OverlayEntry? _overlayEntry;
+
   @override
   void initState() {
     super.initState();
@@ -57,6 +67,7 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
   void _dismissKeyboard() {
     FocusManager.instance.primaryFocus?.unfocus();
     SystemChannels.textInput.invokeMethod('TextInput.hide');
+    _removeOverlay(); // Hide autocomplete suggestions when keyboard is dismissed
   }
 
   void _populateFields(EducationModel education) {
@@ -78,6 +89,8 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
+    _removeOverlay();
     schoolController.dispose();
     courseController.dispose();
     fieldOfStudyController.dispose();
@@ -345,13 +358,10 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
                       height: 32,
                       child: Transform.scale(
                         scale: 0.45, // Makes it half the size
-                        child: const Padding(
-                          padding: EdgeInsets.only(right: 4.0),
-                          child: CircularProgressIndicator(
-                            strokeWidth: 9,
-                            color: Colors.white,
-                            strokeCap: StrokeCap.square,
-                          ),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 9,
+                          color: Colors.white,
+                          strokeCap: StrokeCap.square,
                         ),
                       ),
                     )
@@ -482,6 +492,131 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
     }
   }
 
+  // Autocomplete helper methods
+  void _onSchoolQueryChanged(String query) {
+    if (query.isEmpty) {
+      _removeOverlay();
+      setState(() {
+        _schoolSuggestions = [];
+        _isLoadingSuggestions = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoadingSuggestions = true;
+    });
+
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      _searchSchools(query);
+    });
+  }
+
+  Future<void> _searchSchools(String query) async {
+    try {
+      final suggestions = await _placesService.getSchoolSuggestions(query);
+      if (mounted) {
+        setState(() {
+          _schoolSuggestions = suggestions;
+          _isLoadingSuggestions = false;
+        });
+        
+        if (suggestions.isNotEmpty) {
+          _showSuggestionOverlay();
+        } else {
+          _removeOverlay();
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _schoolSuggestions = [];
+          _isLoadingSuggestions = false;
+        });
+        _removeOverlay();
+      }
+    }
+  }
+
+  void _showSuggestionOverlay() {
+    _removeOverlay();
+
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        width: MediaQuery.of(context).size.width - 48, // Account for padding
+        child: CompositedTransformFollower(
+          link: _layerLink,
+          showWhenUnlinked: false,
+          offset: const Offset(0.0, 60.0), // Position below the text field
+          child: Material(
+            elevation: 4.0,
+            borderRadius: BorderRadius.circular(8.0),
+            child: Container(
+              constraints: const BoxConstraints(maxHeight: 200),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(8.0),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                ),
+              ),
+              child: ListView.separated(
+                padding: EdgeInsets.zero,
+                shrinkWrap: true,
+                itemCount: _schoolSuggestions.length,
+                separatorBuilder: (context, index) => Divider(
+                  height: 1,
+                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
+                ),
+                itemBuilder: (context, index) {
+                  final suggestion = _schoolSuggestions[index];
+                  return ListTile(
+                    dense: true,
+                    title: Text(
+                      suggestion.mainText,
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: suggestion.secondaryText.isNotEmpty
+                        ? Text(
+                            suggestion.secondaryText,
+                            style: TextStyle(
+                              fontSize: 12, 
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          )
+                        : null,
+                    onTap: () => _selectSchool(suggestion),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    Overlay.of(context).insert(_overlayEntry!);
+  }
+
+  void _selectSchool(PlaceAutocomplete suggestion) {
+    schoolController.text = suggestion.mainText;
+    _removeOverlay();
+    setState(() {
+      _schoolSuggestions = [];
+      _isSchoolEmpty = false;
+    });
+  }
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
   Widget _buildSchoolField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -494,42 +629,69 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
           ),
         ),
         const SizedBox(height: 4),
-        TextFormField(
-          controller: schoolController,
-          focusNode: schoolFocusNode,
-          onChanged: (value) {
-            if (_isSchoolEmpty && value.isNotEmpty) {
-              setState(() => _isSchoolEmpty = false);
-            }
-          },
-          decoration: InputDecoration(
-            hintText: 'Ex: Vocational Training School',
-            hintStyle: const TextStyle(
-                color: Colors.grey
-            ),
-            filled: true,
-            fillColor: Theme.of(context).colorScheme.tertiary,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.outline,
-                width: 1.5,
+        CompositedTransformTarget(
+          link: _layerLink,
+          child: TextFormField(
+            controller: schoolController,
+            focusNode: schoolFocusNode,
+            onChanged: (value) {
+              if (_isSchoolEmpty && value.isNotEmpty) {
+                setState(() => _isSchoolEmpty = false);
+              }
+              _onSchoolQueryChanged(value);
+            },
+            onTap: () {
+              // Show suggestions when field gets focus if there's already text
+              if (schoolController.text.isNotEmpty && _schoolSuggestions.isEmpty) {
+                _onSchoolQueryChanged(schoolController.text);
+              }
+            },
+            decoration: InputDecoration(
+              hintText: 'Ex: Vocational Training School',
+              hintStyle: const TextStyle(
+                  color: Colors.grey
               ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: _isSchoolEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-                width: 1.5,
+              filled: true,
+              fillColor: Theme.of(context).colorScheme.tertiary,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.outline,
+                  width: 1.5,
+                ),
               ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: _isSchoolEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
-                width: 2,
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: _isSchoolEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                  width: 1.5,
+                ),
               ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: _isSchoolEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
+                  width: 2,
+                ),
+              ),
+              suffixIcon: _isLoadingSuggestions
+                ? Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: Transform.scale(
+                        scale: 0.45, // Makes it half the size
+                        child: CircularProgressIndicator(
+                          strokeWidth: 7,
+                          color: Colors.white,
+                          strokeCap: StrokeCap.square,
+                        ),
+                      ),
+                    ),
+                  )
+                : null,
             ),
           ),
         ),
@@ -829,8 +991,9 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
     showCupertinoDialog(
       context: context,
       builder: (BuildContext context) {
-        int selectedYear = DateTime.now().year;
-        int initialIndex = 25;
+        int currentYear = DateTime.now().year;
+        int selectedYear = currentYear; // Initialize with current year
+        int initialIndex = 50; // Current year is at index 50 (middle of range)
 
         return CupertinoAlertDialog(
           title: const Text('Select Year', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, fontFamily: 'Google Sans'),),
@@ -842,10 +1005,10 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
                 initialItem: initialIndex,
               ),
               onSelectedItemChanged: (int index) {
-                selectedYear = DateTime.now().year - 50 + index;
+                selectedYear = currentYear - 50 + index;
               },
-              children: List.generate(51, (index) {
-                int year = DateTime.now().year - 50 + index;
+              children: List.generate(101, (index) { // Generate 101 items for proper range
+                int year = currentYear - 50 + index;
                 return Center(
                   child: Text(
                     year.toString(),
@@ -911,13 +1074,10 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
             height: 16,
             child: Transform.scale(
               scale: 0.45, // Makes it half the size
-              child: const Padding(
-                padding: EdgeInsets.only(right: 4.0),
-                child: CircularProgressIndicator(
-                  strokeWidth: 9,
-                  color: Colors.white,
-                  strokeCap: StrokeCap.square,
-                ),
+              child: CircularProgressIndicator(
+                strokeWidth: 7,
+                color: Colors.white,
+                strokeCap: StrokeCap.square,
               ),
             ),
           )

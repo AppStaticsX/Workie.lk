@@ -69,7 +69,7 @@ class BottomNavigationWithSkip extends StatelessWidget {
               onPressed: onTapAction,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF4E6BF5),
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                //padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),
@@ -82,16 +82,28 @@ class BottomNavigationWithSkip extends StatelessWidget {
                   fontWeight: FontWeight.w900,
                   fontSize: 16,
                 ),
-              ) : Transform.scale(
-                scale: 0.45, // Makes it half the size
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 4.0),
-                  child: CircularProgressIndicator(
-                    strokeWidth: 9,
-                    color: Colors.white,
-                    strokeCap: StrokeCap.square,
+              ) : Row(
+                children: [
+                  Transform.scale(
+                    scale: 0.45, // Makes it half the size
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 4.0),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 9,
+                        color: Colors.white,
+                        strokeCap: StrokeCap.square,
+                      ),
+                    ),
                   ),
-                ),
+                  Text(
+                    'Updating...',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

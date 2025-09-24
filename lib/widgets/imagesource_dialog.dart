@@ -41,7 +41,7 @@ class ImageSourceDialog extends StatelessWidget {
                   const SizedBox(width: 12),
                   Text(
                     'Gallery',
-                    style: TextStyle(color: CupertinoColors.white, fontFamily: 'Google Sans',),
+                    style: TextStyle(color: Theme.of(context).colorScheme.inverseSurface, fontFamily: 'Google Sans',),
                   ),
                 ],
               ),
@@ -60,7 +60,7 @@ class ImageSourceDialog extends StatelessWidget {
                   const SizedBox(width: 12),
                   Text(
                     'Camera',
-                    style: TextStyle(color: CupertinoColors.white, fontFamily: 'Google Sans'),
+                    style: TextStyle(color: Theme.of(context).colorScheme.inverseSurface, fontFamily: 'Google Sans'),
                   ),
                 ],
               ),

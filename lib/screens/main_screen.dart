@@ -180,7 +180,7 @@ class _MainScreenState extends State<MainScreen> {
                 fontSize: isSelected ? 12 : 10,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
-              child: Text(lable),
+              child: Text(lable, style: TextStyle(fontFamily: 'Google Sans')),
             ),
           ],
         ),

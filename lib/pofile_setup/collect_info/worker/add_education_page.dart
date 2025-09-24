@@ -12,10 +12,10 @@ class AddEducationPage extends StatefulWidget {
   const AddEducationPage({super.key, this.onEducationChanged});
 
   @override
-  State<AddEducationPage> createState() => _AddEducationPageState();
+  State<AddEducationPage> createState() => AddEducationPageState();
 }
 
-class _AddEducationPageState extends State<AddEducationPage> {
+class AddEducationPageState extends State<AddEducationPage> {
   List<EducationModel> educationExperiences = [];
 
   void _addEducationExperience(EducationModel experience) {
@@ -46,6 +46,16 @@ class _AddEducationPageState extends State<AddEducationPage> {
     if (widget.onEducationChanged != null) {
       widget.onEducationChanged!(educationExperiences.isNotEmpty);
     }
+  }
+
+  /// Get a copy of the current education experiences
+  List<EducationModel> getEducationExperiences() {
+    return List.from(educationExperiences);
+  }
+
+  /// Check if education data has been added
+  bool hasEducationData() {
+    return educationExperiences.isNotEmpty;
   }
 
   @override

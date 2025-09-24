@@ -13,6 +13,7 @@ import 'package:workie/widgets/bottom_navigation.dart';
 import 'package:workie/widgets/bottom_navigation_with_skip.dart';
 import 'package:workie/widgets/simple_bottom_navigation.dart';
 import '../../../services/add_skills_service.dart';
+import '../../../services/education_data_service.dart';
 import '../../../services/hive_service.dart';
 import '../../../services/overview_service.dart';
 import '../../../services/profile_service.dart';
@@ -33,6 +34,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
   final GlobalKey<AddOverviewPageState> _overviewDetailsKey = GlobalKey();
   final GlobalKey<AddSkillsPageState> _addSkillsKey = GlobalKey();
   final GlobalKey<AddTitlePageState> _addTitleKey = GlobalKey();
+  final GlobalKey<AddEducationPageState> _addEducationKey = GlobalKey();
 
   // Current step in the profile setup process
   int _selectedIndex = 0;
@@ -120,7 +122,8 @@ class _ProfileSetupState extends State<ProfileSetup> {
           _showSnackBar('Please add at least one education to continue, or use the skip button.');
           return;
         }
-        break;
+        _saveEducation();
+        return;
       case 7:
         bool isValid = _personalDetailsKey.currentState?.validateInputs() ?? false;
         if (!isValid) {
@@ -339,6 +342,41 @@ class _ProfileSetupState extends State<ProfileSetup> {
     }
   }
 
+  void _saveEducation() async {
+    final educationState = _addEducationKey.currentState;
+    if (educationState == null || educationState.educationExperiences.isEmpty) {
+      _showSnackBar('Please add at least one education to continue, or use the skip button.');
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      final result = await EducationDataService.saveEducationDataWithCertificates(
+        educationList: educationState.educationExperiences,
+      );
+
+      if (result?['success'] == true) {
+        // Navigate to next page after successful save
+        if (_selectedIndex < _maxIndex) {
+          setState(() {
+            _selectedIndex++;
+          });
+        }
+      } else {
+        _showSnackBar('Failed to save education: ${result?['message'] ?? 'Unknown error'}');
+      }
+    } catch (e) {
+      _showSnackBar('An error occurred while saving education data');
+    } finally {
+      setState(() {
+        _isSaving = false;
+      });
+    }
+  }
+
   // Complete profile setup and navigate to verification
   Future<void> _handleProfileCompletion() async {
     if (_isCompletingProfile || _isSaving) return; // Prevent multiple calls
@@ -524,6 +562,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
             },
           ),
           AddEducationPage(
+            key: _addEducationKey,
             onEducationChanged: (hasEducation) {
               setState(() {
                 _hasEducation = hasEducation;

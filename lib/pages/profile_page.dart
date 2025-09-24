@@ -25,8 +25,6 @@ class ProfileTabPage extends StatefulWidget {
   State<ProfileTabPage> createState() => _ProfileTabPageState();
 }
 
-
-
 class _ProfileTabPageState extends State<ProfileTabPage> {
   String selectedRole = '';
   String _fullName = '';
@@ -159,7 +157,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                     // Profile picture
                     _profileImage(context),
 
-                    //_editProfileButton(),
+                    _editProfileButton(),
                     // Edit button for profile picture
                     _profileImagePicker(context),
                   ],
@@ -203,17 +201,17 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'My Posts',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold
-                    )
+                      'My Posts',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold
+                      )
                   ),
                   Text(
                     '$_totalPostsCount Posts',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                      height: 1
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                        height: 1
                     ),
                   )
                 ],
@@ -225,15 +223,15 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                   onPressed: widget.onCreatePost,
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(
-                        width: 2,
+                      width: 2,
                       color: Theme.of(context).colorScheme.inverseSurface,
                     ),
                   ),
                   child: Text(
-                      'Create-Post',
+                    'Create-Post',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5
                     ),
                   )
               ),
@@ -302,24 +300,24 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                       onPressed: () {
                         Navigator.push(
                             context,
-                          PageRouteBuilder(
-                            pageBuilder: (context, animation, secondaryAnimation) => ProfilePagePostHelper(),
-                            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                              const begin = Offset(1.0, 0.0); // Start from right
-                              const end = Offset.zero; // End at current position
-                              const curve = Curves.easeInOut;
+                            PageRouteBuilder(
+                              pageBuilder: (context, animation, secondaryAnimation) => ProfilePagePostHelper(),
+                              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                const begin = Offset(1.0, 0.0); // Start from right
+                                const end = Offset.zero; // End at current position
+                                const curve = Curves.easeInOut;
 
-                              var tween = Tween(begin: begin, end: end).chain(
-                                CurveTween(curve: curve),
-                              );
+                                var tween = Tween(begin: begin, end: end).chain(
+                                  CurveTween(curve: curve),
+                                );
 
-                              return SlideTransition(
-                                position: animation.drive(tween),
-                                child: child,
-                              );
-                            },
-                            transitionDuration: const Duration(milliseconds: 300),
-                          )
+                                return SlideTransition(
+                                  position: animation.drive(tween),
+                                  child: child,
+                                );
+                              },
+                              transitionDuration: const Duration(milliseconds: 300),
+                            )
                         );
                       },
                       child: Row(
@@ -337,43 +335,6 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
               ),
             ),
           ),
-
-// Option 2: Alternative using Visibility widget (uncomment to use instead)
-// Visibility(
-//   visible: !_isLoadingPosts,
-//   child: Padding(
-//     padding: const EdgeInsets.symmetric(horizontal: 16.0),
-//     child: Container(
-//       decoration: BoxDecoration(
-//         color: Theme.of(context).colorScheme.tertiary,
-//         borderRadius: const BorderRadius.only(
-//           bottomRight: Radius.circular(12),
-//           bottomLeft: Radius.circular(12)
-//         )
-//       ),
-//       child: Row(
-//         mainAxisAlignment: MainAxisAlignment.center,
-//         children: [
-//           TextButton(
-//             onPressed: () {
-//               // Add your onPressed logic here
-//             },
-//             child: Row(
-//               children: [
-//                 Text(
-//                   'Show All ${_selectedChipLabel ?? "Items"}',
-//                   style: Theme.of(context).textTheme.titleSmall
-//                 ),
-//                 const SizedBox(width: 8),
-//                 const Icon(CupertinoIcons.arrow_right)
-//               ],
-//             )
-//           )
-//         ],
-//       ),
-//     ),
-//   ),
-// )
       ],
     );
   }
@@ -395,21 +356,21 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
           child: Column(
             children: [
               Icon(
-                selectedChipIndex == 0 
+                selectedChipIndex == 0
                     ? Iconsax.document_text_copy
-                    : selectedChipIndex == 1 
-                        ? Iconsax.video_play_copy
-                        : Iconsax.gallery_copy,
+                    : selectedChipIndex == 1
+                    ? Iconsax.video_play_copy
+                    : Iconsax.gallery_copy,
                 size: 48,
                 color: Colors.grey.shade400,
               ),
               const SizedBox(height: 16),
               Text(
-                selectedChipIndex == 0 
+                selectedChipIndex == 0
                     ? 'No posts yet'
-                    : selectedChipIndex == 1 
-                        ? 'No videos yet'
-                        : 'No photos yet',
+                    : selectedChipIndex == 1
+                    ? 'No videos yet'
+                    : 'No photos yet',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: Colors.grey.shade600,
                   fontWeight: FontWeight.w500,
@@ -623,42 +584,11 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
               '$_userCity, $_userProvince Province',
               style: Theme.of(context).textTheme.bodyLarge
                   ?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textDarkGrey,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textDarkGrey,
               )
           ),
           const SizedBox(height: 8),
-          /*Row(
-            children: [
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.tertiary,
-                    borderRadius: BorderRadius.all(Radius.circular(5))
-                ),
-                child: Text(
-                    '23 Works'
-                ),
-              ),
-              const SizedBox(width: 12),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.tertiary,
-                    borderRadius: BorderRadius.all(Radius.circular(5))
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.star, size: 18),
-                    const SizedBox(width: 4),
-                    Text(
-                        '4.8 (23 Reviews)'
-                    ),
-                  ],
-                ),
-              )
-            ],
-          )*/
         ],
       ),
     );
@@ -720,31 +650,10 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     return Positioned(
       right: 16,
       top: 125, // Position to overlap background
-      child: InkWell(
-        child: Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFF4E6BF5),
-              shape: BoxShape.rectangle,
-              borderRadius: BorderRadius.all(Radius.circular(5)),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-              child: Row(
-                children: [
-                  Icon(Iconsax.user_edit_copy, size: 18, color: Colors.white),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Edit Profile',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white
-                    ),
-                  )
-                ],
-              ),
-            )
-        ),
-      ),
+      child: IconButton(
+          onPressed: (){},
+          icon: Icon(CupertinoIcons.pencil_outline, size: 32)
+      )
     );
   }
 
