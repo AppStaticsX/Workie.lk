@@ -5,16 +5,8 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/education_model.dart';
+import 'school_logo_service.dart';
 
-/// Service class for handling education data operations with the backend API
-/// 
-/// This service provides methods to:
-/// - Save education data to user profile
-/// - Upload education certificates
-/// - Retrieve user education information
-/// - Validate education data before submission
-/// 
-/// Used primarily when the "Add Personal Info" button is clicked in the profile setup flow
 class EducationDataService {
   static const String _baseUrl = 'https://workie-lk-backend.onrender.com/api';
   static const String _authTokenKey = 'auth_token';
@@ -239,6 +231,53 @@ class EducationDataService {
     } catch (e) {
       if (kDebugMode) print('Error getting education data: $e');
       return null;
+    }
+  }
+
+  /// Get user's education data with school logos
+  static Future<Map<String, dynamic>> getUserEducationDataWithLogos() async {
+    try {
+      final educationData = await getUserEducationData();
+      if (educationData == null) {
+        return {
+          'education': <EducationModel>[],
+          'logos': <String, String>{},
+        };
+      }
+
+      // Get unique school names
+      final schoolNames = educationData
+          .map((edu) => edu.school)
+          .where((school) => school.isNotEmpty)
+          .toSet()
+          .toList();
+
+      // Fetch logos for all schools
+      Map<String, String> schoolLogos = {};
+      if (schoolNames.isNotEmpty) {
+        final schoolInfos = await SchoolLogoService.getMultipleSchoolLogos(schoolNames);
+        
+        for (String schoolName in schoolNames) {
+          final schoolInfo = schoolInfos[schoolName];
+          if (schoolInfo != null && schoolInfo.logoUrl != null) {
+            schoolLogos[schoolName] = schoolInfo.logoUrl!;
+          } else {
+            // Use fallback logo
+            schoolLogos[schoolName] = SchoolLogoService.getFallbackLogoUrl(schoolName);
+          }
+        }
+      }
+
+      return {
+        'education': educationData,
+        'logos': schoolLogos,
+      };
+    } catch (e) {
+      if (kDebugMode) print('Error getting education data with logos: $e');
+      return {
+        'education': <EducationModel>[],
+        'logos': <String, String>{},
+      };
     }
   }
 

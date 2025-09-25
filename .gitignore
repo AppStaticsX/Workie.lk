@@ -54,3 +54,6 @@ Workie.zip
 #backend
 /backend
 /backend/
+
+#frontend
+/lib/secrets/

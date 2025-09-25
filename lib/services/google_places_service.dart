@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'dart:async';
 import 'package:http/http.dart' as http;
+import 'package:workie/secrets/apikeys.dart';
 
 class GooglePlacesService {
   // TODO: Replace with your actual Google Places API key
   // You can get this from: https://console.cloud.google.com/
   // Make sure to enable Places API and restrict the key appropriately
-  static const String _apiKey = 'API_KEY';
+  static const String _apiKey = APIKEYS.GOOGLE_MAPS_API_KEY;
   static const String _baseUrl = 'https://maps.googleapis.com/maps/api/place';
   
   // Singleton pattern

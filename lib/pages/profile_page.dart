@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workie/pages/components/cover_pic_bottomsheet.dart';
+import 'package:workie/pages/components/education_detail_model.dart';
 import 'package:workie/pages/components/profile_page_post_helper.dart';
 import 'package:workie/pages/components/profile_pic_bottomsheet.dart';
 import 'package:workie/values/color.dart';
@@ -11,6 +12,8 @@ import '../services/pull_data/get_user_data.dart';
 import '../services/pull_data/current_user_posts.dart';
 import '../models/post_model.dart';
 import '../services/pull_data/post_data_service.dart';
+import '../services/education_data_service.dart';
+import '../models/education_model.dart';
 
 class ProfileTabPage extends StatefulWidget {
 
@@ -45,11 +48,17 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
   bool _isLoadingPosts = false;
   int _totalPostsCount = 0;
 
+  // Add these variables for education
+  List<EducationModel> _userEducation = [];
+  Map<String, String> _schoolLogos = {};
+  bool _isLoadingEducation = false;
+
   @override
   void initState() {
     _loadUserRole();
     _getUserData();
     _loadUserPosts();
+    _loadEducationData();
     super.initState();
   }
 
@@ -107,10 +116,38 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     });
   }
 
+  Future<void> _loadEducationData() async {
+    setState(() {
+      _isLoadingEducation = true;
+    });
+
+    try {
+      final result = await EducationDataService.getUserEducationDataWithLogos();
+      final educationData = result['education'] as List<EducationModel>;
+      final logos = result['logos'] as Map<String, String>;
+      
+      setState(() {
+        _userEducation = educationData;
+        _schoolLogos = logos;
+        _isLoadingEducation = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingEducation = false;
+        _userEducation = [];
+        _schoolLogos = {};
+      });
+      if (kDebugMode) {
+        print('Error loading education data: $e');
+      }
+    }
+  }
+
   Future<void> _refreshData() async {
     await _loadUserRole();
     await _getUserData();
     await _loadUserPosts();
+    await _loadEducationData();
   }
 
   @override
@@ -179,7 +216,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                 color: Theme.of(context).colorScheme.secondary,
                 height: 12,
               ),
-
+              _educationSection(context)
             ],
           ),
         ),
@@ -187,7 +224,98 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     );
   }
 
+  Widget _educationSection(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+              child: Text(
+                  'Education',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5
+                  )
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: IconButton(
+                  onPressed: _navigateToEducationEdit,
+                  icon: Icon(CupertinoIcons.add)
+              ),
+            )
+          ],
+        ),
+        // Education content
+        _buildEducationContent(),
+      ],
+    );
+  }
 
+  Widget _buildEducationContent() {
+    if (_isLoadingEducation) {
+      return const Padding(
+        padding: EdgeInsets.all(32.0),
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_userEducation.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 32.0),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(
+                CupertinoIcons.book,
+                size: 48,
+                color: Colors.grey[400],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'No Education Added',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Add your education to showcase your qualifications',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[500],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: _userEducation.map((education) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16.0, top: 8),
+          child: EducationDetailModel(
+            school: education.school,
+            degree: education.course,
+            field: education.fieldOfStudy,
+            startDate: education.startYear,
+            endDate: education.endYear ?? 'Present',
+            schoolUrl: _schoolLogos[education.school] ?? 'https://logo.clearbit.com/edu',
+          ),
+        );
+      }).toList(),
+    );
+  }
 
   Widget _myMediaContents(BuildContext context) {
     return Column(
@@ -259,7 +387,9 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                       selectedChipIndex = i;
                     });
                     // You can add logic here to filter content based on selection
-                    print('Selected: ${chipLabels[i]}');
+                    if (kDebugMode) {
+                      print('Selected: ${chipLabels[i]}');
+                    }
                     setState(() {
                       _selectedChipLable = chipLabels[i];
                     });
@@ -498,6 +628,20 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
       print('Share post: $postId');
     }
   }
+
+  void _navigateToEducationEdit() {
+    // Navigate to education management page or show bottom sheet
+    // For now, just refresh the education data
+    if (kDebugMode) {
+      print('Navigate to education edit');
+    }
+    // You can navigate to the AddEducationPage here
+    // Navigator.push(context, MaterialPageRoute(builder: (context) => AddEducationPage()));
+    
+    // For now, just refresh education data
+    _loadEducationData();
+  }
+
   Widget _statsContent() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
