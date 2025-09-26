@@ -426,7 +426,7 @@ class _PostCardModelState extends State<PostCardModel> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           RichText(
-            //overflow: TextOverflow.ellipsis,
+            ////overflow: TextOverflow.ellipsis,
             text: TextSpan(
               style: TextStyle(
                 fontFamily: 'Google Sans',
