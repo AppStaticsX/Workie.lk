@@ -56,4 +56,5 @@ Workie.zip
 /backend/
 
 #frontend
-lib/secrets/
+/lib/secrets/
+/android/app/src/main/AndroidManifest.xml
