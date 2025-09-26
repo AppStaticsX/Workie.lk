@@ -521,6 +521,11 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
                         });
                       }, bRadius: 12,
                       popupMenuItemIcon: Iconsax.save_add_copy,
+                      options: [
+                        PopupMenuOption(title: 'Save', icon: Iconsax.save_add_copy, onTap: (){}),
+                        PopupMenuOption(title: 'Share', icon: Iconsax.share_copy, onTap: (){}),
+                      ],
+                      iconSize: 24,
                       //popupMenuItemIconColor: Theme.of(context).colorScheme.inverseSurface,
                     );
                   },

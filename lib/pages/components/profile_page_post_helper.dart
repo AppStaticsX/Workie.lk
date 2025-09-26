@@ -253,6 +253,11 @@ class _ProfilePagePostHelperState extends State<ProfilePagePostHelper> {
               bRadius: 12,
               popupMenuItemIcon: Iconsax.trash_copy,
               popupMenuItemIconColor: Colors.red,
+              options: [
+                PopupMenuOption(title: 'Save', icon: Iconsax.save_add_copy, onTap: (){}, textColor: Theme.of(context).colorScheme.inverseSurface),
+                PopupMenuOption(title: 'Share', icon: Iconsax.share_copy, onTap: (){}, textColor: Theme.of(context).colorScheme.inverseSurface),
+              ],
+              iconSize: 24,
             ),
           );
         },

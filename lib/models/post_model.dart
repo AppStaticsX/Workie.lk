@@ -37,6 +37,11 @@ class PostCardModel extends StatefulWidget {
   final double bRadius;
   final IconData popupMenuItemIcon;
   final Color? popupMenuItemIconColor;
+  final List<PopupMenuOption> options;
+  final Widget? customIcon;
+  final Color? iconColor;
+  final double iconSize;
+
 
   const PostCardModel({
     super.key,
@@ -63,6 +68,10 @@ class PostCardModel extends StatefulWidget {
     required this.bRadius,
     required this.popupMenuItemIcon,
     this.popupMenuItemIconColor,
+    this.customIcon,
+    required this.options,
+    this.iconColor,
+    required this.iconSize,
   });
 
   @override
@@ -229,7 +238,7 @@ class _PostCardModelState extends State<PostCardModel> {
     if (widget.content.length <= 95) {
       return widget.content;
     }
-    return widget.content.substring(0, 95);
+    return '${widget.content.substring(0, 95)}...';
   }
 
   // Helper method to check if content needs truncation
@@ -361,26 +370,49 @@ class _PostCardModelState extends State<PostCardModel> {
               ],
             ),
           ),
-          PopupMenuButton<String>(
-            icon: Transform.rotate(angle: math.pi,
-            child: Icon(CupertinoIcons.dot_radiowaves_left_right, color: Colors.grey.shade400)),
-            onSelected: (String result) {
-              // Handle menu item selection
-              if (kDebugMode) {
-                print('Selected: $result');
+          PopupMenuButton<int>(
+            icon: widget.customIcon ??
+                Transform.rotate(
+                  angle: math.pi,
+                  child: Icon(
+                    CupertinoIcons.dot_radiowaves_left_right,
+                    color: widget.iconColor ?? Colors.grey.shade400,
+                    size: widget.iconSize,
+                  ),
+                ),
+            onSelected: (int index) {
+              if (index >= 0 && index < widget.options.length) {
+                widget.options[index].onTap();
               }
             },
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              PopupMenuItem<String>(
-                value: 'option1',
-                child: ListTile(
-                  leading: Icon(widget.popupMenuItemIcon, size: 20, color: widget.popupMenuItemIconColor),
-                  title: const Text('Save Post', style: TextStyle(fontSize: 16)),
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-            ],
+            itemBuilder: (BuildContext context) => List.generate(
+              widget.options.length,
+                  (index) {
+                final option = widget.options[index];
+                return PopupMenuItem<int>(
+                  value: index,
+                  child: ListTile(
+                    leading: Icon(
+                      option.icon,
+                      color: option.isDanger
+                          ? Colors.red
+                          : option.iconColor ?? Colors.grey.shade600,
+                    ),
+                    title: Text(
+                      option.title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: option.isDanger
+                            ? Colors.red
+                            : option.textColor ?? Colors.black87,
+                      ),
+                    ),
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                );
+              },
+            ),
           )
         ],
       ),
@@ -394,6 +426,7 @@ class _PostCardModelState extends State<PostCardModel> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           RichText(
+            //overflow: TextOverflow.ellipsis,
             text: TextSpan(
               style: TextStyle(
                 fontFamily: 'Google Sans',
@@ -915,4 +948,22 @@ class _PostCardModelState extends State<PostCardModel> {
       ),
     );
   }
+}
+
+class PopupMenuOption {
+  final String title;
+  final IconData icon;
+  final Color? iconColor;
+  final Color? textColor;
+  final VoidCallback onTap;
+  final bool isDanger;
+
+  PopupMenuOption({
+    required this.title,
+    required this.icon,
+    required this.onTap,
+    this.iconColor,
+    this.textColor,
+    this.isDanger = false,
+  });
 }
