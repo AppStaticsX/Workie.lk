@@ -14,6 +14,7 @@ import 'package:workie/widgets/bottom_navigation_with_skip.dart';
 import 'package:workie/widgets/simple_bottom_navigation.dart';
 import '../../../services/add_skills_service.dart';
 import '../../../services/education_data_service.dart';
+import '../../../services/experience_data_service.dart';
 import '../../../services/hive_service.dart';
 import '../../../services/overview_service.dart';
 import '../../../services/profile_service.dart';
@@ -35,6 +36,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
   final GlobalKey<AddSkillsPageState> _addSkillsKey = GlobalKey();
   final GlobalKey<AddTitlePageState> _addTitleKey = GlobalKey();
   final GlobalKey<AddEducationPageState> _addEducationKey = GlobalKey();
+  final GlobalKey<AddExperiencePageState> _addExperienceKey = GlobalKey();
 
   // Current step in the profile setup process
   int _selectedIndex = 0;
@@ -112,11 +114,13 @@ class _ProfileSetupState extends State<ProfileSetup> {
         _saveOverview();
         return;
       case 5:
+        // Save experience data when moving to education page
         if (!_hasExperience) {
           _showSnackBar('Please add at least one work experience to continue, or use the skip button.');
           return;
         }
-        break;
+        _saveExperience();
+        return;
       case 6:
         if (!_hasEducation) {
           _showSnackBar('Please add at least one education to continue, or use the skip button.');
@@ -342,6 +346,41 @@ class _ProfileSetupState extends State<ProfileSetup> {
     }
   }
 
+  // Save user's work experience to backend
+  Future<void> _saveExperience() async {
+    final experienceState = _addExperienceKey.currentState;
+    if (experienceState == null || experienceState.workExperiencesList.isEmpty) {
+      _showSnackBar('Please add at least one experience to continue, or use the skip button.');
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      final result = await ExperienceDataService.saveMultipleExperiences(
+        experienceList: experienceState.workExperiencesList,
+      );
+
+      if (result?['success'] == true) {
+        if (_selectedIndex < _maxIndex) {
+          setState(() {
+            _selectedIndex++;
+          });
+        }
+      } else {
+        _showSnackBar(result?['message'] ?? 'Failed to save work experience');
+      }
+    } catch (e) {
+      _showSnackBar('An error occurred while saving work experience');
+    } finally {
+      setState(() {
+        _isSaving = false;
+      });
+    }
+  }
+
   void _saveEducation() async {
     final educationState = _addEducationKey.currentState;
     if (educationState == null || educationState.educationExperiences.isEmpty) {
@@ -555,6 +594,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
             },
           ),
           AddExperiencePage(
+            key: _addExperienceKey,
             onExperienceChanged: (hasExperience) {
               setState(() {
                 _hasExperience = hasExperience;

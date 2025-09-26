@@ -11,11 +11,14 @@ class AddExperiencePage extends StatefulWidget {
   const AddExperiencePage({super.key, this.onExperienceChanged});
 
   @override
-  State<AddExperiencePage> createState() => _AddExperiencePageState();
+  State<AddExperiencePage> createState() => AddExperiencePageState();
 }
 
-class _AddExperiencePageState extends State<AddExperiencePage> {
+class AddExperiencePageState extends State<AddExperiencePage> {
   List<WorkExperienceModel> workExperiences = [];
+
+  // Getter to access work experiences from parent
+  List<WorkExperienceModel> get workExperiencesList => workExperiences;
 
   void _addWorkExperience(WorkExperienceModel experience) {
     setState(() {

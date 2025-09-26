@@ -331,7 +331,8 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                   Text(
                       'My Posts',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.5
                       )
                   ),
                   Text(

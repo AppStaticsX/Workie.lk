@@ -691,7 +691,15 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
                       ),
                     ),
                   )
-                : null,
+                : schoolController.text.isNotEmpty
+                  ? IconButton(
+                  onPressed: () {
+                    schoolController.clear();
+                    _removeOverlay();
+                  },
+                  icon: Icon(Icons.close, size: 20)
+              )
+                  : Icon(Icons.school)
             ),
           ),
         ),

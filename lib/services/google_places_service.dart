@@ -68,6 +68,59 @@ class GooglePlacesService {
     }
   }
 
+  /// Search for companies and organizations using Google Places API
+  Future<List<PlaceAutocomplete>> getCompanySuggestions(String query) async {
+    if (query.isEmpty) return [];
+
+    try {
+      // Using Place Autocomplete API with type 'establishment' for companies/organizations
+      final response = await http.get(
+        Uri.parse(
+          '$_baseUrl/autocomplete/json'
+          '?input=$query'
+          '&types=establishment'
+          '&components=country:lk' // Restrict to Sri Lanka, change as needed
+          '&key=$_apiKey'
+        ),
+        headers: {
+          'Accept': 'application/json',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        if (data['status'] == 'OK') {
+          List<dynamic> predictions = data['predictions'] ?? [];
+          
+          // Filter results to prioritize business establishments
+          List<PlaceAutocomplete> filteredResults = predictions
+              .where((prediction) => _isBusinessEstablishment(prediction['description'], prediction['types']))
+              .map((prediction) => PlaceAutocomplete.fromJson(prediction))
+              .toList();
+          
+          // If no business establishments found, return all results
+          if (filteredResults.isEmpty) {
+            filteredResults = predictions
+                .map((prediction) => PlaceAutocomplete.fromJson(prediction))
+                .toList();
+          }
+          
+          return filteredResults.take(5).toList(); // Limit to 5 results
+        } else {
+          print('Google Places API Error: ${data['status']} - ${data['error_message'] ?? 'Unknown error'}');
+          return [];
+        }
+      } else {
+        print('HTTP Error: ${response.statusCode} - ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      print('Error fetching company suggestions: $e');
+      return [];
+    }
+  }
+
   /// Helper method to identify educational institutions
   bool _isEducationalInstitution(String description) {
     final educationalKeywords = [
@@ -78,6 +131,31 @@ class GooglePlacesService {
     
     final lowerDescription = description.toLowerCase();
     return educationalKeywords.any((keyword) => lowerDescription.contains(keyword));
+  }
+
+  /// Helper method to identify business establishments
+  bool _isBusinessEstablishment(String description, List<dynamic> types) {
+    // Exclude educational institutions and residential areas
+    final excludeKeywords = [
+      'school', 'college', 'university', 'institute', 'academy', 'campus',
+      'house', 'home', 'residence', 'apartment', 'flat'
+    ];
+    
+    final businessTypes = [
+      'establishment', 'point_of_interest', 'store', 'finance',
+      'health', 'food', 'lodging', 'gas_station', 'shopping_mall'
+    ];
+    
+    final lowerDescription = description.toLowerCase();
+    final typeStrings = types.map((type) => type.toString().toLowerCase()).toList();
+    
+    // Exclude if contains exclude keywords
+    if (excludeKeywords.any((keyword) => lowerDescription.contains(keyword))) {
+      return false;
+    }
+    
+    // Include if matches business types
+    return businessTypes.any((type) => typeStrings.contains(type));
   }
 
   /// Get detailed information about a place (optional, for future use)

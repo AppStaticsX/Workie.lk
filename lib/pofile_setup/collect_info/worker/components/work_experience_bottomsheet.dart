@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:async';
 import 'package:workie/models/work_experience_model.dart';
+import 'package:workie/services/google_places_service.dart';
 
 class WorkExperienceBottomsheet extends StatefulWidget {
   final VoidCallback closeBottomSheet;
@@ -33,6 +35,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
   bool _isDateRangeInvalid = false;
   bool _hasErrors = false;
   bool _isChecked = false;
+  bool _isLoadingSuggestions = false;
 
   final TextEditingController titleController = TextEditingController();
   final TextEditingController companyController = TextEditingController();
@@ -41,6 +44,15 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
   final FocusNode titleFocusNode = FocusNode();
   final FocusNode companyFocusNode = FocusNode();
   final FocusNode locationFocusNode = FocusNode();
+
+  // Company autocomplete variables
+  List<PlaceAutocomplete> _companySuggestions = [];
+  bool _showCompanySuggestions = false;
+  Timer? _companyDebounce;
+  final GooglePlacesService _placesService = GooglePlacesService();
+  OverlayEntry? _companySuggestionsOverlay;
+  final LayerLink _companyLayerLink = LayerLink();
+  String _selectedCompanyPlaceId = '';
 
   @override
   void initState() {
@@ -77,6 +89,8 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
     titleFocusNode.dispose();
     companyFocusNode.dispose();
     locationFocusNode.dispose();
+    _companyDebounce?.cancel();
+    _hideSuggestionOverlay();
     super.dispose();
   }
 
@@ -140,6 +154,145 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
     DateTime endDate = DateTime(endYearInt, endMonthIndex);
 
     return endDate.isBefore(startDate);
+  }
+
+  // Company autocomplete methods
+  void _onCompanyQueryChanged(String query) {
+    if (_companyDebounce?.isActive ?? false) _companyDebounce!.cancel();
+
+    // Set loading state immediately when user starts typing
+    setState(() {
+      _isLoadingSuggestions = query.isNotEmpty;
+    });
+
+    _companyDebounce = Timer(const Duration(milliseconds: 500), () {
+      if (query.isNotEmpty) {
+        _searchCompanies(query);
+      } else {
+        _hideSuggestionOverlay();
+        setState(() {
+          _isLoadingSuggestions = false;
+        });
+      }
+    });
+  }
+
+  Future<void> _searchCompanies(String query) async {
+    try {
+      final suggestions = await _placesService.getCompanySuggestions(query);
+      setState(() {
+        _companySuggestions = suggestions;
+        _showCompanySuggestions = suggestions.isNotEmpty;
+        _isLoadingSuggestions = false;
+      });
+      
+      if (_showCompanySuggestions) {
+        _showSuggestionOverlay();
+      } else {
+        _hideSuggestionOverlay();
+      }
+    } catch (e) {
+      print('Error searching companies: $e');
+      _hideSuggestionOverlay();
+      setState(() {
+        _isLoadingSuggestions = false;
+      });
+    }
+  }
+
+  void _showSuggestionOverlay() {
+    _hideSuggestionOverlay(); // Remove existing overlay
+    
+    _companySuggestionsOverlay = OverlayEntry(
+      builder: (context) => Positioned(
+        width: MediaQuery.of(context).size.width - 48, // Account for padding
+        child: CompositedTransformFollower(
+          link: _companyLayerLink,
+          showWhenUnlinked: false,
+          offset: const Offset(0, 50), // Position below the text field
+          child: Material(
+            elevation: 4,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              constraints: const BoxConstraints(maxHeight: 200),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                ),
+              ),
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                itemCount: _companySuggestions.length,
+                itemBuilder: (context, index) {
+                  final suggestion = _companySuggestions[index];
+                  return ListTile(
+                    dense: true,
+                    title: Text(
+                      suggestion.mainText,
+                      style: const TextStyle(fontWeight: FontWeight.normal),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: suggestion.secondaryText.isNotEmpty
+                        ? Text(
+                            suggestion.secondaryText,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 12,
+                            ),
+                          )
+                        : null,
+                    onTap: () => _onCompanySuggestionSelected(suggestion),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    
+    Overlay.of(context).insert(_companySuggestionsOverlay!);
+  }
+
+  void _hideSuggestionOverlay() {
+    _companySuggestionsOverlay?.remove();
+    _companySuggestionsOverlay = null;
+    setState(() {
+      _showCompanySuggestions = false;
+    });
+  }
+
+  Future<void> _onCompanySuggestionSelected(PlaceAutocomplete suggestion) async {
+    companyController.text = suggestion.mainText;
+    _selectedCompanyPlaceId = suggestion.placeId;
+    _hideSuggestionOverlay();
+    
+    // Auto-update location field with company address
+    if (suggestion.secondaryText.isNotEmpty) {
+      locationController.text = suggestion.secondaryText;
+    } else {
+      // Fetch detailed place information for more accurate address
+      try {
+        final placeDetails = await _placesService.getPlaceDetails(suggestion.placeId);
+        if (placeDetails != null && placeDetails.formattedAddress.isNotEmpty) {
+          locationController.text = placeDetails.formattedAddress;
+        }
+      } catch (e) {
+        print('Error fetching place details: $e');
+      }
+    }
+    
+    // Clear validation errors
+    if (_isCompanyEmpty) setState(() => _isCompanyEmpty = false);
+    if (_isLocationEmpty) setState(() => _isLocationEmpty = false);
+    
+    _dismissKeyboard();
   }
 
   void _handleSave() {
@@ -340,55 +493,92 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
           ),
         ),
         const SizedBox(height: 4),
-        TextFormField(
-          controller: companyController,
-          focusNode: companyFocusNode,
-          onChanged: (value) {
-            if (_isCompanyEmpty && value.isNotEmpty) {
-              setState(() => _isCompanyEmpty = false);
-            }
-          },
-          decoration: InputDecoration(
-            hintText: 'Ex: Organization or Company',
-            hintStyle: TextStyle(
-                color: Colors.grey
-            ),
-            filled: true,
-            fillColor: Theme.of(context).colorScheme.tertiary,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.outline,
-                width: 1.5,
+        CompositedTransformTarget(
+          link: _companyLayerLink,
+          child: TextFormField(
+            controller: companyController,
+            focusNode: companyFocusNode,
+            onChanged: (value) {
+              if (_isCompanyEmpty && value.isNotEmpty) {
+                setState(() => _isCompanyEmpty = false);
+              }
+              _onCompanyQueryChanged(value);
+            },
+            onTap: () {
+              if (companyController.text.isNotEmpty) {
+                _onCompanyQueryChanged(companyController.text);
+              }
+            },
+            decoration: InputDecoration(
+              hintText: 'Ex: Organization or Company',
+              hintStyle: TextStyle(
+                  color: Colors.grey
               ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: _isCompanyEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-                width: 1.5,
+              filled: true,
+              fillColor: Theme.of(context).colorScheme.tertiary,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              suffixIcon: _isLoadingSuggestions
+                  ? Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: Transform.scale(
+                    scale: 0.45, // Makes it half the size
+                    child: CircularProgressIndicator(
+                      strokeWidth: 7,
+                      color: Colors.white,
+                      strokeCap: StrokeCap.square,
+                    ),
+                  ),
+                ),
+              )
+                  :
+              companyController.text.isNotEmpty
+                  ? IconButton(
+                      onPressed: () {
+                        companyController.clear();
+                        locationController.clear();
+                        _hideSuggestionOverlay();
+                        _selectedCompanyPlaceId = '';
+                      },
+                      icon: const Icon(Icons.clear, size: 20),
+                    )
+                  : const Icon(Icons.business, size: 20),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.outline,
+                  width: 1.5,
+                ),
               ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: _isCompanyEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
-                width: 2,
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: _isCompanyEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                  width: 1.5,
+                ),
               ),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Colors.red,
-                width: 1.5,
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: _isCompanyEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
+                  width: 2,
+                ),
               ),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Colors.red,
-                width: 2,
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: Colors.red,
+                  width: 1.5,
+                ),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: Colors.red,
+                  width: 2,
+                ),
               ),
             ),
           ),
