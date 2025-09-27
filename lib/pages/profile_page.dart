@@ -131,7 +131,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
       final result = await EducationDataService.getUserEducationDataWithLogos();
       final educationData = result['education'] as List<EducationModel>;
       final logos = result['logos'] as Map<String, String>;
-      
+
       setState(() {
         _userEducation = educationData;
         _schoolLogos = logos;
@@ -157,13 +157,13 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     try {
       // Get saved post IDs from Hive
       final savedPostIds = await HiveService.getSavedPostIds();
-      
+
       if (kDebugMode) {
         print('=== DEBUG: _loadSavedPosts START ===');
         print('Retrieved saved post IDs: $savedPostIds');
         print('Number of saved posts: ${savedPostIds.length}');
       }
-      
+
       if (savedPostIds.isEmpty) {
         if (kDebugMode) {
           print('No saved post IDs found in Hive');
@@ -183,11 +183,11 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
           print('Attempting to fetch posts using getPostsByIds...');
         }
         final savedPostsFromBackend = await PostDataService.getPostsByIds(savedPostIds);
-        
+
         if (kDebugMode) {
           print('Batch fetch returned ${savedPostsFromBackend.length} posts');
         }
-        
+
         // Format posts for UI
         for (var post in savedPostsFromBackend) {
           try {
@@ -205,7 +205,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
             // Skip this post instead of adding an error template
           }
         }
-        
+
         if (kDebugMode) {
           print('Formatted ${formattedSavedPosts.length} posts from batch');
         }
@@ -213,7 +213,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
         if (kDebugMode) {
           print('Batch fetch failed, trying individual fetch: $e');
         }
-        
+
         // Fallback: Try to fetch posts individually
         for (String savedId in savedPostIds) {
           try {
@@ -244,7 +244,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
             }
           }
         }
-        
+
         // If individual fetch also fails, try searching through feed posts
         if (formattedSavedPosts.isEmpty) {
           try {
@@ -252,14 +252,14 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
               print('Trying fallback search through feed posts...');
             }
             final feedPosts = await PostDataService.getFeedPosts(page: 1, limit: 50);
-            
+
             for (String savedId in savedPostIds) {
               try {
                 final foundPost = feedPosts.firstWhere(
-                  (post) => post['_id'] == savedId,
+                      (post) => post['_id'] == savedId,
                   orElse: () => {},
                 );
-                
+
                 if (foundPost.isNotEmpty) {
                   try {
                     final formattedPost = await PostDataService.formatSavedPostForWidget(foundPost);
@@ -292,12 +292,12 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
         print('=== FINAL RESULT ===');
         print('Total formatted saved posts: ${formattedSavedPosts.length}');
       }
-      
+
       setState(() {
         _savedPosts = formattedSavedPosts;
         _isLoadingSavedPosts = false;
       });
-      
+
       if (kDebugMode) {
         print('setState completed. _savedPosts length: ${_savedPosts.length}');
         print('=== _loadSavedPosts COMPLETED ===');
@@ -407,7 +407,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                   'Education',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w900,
-                    letterSpacing: 0.5
+                      letterSpacing: 0.5
                   )
               ),
             ),
@@ -559,12 +559,12 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                       selectedChipIndex = i;
                       _selectedChipLable = chipLabels[i];
                     });
-                    
+
                     // Load saved posts when "Saved" chip is selected
                     if (chipLabels[i] == 'Saved') {
                       _loadSavedPosts();
                     }
-                    
+
                     if (kDebugMode) {
                       print('Selected: ${chipLabels[i]}');
                     }
@@ -652,14 +652,14 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
       print('_savedPosts.length: ${_savedPosts.length}');
       print('_userPosts.length: ${_userPosts.length}');
     }
-    
+
     // Show loading indicator for the selected chip
     bool isLoading = selectedChipIndex == 3 ? _isLoadingSavedPosts : _isLoadingPosts;
-    
+
     if (kDebugMode) {
       print('isLoading: $isLoading');
     }
-    
+
     if (isLoading) {
       return const Padding(
         padding: EdgeInsets.all(32.0),
@@ -671,7 +671,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
 
     // Check if the relevant data source is empty
     bool isEmpty = selectedChipIndex == 3 ? _savedPosts.isEmpty : _userPosts.isEmpty;
-    
+
     if (isEmpty) {
       return Padding(
         padding: const EdgeInsets.all(32.0),
@@ -763,7 +763,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
         children: [
           // Show only the first (latest) post from filtered posts
           if (filteredPosts.isNotEmpty) ...[
-            if (kDebugMode) 
+            if (kDebugMode)
               Text('DEBUG: Rendering PostCardModel for post ID: ${filteredPosts[0]['id']}'),
             Padding(
               padding: const EdgeInsets.only(bottom: 0),
@@ -791,16 +791,16 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                 popupMenuItemIconColor: Colors.red,
                 options: [
                   PopupMenuOption(
-                    title: 'Save', 
-                    icon: Iconsax.save_add_copy, 
-                    onTap: () => HiveService.savePostId(filteredPosts[0]['id']),
-                    textColor: Theme.of(context).colorScheme.inverseSurface
+                      title: 'Save',
+                      icon: Iconsax.save_add_copy,
+                      onTap: () => HiveService.savePostId(filteredPosts[0]['id']),
+                      textColor: Theme.of(context).colorScheme.inverseSurface
                   ),
                   PopupMenuOption(
-                    title: 'Share', 
-                    icon: Iconsax.share_copy, 
-                    onTap: () => _handlePostShare(filteredPosts[0]['id']), 
-                    textColor: Theme.of(context).colorScheme.inverseSurface
+                      title: 'Share',
+                      icon: Iconsax.share_copy,
+                      onTap: () => _handlePostShare(filteredPosts[0]['id']),
+                      textColor: Theme.of(context).colorScheme.inverseSurface
                   ),
                 ],
                 iconSize: 24,
@@ -819,7 +819,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
       print('_savedPosts.length: ${_savedPosts.length}');
       print('_userPosts.length: ${_userPosts.length}');
     }
-    
+
     List<Map<String, dynamic>> result;
     switch (selectedChipIndex) {
       case 0: // Posts - show all posts
@@ -850,11 +850,11 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
         result = _userPosts;
         break;
     }
-    
+
     if (kDebugMode) {
       print('_filterPostsByChip returning ${result.length} posts');
     }
-    
+
     return result;
   }
 
@@ -892,7 +892,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     }
     // You can navigate to the AddEducationPage here
     // Navigator.push(context, MaterialPageRoute(builder: (context) => AddEducationPage()));
-    
+
     // For now, just refresh education data
     _loadEducationData();
   }
@@ -917,7 +917,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
       } else {
         await HiveService.removePostId(postId);
       }
-      
+
       // Refresh saved posts if currently viewing them
       refreshSavedPosts();
     } catch (e) {
@@ -1077,12 +1077,12 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
 
   Positioned _editProfileButton() {
     return Positioned(
-      right: 16,
-      top: 125, // Position to overlap background
-      child: IconButton(
-          onPressed: (){},
-          icon: Icon(CupertinoIcons.pencil_outline, size: 32)
-      )
+        right: 16,
+        top: 125, // Position to overlap background
+        child: IconButton(
+            onPressed: (){},
+            icon: Icon(CupertinoIcons.pencil_outline, size: 32)
+        )
     );
   }
 
