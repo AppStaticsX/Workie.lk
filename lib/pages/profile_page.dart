@@ -507,7 +507,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                       )
                   ),
                   Text(
-                    '$_totalPostsCount Posts',
+                    '$_totalPostsCount posts found. 🎉',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).colorScheme.primary,
@@ -1014,7 +1014,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
               style: Theme.of(context).textTheme.bodyLarge
                   ?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: AppColors.textDarkGrey,
+                color: Theme.of(context).colorScheme.primary,
               )
           ),
           const SizedBox(height: 8),
