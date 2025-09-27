@@ -5,9 +5,14 @@ import '../hive_db/work_selection_model.dart';
 class HiveService {
   static const String _workSelectionBoxName = 'work_selections';
   static const String _workSelectionKey = 'user_work_selection';
+  
+  // Post ID storage constants
+  static const String _savedPostsBoxName = 'saved_posts';
+  static const String _savedPostsListKey = 'saved_posts_list';
 
-  // Keep a reference to the opened box
+  // Keep a reference to the opened boxes
   static Box<WorkSelection>? _workSelectionBox;
+  static Box? _savedPostsBox;
 
   // Initialize Hive and register adapters
   static Future<void> initHive() async {
@@ -17,9 +22,13 @@ class HiveService {
         Hive.registerAdapter(WorkSelectionAdapter());
       }
 
-      // Open the box and keep it open
+      // Open the boxes and keep them open
       if (_workSelectionBox == null || !_workSelectionBox!.isOpen) {
         _workSelectionBox = await Hive.openBox<WorkSelection>(_workSelectionBoxName);
+      }
+      
+      if (_savedPostsBox == null || !_savedPostsBox!.isOpen) {
+        _savedPostsBox = await Hive.openBox(_savedPostsBoxName);
       }
     } catch (e) {
       rethrow;
@@ -32,6 +41,14 @@ class HiveService {
       await initHive();
     }
     return _workSelectionBox!;
+  }
+
+  // Get the saved posts box (open it if not already open)
+  static Future<Box> _getSavedPostsBox() async {
+    if (_savedPostsBox == null || !_savedPostsBox!.isOpen) {
+      await initHive();
+    }
+    return _savedPostsBox!;
   }
 
   // Save work selection to Hive
@@ -185,12 +202,207 @@ class HiveService {
     }
   }
 
+  static Future<bool> savePostId(String postId) async {
+    try {
+      final box = await _getSavedPostsBox();
+      
+      // Get existing saved posts list
+      List<String> savedPosts = getSavedPostsSync(box);
+      
+      // Check if post is already saved
+      if (savedPosts.contains(postId)) {
+        if (kDebugMode) {
+          print('Post $postId is already saved');
+        }
+        return false; // Already saved
+      }
+      
+      // Add new post ID to the beginning of the list (most recent first)
+      savedPosts.insert(0, postId);
+      
+      // Save updated list
+      await box.put(_savedPostsListKey, savedPosts);
+      
+      if (kDebugMode) {
+        print('Saved post ID: $postId');
+        print('Total saved posts: ${savedPosts.length}');
+      }
+      
+      return true; // Successfully saved
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error saving post ID: $e');
+      }
+      return false;
+    }
+  }
+
+  /// Remove a post ID from the saved posts list
+  static Future<bool> removePostId(String postId) async {
+    try {
+      final box = await _getSavedPostsBox();
+      
+      // Get existing saved posts list
+      List<String> savedPosts = getSavedPostsSync(box);
+      
+      // Check if post exists in the list
+      if (!savedPosts.contains(postId)) {
+        if (kDebugMode) {
+          print('Post $postId is not in saved posts');
+        }
+        return false; // Not found
+      }
+      
+      // Remove the post ID
+      savedPosts.remove(postId);
+      
+      // Save updated list
+      await box.put(_savedPostsListKey, savedPosts);
+      
+      if (kDebugMode) {
+        print('Removed post ID: $postId');
+        print('Total saved posts: ${savedPosts.length}');
+      }
+      
+      return true; // Successfully removed
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error removing post ID: $e');
+      }
+      return false;
+    }
+  }
+
+  /// Get all saved post IDs
+  static Future<List<String>> getSavedPostIds() async {
+    try {
+      final box = await _getSavedPostsBox();
+      return getSavedPostsSync(box);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting saved post IDs: $e');
+      }
+      return [];
+    }
+  }
+
+  /// Check if a specific post ID is saved
+  static Future<bool> isPostSaved(String postId) async {
+    try {
+      final box = await _getSavedPostsBox();
+      final savedPosts = getSavedPostsSync(box);
+      return savedPosts.contains(postId);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error checking if post is saved: $e');
+      }
+      return false;
+    }
+  }
+
+  /// Get the count of saved posts
+  static Future<int> getSavedPostsCount() async {
+    try {
+      final savedPosts = await getSavedPostIds();
+      return savedPosts.length;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting saved posts count: $e');
+      }
+      return 0;
+    }
+  }
+
+  /// Clear all saved posts
+  static Future<void> clearAllSavedPosts() async {
+    try {
+      final box = await _getSavedPostsBox();
+      await box.delete(_savedPostsListKey);
+      
+      if (kDebugMode) {
+        print('Cleared all saved posts');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error clearing saved posts: $e');
+      }
+    }
+  }
+
+  /// Toggle post save status (save if not saved, remove if saved)
+  static Future<bool> togglePostSave(String postId) async {
+    try {
+      final isCurrentlySaved = await isPostSaved(postId);
+      
+      if (isCurrentlySaved) {
+        await removePostId(postId);
+        return false; // Now unsaved
+      } else {
+        await savePostId(postId);
+        return true; // Now saved
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error toggling post save status: $e');
+      }
+      return false;
+    }
+  }
+
+  /// Get recent saved post IDs with limit
+  static Future<List<String>> getRecentSavedPostIds({int limit = 10}) async {
+    try {
+      final allSavedPosts = await getSavedPostIds();
+      
+      if (allSavedPosts.length <= limit) {
+        return allSavedPosts;
+      }
+      
+      return allSavedPosts.sublist(0, limit);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting recent saved post IDs: $e');
+      }
+      return [];
+    }
+  }
+
+  /// Helper method to get saved posts synchronously from box
+  static List<String> getSavedPostsSync(Box box) {
+    try {
+      final savedPostsData = box.get(_savedPostsListKey);
+      
+      if (savedPostsData == null) {
+        return [];
+      }
+      
+      // Handle both List<String> and List<dynamic>
+      if (savedPostsData is List<String>) {
+        return savedPostsData;
+      } else if (savedPostsData is List) {
+        return savedPostsData.map((item) => item.toString()).toList();
+      }
+      
+      return [];
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error in getSavedPostsSync: $e');
+      }
+      return [];
+    }
+  }
+
   // Close all boxes (call this when app is closing)
   static Future<void> closeBoxes() async {
     try {
       if (_workSelectionBox != null && _workSelectionBox!.isOpen) {
         await _workSelectionBox!.close();
         _workSelectionBox = null;
+      }
+      
+      if (_savedPostsBox != null && _savedPostsBox!.isOpen) {
+        await _savedPostsBox!.close();
+        _savedPostsBox = null;
       }
     } catch (e) {
       if (kDebugMode) {
@@ -199,18 +411,18 @@ class HiveService {
     }
   }
 
-  // Debug method to print all data in the box
+  // Debug method to print all data in both boxes
   static Future<void> debugPrintAllData() async {
     try {
-      final box = await _getBox();
-
+      // Work Selection Box Debug
+      final workBox = await _getBox();
       if (kDebugMode) {
-        print('=== All Hive Data ===');
-        print('Total keys in box: ${box.keys.length}');
+        print('=== Work Selection Hive Data ===');
+        print('Total keys in work selection box: ${workBox.keys.length}');
       }
 
-      for (var key in box.keys) {
-        final value = box.get(key);
+      for (var key in workBox.keys) {
+        final value = workBox.get(key);
         if (kDebugMode) {
           if (value is WorkSelection) {
             print('Key: $key, Category: ${value.categoryTitle}, Options: ${value.selectedOptions}');
@@ -220,7 +432,7 @@ class HiveService {
         }
       }
 
-      // Also print the new format data
+      // Also print the parsed category selections
       final allSelections = await getAllCategorySelections();
       if (kDebugMode) {
         print('=== Parsed Category Selections ===');
@@ -228,6 +440,31 @@ class HiveService {
         allSelections.forEach((category, options) {
           print('Category: $category, Options: $options');
         });
+      }
+
+      // Saved Posts Box Debug
+      try {
+        final savedPostsBox = await _getSavedPostsBox();
+        final savedPosts = await getSavedPostIds();
+        
+        if (kDebugMode) {
+          print('=== Saved Posts Hive Data ===');
+          print('Total keys in saved posts box: ${savedPostsBox.keys.length}');
+          print('Number of saved posts: ${savedPosts.length}');
+          
+          if (savedPosts.isNotEmpty) {
+            print('Saved post IDs:');
+            for (int i = 0; i < savedPosts.length; i++) {
+              print('  ${i + 1}. ${savedPosts[i]}');
+            }
+          } else {
+            print('No saved posts found');
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error accessing saved posts box: $e');
+        }
       }
     } catch (e) {
       if (kDebugMode) {

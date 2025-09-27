@@ -158,6 +158,51 @@ class GooglePlacesService {
     return businessTypes.any((type) => typeStrings.contains(type));
   }
 
+  /// Search for cities and towns using Google Places API
+  Future<List<PlaceAutocomplete>> getCitySuggestions(String query) async {
+    if (query.isEmpty) return [];
+
+    try {
+      // Using Place Autocomplete API with type '(cities)' for cities/towns
+      final response = await http.get(
+        Uri.parse(
+          '$_baseUrl/autocomplete/json'
+          '?input=$query'
+          '&types=(cities)'
+          '&components=country:lk' // Restrict to Sri Lanka, change as needed
+          '&key=$_apiKey'
+        ),
+        headers: {
+          'Accept': 'application/json',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        if (data['status'] == 'OK') {
+          List<dynamic> predictions = data['predictions'] ?? [];
+          
+          // Convert predictions to PlaceAutocomplete objects
+          List<PlaceAutocomplete> results = predictions
+              .map((prediction) => PlaceAutocomplete.fromJson(prediction))
+              .toList();
+          
+          return results.take(5).toList(); // Limit to 5 results
+        } else {
+          print('Google Places API Error: ${data['status']} - ${data['error_message'] ?? 'Unknown error'}');
+          return [];
+        }
+      } else {
+        print('HTTP Error: ${response.statusCode} - ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      print('Error fetching city suggestions: $e');
+      return [];
+    }
+  }
+
   /// Get detailed information about a place (optional, for future use)
   Future<PlaceDetails?> getPlaceDetails(String placeId) async {
     try {

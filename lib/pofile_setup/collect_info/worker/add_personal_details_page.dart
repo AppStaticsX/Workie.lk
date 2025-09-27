@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:pinput/pinput.dart';
 import 'package:workie/values/color.dart';
 import 'components/profile_pic_bottomsheet.dart';
+import '../../../services/google_places_service.dart';
 
 class AddPersonalDetailsPage extends StatefulWidget {
   const AddPersonalDetailsPage({super.key});
@@ -62,6 +64,39 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
   FocusNode phoneNumberFocusNode = FocusNode();
   FocusNode apartmentOrSuiteFocusNode = FocusNode();
 
+  // City autocomplete variables
+  List<PlaceAutocomplete> _citySuggestions = [];
+  bool _showCitySuggestions = false;
+  Timer? _cityDebounce;
+  final GooglePlacesService _placesService = GooglePlacesService();
+  OverlayEntry? _citySuggestionsOverlay;
+  final LayerLink _cityLayerLink = LayerLink();
+
+  @override
+  void initState() {
+    super.initState();
+    // Add focus listener to hide suggestions when focus is lost
+    cityFocusNode.addListener(() {
+      if (!cityFocusNode.hasFocus) {
+        _hideCitySuggestionsOverlay();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _cityDebounce?.cancel();
+    _hideCitySuggestionsOverlay();
+    birthDayFocusNode.dispose();
+    streetAddressFocusNode.dispose();
+    cityFocusNode.dispose();
+    stateOrProvinceFocusNode.dispose();
+    postalCodeFocusNode.dispose();
+    phoneNumberFocusNode.dispose();
+    apartmentOrSuiteFocusNode.dispose();
+    super.dispose();
+  }
+
   bool validateInputs() {
     setState(() {
       _isBirthDayEmpty = birthDayController.text.isEmpty;
@@ -82,6 +117,236 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
         _isPhoneNumberEmpty ||
         _isPhoneNumberInvalid ||
         _isProfileImage);
+  }
+
+  // City autocomplete methods
+  void _onCityQueryChanged(String query) {
+    if (_cityDebounce?.isActive ?? false) _cityDebounce!.cancel();
+    _cityDebounce = Timer(const Duration(milliseconds: 500), () {
+      if (query.isNotEmpty) {
+        _searchCities(query);
+      } else {
+        _hideCitySuggestionsOverlay();
+      }
+    });
+  }
+
+  Future<void> _searchCities(String query) async {
+    try {
+      final suggestions = await _placesService.getCitySuggestions(query);
+      setState(() {
+        _citySuggestions = suggestions;
+        _showCitySuggestions = suggestions.isNotEmpty;
+      });
+      
+      if (_showCitySuggestions) {
+        _showCitySuggestionsOverlay();
+      } else {
+        _hideCitySuggestionsOverlay();
+      }
+    } catch (e) {
+      print('Error searching cities: $e');
+      _hideCitySuggestionsOverlay();
+    }
+  }
+
+  void _showCitySuggestionsOverlay() {
+    _hideCitySuggestionsOverlay(); // Remove existing overlay
+    
+    _citySuggestionsOverlay = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          // Invisible barrier to detect taps outside
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: _hideCitySuggestionsOverlay,
+              child: Container(
+                color: Colors.transparent,
+              ),
+            ),
+          ),
+          // The actual suggestions dropdown
+          Positioned(
+            width: MediaQuery.of(context).size.width - 48, // Account for padding
+            child: CompositedTransformFollower(
+              link: _cityLayerLink,
+              showWhenUnlinked: false,
+              offset: const Offset(0, 50), // Position below the text field
+              child: Material(
+                elevation: 4,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  constraints: const BoxConstraints(maxHeight: 200),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    padding: EdgeInsets.zero,
+                    itemCount: _citySuggestions.length,
+                    itemBuilder: (context, index) {
+                      final suggestion = _citySuggestions[index];
+                      return ListTile(
+                        dense: true,
+                        title: Text(
+                          suggestion.mainText,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: suggestion.secondaryText.isNotEmpty
+                            ? Text(
+                                suggestion.secondaryText,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                ),
+                              )
+                            : null,
+                        onTap: () => _onCitySuggestionSelected(suggestion),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    
+    Overlay.of(context).insert(_citySuggestionsOverlay!);
+  }
+
+  void _hideCitySuggestionsOverlay() {
+    _citySuggestionsOverlay?.remove();
+    _citySuggestionsOverlay = null;
+    setState(() {
+      _showCitySuggestions = false;
+    });
+  }
+
+  void _onCitySuggestionSelected(PlaceAutocomplete suggestion) {
+    cityController.text = suggestion.mainText;
+    _hideCitySuggestionsOverlay();
+    
+    // Auto-update province based on city selection
+    // Check both secondaryText and full description for better province detection
+    String locationInfo = suggestion.secondaryText.isNotEmpty 
+        ? suggestion.secondaryText 
+        : suggestion.description;
+    _updateProvinceFromCity(locationInfo);
+    
+    // Clear validation errors
+    if (_isCityEmpty) setState(() => _isCityEmpty = false);
+    
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
+  void _updateProvinceFromCity(String locationInfo) {
+    // Map common Sri Lankan provinces with their variations, districts, and major cities
+    final provinceMapping = {
+      'Western': [
+        'Western Province', 'Western', 'Colombo', 'Gampaha', 'Kalutara',
+        'Colombo District', 'Gampaha District', 'Kalutara District',
+        'Dehiwala', 'Mount Lavinia', 'Negombo', 'Kotte', 'Maharagama',
+        'Moratuwa', 'Kelaniya', 'Panadura', 'Homagama', 'Beruwala'
+      ],
+      'Central': [
+        'Central Province', 'Central', 'Kandy', 'Matale', 'Nuwara Eliya',
+        'Kandy District', 'Matale District', 'Nuwara Eliya District',
+        'Peradeniya', 'Gampola', 'Hatton', 'Nawalapitiya', 'Dambulla'
+      ],
+      'Southern': [
+        'Southern Province', 'Southern', 'Galle', 'Matara', 'Hambantota',
+        'Galle District', 'Matara District', 'Hambantota District',
+        'Hikkaduwa', 'Unawatuna', 'Tangalle', 'Mirissa', 'Weligama'
+      ],
+      'Northern': [
+        'Northern Province', 'Northern', 'Jaffna', 'Mannar', 'Vavuniya', 
+        'Mullaitivu', 'Kilinochchi', 'Jaffna District', 'Mannar District',
+        'Vavuniya District', 'Mullaitivu District', 'Kilinochchi District',
+        'Point Pedro', 'Chavakachcheri'
+      ],
+      'Eastern': [
+        'Eastern Province', 'Eastern', 'Batticaloa', 'Ampara', 'Trincomalee',
+        'Batticaloa District', 'Ampara District', 'Trincomalee District',
+        'Kalmunai', 'Akkaraipattu', 'Kattankudy'
+      ],
+      'North Western': [
+        'North Western Province', 'North Western', 'Northwestern', 'Kurunegala', 'Puttalam',
+        'Kurunegala District', 'Puttalam District', 'Chilaw', 'Kuliyapitiya'
+      ],
+      'North Central': [
+        'North Central Province', 'North Central', 'Anuradhapura', 'Polonnaruwa',
+        'Anuradhapura District', 'Polonnaruwa District'
+      ],
+      'Uva': [
+        'Uva Province', 'Uva', 'Badulla', 'Monaragala',
+        'Badulla District', 'Monaragala District', 'Ella', 'Bandarawela', 'Haputale'
+      ],
+      'Sabaragamuwa': [
+        'Sabaragamuwa Province', 'Sabaragamuwa', 'Ratnapura', 'Kegalle',
+        'Ratnapura District', 'Kegalle District', 'Embilipitiya', 'Balangoda'
+      ],
+    };
+
+    String detectedProvince = '';
+    String lowercaseLocationInfo = locationInfo.toLowerCase();
+    
+    // First, try to find direct province name matches
+    for (final entry in provinceMapping.entries) {
+      final provinceName = entry.key;
+      final keywords = entry.value;
+      
+      for (final keyword in keywords) {
+        if (lowercaseLocationInfo.contains(keyword.toLowerCase())) {
+          detectedProvince = provinceName;
+          break;
+        }
+      }
+      
+      if (detectedProvince.isNotEmpty) break;
+    }
+
+    // If no province detected and "Sri Lanka" is in the text, try partial matching
+    if (detectedProvince.isEmpty && lowercaseLocationInfo.contains('sri lanka')) {
+      // Look for any city/district name in the location string
+      for (final entry in provinceMapping.entries) {
+        final provinceName = entry.key;
+        final keywords = entry.value;
+        
+        for (final keyword in keywords) {
+          // Check if the keyword appears as a separate word
+          if (RegExp(r'\b' + RegExp.escape(keyword.toLowerCase()) + r'\b')
+              .hasMatch(lowercaseLocationInfo)) {
+            detectedProvince = provinceName;
+            break;
+          }
+        }
+        
+        if (detectedProvince.isNotEmpty) break;
+      }
+    }
+
+    if (detectedProvince.isNotEmpty) {
+      setState(() {
+        selectedProvince = detectedProvince;
+        stateOrProvinceController.text = detectedProvince;
+        if (_isStateOrProvinceEmpty) {
+          _isStateOrProvinceEmpty = false;
+        }
+      });
+      print('Province updated to: $detectedProvince'); // Debug print
+    } else {
+      print('No province detected from location: $locationInfo'); // Debug print
+    }
   }
 
   @override
@@ -574,39 +839,65 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
         Row(
           children: [
             Expanded(
-              child: TextFormField(
-                controller: cityController,
-                focusNode: cityFocusNode,
-                onChanged: (value) {
-                  if (_isCityEmpty && value.isNotEmpty) {
-                    setState(() => _isCityEmpty = false);
-                  }
-                },
-                decoration: InputDecoration(
-                  hintText: 'Ex: New York', // Also fix the hint text
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  filled: true,
-                  fillColor: Theme.of(context).colorScheme.tertiary,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.outline,
-                      width: 1.5,
+              child: CompositedTransformTarget(
+                link: _cityLayerLink,
+                child: TextFormField(
+                  controller: cityController,
+                  focusNode: cityFocusNode,
+                  onChanged: (value) {
+                    if (_isCityEmpty && value.isNotEmpty) {
+                      setState(() => _isCityEmpty = false);
+                    }
+                    _onCityQueryChanged(value);
+                  },
+                  onTap: () {
+                    if (cityController.text.isNotEmpty && _citySuggestions.isNotEmpty) {
+                      _showCitySuggestionsOverlay();
+                    }
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Ex: Colombo',
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    filled: true,
+                    fillColor: Theme.of(context).colorScheme.tertiary,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    /*suffixIcon: _showCitySuggestions
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            cityController.clear();
+                            _hideCitySuggestionsOverlay();
+                          },
+                        )
+                      : cityController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              cityController.clear();
+                              setState(() => _isCityEmpty = true);
+                            },
+                          )
+                        : const Icon(Icons.location_city),*/
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.outline,
+                        width: 1.5,
+                      ),
                     ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: _isCityEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-                      width: 1.5,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: _isCityEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                        width: 1.5,
+                      ),
                     ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: _isCityEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
-                      width: 2,
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: _isCityEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
+                        width: 2,
+                      ),
                     ),
                   ),
                 ),

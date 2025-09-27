@@ -622,7 +622,7 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'School / Institute *',
+          'Training School / Institute *',
           style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold
@@ -707,7 +707,7 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
           const Padding(
             padding: EdgeInsets.only(top: 4),
             child: Text(
-              'School / Institute is required',
+              'Training School / Institute is required',
               style: TextStyle(
                 color: Colors.red,
                 fontSize: 12,
@@ -723,7 +723,7 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Diploma / Course *',
+          'Course Name *',
           style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold
@@ -739,7 +739,7 @@ class _EducationBottomsheetState extends State<EducationBottomsheet> {
             }
           },
           decoration: InputDecoration(
-            hintText: 'Ex: Certificate in Carpentry',
+            hintText: 'Ex: NVQ Level 6',
             hintStyle: const TextStyle(
                 color: Colors.grey
             ),

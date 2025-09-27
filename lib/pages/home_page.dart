@@ -4,6 +4,7 @@ import 'package:workie/models/post_model.dart';
 import 'package:workie/widgets/custom_icon_button.dart';
 import 'package:workie/widgets/custom_textfield.dart';
 import 'package:shimmer_ai/shimmer_ai.dart';
+import '../services/hive_service.dart';
 import '../services/location_service.dart';
 import '../services/pull_data/post_data_service.dart';
 import '../widgets/circular_category_bar.dart';
@@ -522,8 +523,18 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
                       }, bRadius: 12,
                       popupMenuItemIcon: Iconsax.save_add_copy,
                       options: [
-                        PopupMenuOption(title: 'Save', icon: Iconsax.save_add_copy, onTap: (){}),
-                        PopupMenuOption(title: 'Share', icon: Iconsax.share_copy, onTap: (){}),
+                        PopupMenuOption(
+                            title: 'Save',
+                            icon: Iconsax.save_add_copy,
+                            onTap: () => HiveService.savePostId(post['id']),
+                            textColor: Theme.of(context).colorScheme.inverseSurface
+                        ),
+                        PopupMenuOption(
+                            title: 'Share',
+                            icon: Iconsax.share_copy,
+                            onTap: (){},
+                            textColor: Theme.of(context).colorScheme.inverseSurface
+                        ),
                       ],
                       iconSize: 24,
                       //popupMenuItemIconColor: Theme.of(context).colorScheme.inverseSurface,

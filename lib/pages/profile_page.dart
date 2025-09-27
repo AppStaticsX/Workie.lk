@@ -14,6 +14,7 @@ import '../models/post_model.dart';
 import '../services/pull_data/post_data_service.dart';
 import '../services/education_data_service.dart';
 import '../models/education_model.dart';
+import '../services/hive_service.dart';
 
 class ProfileTabPage extends StatefulWidget {
 
@@ -41,7 +42,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
 
   // Add this variable to track selected chip
   int selectedChipIndex = 0;
-  final List<String> chipLabels = ['Posts', 'Videos', 'Photos'];
+  final List<String> chipLabels = ['Posts', 'Videos', 'Photos', 'Saved'];
 
   // Add these variables for posts
   List<Map<String, dynamic>> _userPosts = [];
@@ -53,12 +54,17 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
   Map<String, String> _schoolLogos = {};
   bool _isLoadingEducation = false;
 
+  // Add these variables for saved posts
+  List<Map<String, dynamic>> _savedPosts = [];
+  bool _isLoadingSavedPosts = false;
+
   @override
   void initState() {
     _loadUserRole();
     _getUserData();
     _loadUserPosts();
     _loadEducationData();
+    _loadSavedPosts();
     super.initState();
   }
 
@@ -143,11 +149,176 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     }
   }
 
+  Future<void> _loadSavedPosts() async {
+    setState(() {
+      _isLoadingSavedPosts = true;
+    });
+
+    try {
+      // Get saved post IDs from Hive
+      final savedPostIds = await HiveService.getSavedPostIds();
+      
+      if (kDebugMode) {
+        print('=== DEBUG: _loadSavedPosts START ===');
+        print('Retrieved saved post IDs: $savedPostIds');
+        print('Number of saved posts: ${savedPostIds.length}');
+      }
+      
+      if (savedPostIds.isEmpty) {
+        if (kDebugMode) {
+          print('No saved post IDs found in Hive');
+        }
+        setState(() {
+          _savedPosts = [];
+          _isLoadingSavedPosts = false;
+        });
+        return;
+      }
+
+      List<Map<String, dynamic>> formattedSavedPosts = [];
+
+      try {
+        // Try to fetch posts using batch method first
+        if (kDebugMode) {
+          print('Attempting to fetch posts using getPostsByIds...');
+        }
+        final savedPostsFromBackend = await PostDataService.getPostsByIds(savedPostIds);
+        
+        if (kDebugMode) {
+          print('Batch fetch returned ${savedPostsFromBackend.length} posts');
+        }
+        
+        // Format posts for UI
+        for (var post in savedPostsFromBackend) {
+          try {
+            if (post != null && post.isNotEmpty) {
+              final formattedPost = await PostDataService.formatSavedPostForWidget(post);
+              formattedSavedPosts.add(formattedPost);
+              if (kDebugMode) {
+                print('Successfully formatted saved post: ${post['_id']}');
+              }
+            }
+          } catch (e) {
+            if (kDebugMode) {
+              print('Error formatting post ${post?['_id']}: $e - SKIPPING this post');
+            }
+            // Skip this post instead of adding an error template
+          }
+        }
+        
+        if (kDebugMode) {
+          print('Formatted ${formattedSavedPosts.length} posts from batch');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Batch fetch failed, trying individual fetch: $e');
+        }
+        
+        // Fallback: Try to fetch posts individually
+        for (String savedId in savedPostIds) {
+          try {
+            final post = await PostDataService.getPostById(savedId);
+            if (post != null) {
+              try {
+                final formattedPost = await PostDataService.formatSavedPostForWidget(post);
+                formattedSavedPosts.add(formattedPost);
+                if (kDebugMode) {
+                  print('Successfully formatted individual saved post: $savedId');
+                }
+              } catch (formatError) {
+                if (kDebugMode) {
+                  print('Error formatting individual post $savedId: $formatError - SKIPPING this post');
+                }
+                // Skip malformed posts instead of adding error template
+              }
+            } else {
+              if (kDebugMode) {
+                print('Post $savedId not found, removing from saved posts');
+              }
+              // Remove non-existent post from saved posts
+              await HiveService.removePostId(savedId);
+            }
+          } catch (postError) {
+            if (kDebugMode) {
+              print('Error fetching individual post $savedId: $postError');
+            }
+          }
+        }
+        
+        // If individual fetch also fails, try searching through feed posts
+        if (formattedSavedPosts.isEmpty) {
+          try {
+            if (kDebugMode) {
+              print('Trying fallback search through feed posts...');
+            }
+            final feedPosts = await PostDataService.getFeedPosts(page: 1, limit: 50);
+            
+            for (String savedId in savedPostIds) {
+              try {
+                final foundPost = feedPosts.firstWhere(
+                  (post) => post['_id'] == savedId,
+                  orElse: () => {},
+                );
+                
+                if (foundPost.isNotEmpty) {
+                  try {
+                    final formattedPost = await PostDataService.formatSavedPostForWidget(foundPost);
+                    formattedSavedPosts.add(formattedPost);
+                    if (kDebugMode) {
+                      print('Successfully formatted fallback saved post: $savedId');
+                    }
+                  } catch (formatError) {
+                    if (kDebugMode) {
+                      print('Error formatting fallback post $savedId: $formatError - SKIPPING this post');
+                    }
+                    // Skip malformed posts instead of adding error template
+                  }
+                }
+              } catch (searchError) {
+                if (kDebugMode) {
+                  print('Error searching for fallback post $savedId: $searchError');
+                }
+              }
+            }
+          } catch (feedError) {
+            if (kDebugMode) {
+              print('Feed fallback also failed: $feedError');
+            }
+          }
+        }
+      }
+
+      if (kDebugMode) {
+        print('=== FINAL RESULT ===');
+        print('Total formatted saved posts: ${formattedSavedPosts.length}');
+      }
+      
+      setState(() {
+        _savedPosts = formattedSavedPosts;
+        _isLoadingSavedPosts = false;
+      });
+      
+      if (kDebugMode) {
+        print('setState completed. _savedPosts length: ${_savedPosts.length}');
+        print('=== _loadSavedPosts COMPLETED ===');
+      }
+    } catch (e) {
+      setState(() {
+        _isLoadingSavedPosts = false;
+        _savedPosts = [];
+      });
+      if (kDebugMode) {
+        print('Error loading saved posts: $e');
+      }
+    }
+  }
+
   Future<void> _refreshData() async {
     await _loadUserRole();
     await _getUserData();
     await _loadUserPosts();
     await _loadEducationData();
+    await _loadSavedPosts();
   }
 
   @override
@@ -386,15 +557,17 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                   onSelected: (selected) {
                     setState(() {
                       selectedChipIndex = i;
+                      _selectedChipLable = chipLabels[i];
                     });
-                    // You can add logic here to filter content based on selection
+                    
+                    // Load saved posts when "Saved" chip is selected
+                    if (chipLabels[i] == 'Saved') {
+                      _loadSavedPosts();
+                    }
+                    
                     if (kDebugMode) {
                       print('Selected: ${chipLabels[i]}');
                     }
-                    setState(() {
-                      _selectedChipLable = chipLabels[i];
-                    });
-
                   },
                   selectedColor: const Color(0xFF36C897),
                   showCheckmark: false,
@@ -471,7 +644,23 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
   }
 
   Widget _buildPostsContent() {
-    if (_isLoadingPosts) {
+    if (kDebugMode) {
+      print('=== _buildPostsContent called ===');
+      print('selectedChipIndex: $selectedChipIndex');
+      print('_isLoadingSavedPosts: $_isLoadingSavedPosts');
+      print('_isLoadingPosts: $_isLoadingPosts');
+      print('_savedPosts.length: ${_savedPosts.length}');
+      print('_userPosts.length: ${_userPosts.length}');
+    }
+    
+    // Show loading indicator for the selected chip
+    bool isLoading = selectedChipIndex == 3 ? _isLoadingSavedPosts : _isLoadingPosts;
+    
+    if (kDebugMode) {
+      print('isLoading: $isLoading');
+    }
+    
+    if (isLoading) {
       return const Padding(
         padding: EdgeInsets.all(32.0),
         child: Center(
@@ -480,7 +669,10 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
       );
     }
 
-    if (_userPosts.isEmpty) {
+    // Check if the relevant data source is empty
+    bool isEmpty = selectedChipIndex == 3 ? _savedPosts.isEmpty : _userPosts.isEmpty;
+    
+    if (isEmpty) {
       return Padding(
         padding: const EdgeInsets.all(32.0),
         child: Center(
@@ -491,7 +683,9 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                     ? Iconsax.document_text_copy
                     : selectedChipIndex == 1
                     ? Iconsax.video_play_copy
-                    : Iconsax.gallery_copy,
+                    : selectedChipIndex == 2
+                    ? Iconsax.gallery_copy
+                    : Iconsax.bookmark_copy, // For saved posts
                 size: 48,
                 color: Colors.grey.shade400,
               ),
@@ -501,7 +695,9 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                     ? 'No posts yet'
                     : selectedChipIndex == 1
                     ? 'No videos yet'
-                    : 'No photos yet',
+                    : selectedChipIndex == 2
+                    ? 'No photos yet'
+                    : 'No saved posts yet', // For saved posts
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: Colors.grey.shade600,
                   fontWeight: FontWeight.w500,
@@ -509,7 +705,9 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Share your first ${chipLabels[selectedChipIndex].toLowerCase()} to get started!',
+                selectedChipIndex == 3
+                    ? 'Save posts to view them here!'
+                    : 'Share your first ${chipLabels[selectedChipIndex].toLowerCase()} to get started!',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Colors.grey.shade500,
                 ),
@@ -523,7 +721,18 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
 
     List<Map<String, dynamic>> filteredPosts = _filterPostsByChip();
 
+    if (kDebugMode) {
+      print('filteredPosts.length: ${filteredPosts.length}');
+      if (filteredPosts.isNotEmpty) {
+        print('First post ID: ${filteredPosts[0]['id']}');
+        print('First post userName: ${filteredPosts[0]['userName']}');
+      }
+    }
+
     if (filteredPosts.isEmpty) {
+      if (kDebugMode) {
+        print('filteredPosts is empty - showing empty state');
+      }
       return Padding(
         padding: const EdgeInsets.all(32.0),
         child: Center(
@@ -553,7 +762,9 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
       child: Column(
         children: [
           // Show only the first (latest) post from filtered posts
-          if (filteredPosts.isNotEmpty)
+          if (filteredPosts.isNotEmpty) ...[
+            if (kDebugMode) 
+              Text('DEBUG: Rendering PostCardModel for post ID: ${filteredPosts[0]['id']}'),
             Padding(
               padding: const EdgeInsets.only(bottom: 0),
               child: PostCardModel(
@@ -579,34 +790,72 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                 popupMenuItemIcon: Iconsax.trash_copy,
                 popupMenuItemIconColor: Colors.red,
                 options: [
-                  PopupMenuOption(title: 'Save', icon: Iconsax.save_add_copy, onTap: (){}, textColor: Theme.of(context).colorScheme.inverseSurface),
-                  PopupMenuOption(title: 'Share', icon: Iconsax.share_copy, onTap: (){}, textColor: Theme.of(context).colorScheme.inverseSurface),
+                  PopupMenuOption(
+                    title: 'Save', 
+                    icon: Iconsax.save_add_copy, 
+                    onTap: () => HiveService.savePostId(filteredPosts[0]['id']),
+                    textColor: Theme.of(context).colorScheme.inverseSurface
+                  ),
+                  PopupMenuOption(
+                    title: 'Share', 
+                    icon: Iconsax.share_copy, 
+                    onTap: () => _handlePostShare(filteredPosts[0]['id']), 
+                    textColor: Theme.of(context).colorScheme.inverseSurface
+                  ),
                 ],
                 iconSize: 24,
               ),
             ),
+          ],
         ],
       ),
     );
   }
 
   List<Map<String, dynamic>> _filterPostsByChip() {
+    if (kDebugMode) {
+      print('=== _filterPostsByChip called ===');
+      print('selectedChipIndex: $selectedChipIndex');
+      print('_savedPosts.length: ${_savedPosts.length}');
+      print('_userPosts.length: ${_userPosts.length}');
+    }
+    
+    List<Map<String, dynamic>> result;
     switch (selectedChipIndex) {
       case 0: // Posts - show all posts
-        return _userPosts;
+        result = _userPosts;
+        break;
       case 1: // Videos - show only posts with videos
-        return _userPosts.where((post) {
+        result = _userPosts.where((post) {
           final mediaUrls = post['mediaUrls'] as List?;
           return mediaUrls?.any((media) => media.type?.toString() == 'MediaType.video') ?? false;
         }).toList();
+        break;
       case 2: // Photos - show only posts with images
-        return _userPosts.where((post) {
+        result = _userPosts.where((post) {
           final mediaUrls = post['mediaUrls'] as List?;
           return mediaUrls?.any((media) => media.type?.toString() == 'MediaType.image') ?? false;
         }).toList();
+        break;
+      case 3: // Saved - show saved posts
+        result = _savedPosts;
+        if (kDebugMode) {
+          print('Returning saved posts: ${result.length} items');
+          for (int i = 0; i < result.length; i++) {
+            print('  Saved post $i: ID=${result[i]['id']}, User=${result[i]['userName']}');
+          }
+        }
+        break;
       default:
-        return _userPosts;
+        result = _userPosts;
+        break;
     }
+    
+    if (kDebugMode) {
+      print('_filterPostsByChip returning ${result.length} posts');
+    }
+    
+    return result;
   }
 
   void _handlePostLike(String postId) async {
@@ -646,6 +895,36 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     
     // For now, just refresh education data
     _loadEducationData();
+  }
+
+  // Method to refresh saved posts when called from other parts of the app
+  void refreshSavedPosts() {
+    if (selectedChipIndex == 3) { // Only refresh if currently viewing saved posts
+      _loadSavedPosts();
+    }
+  }
+
+  // Method to force refresh saved posts regardless of current tab
+  void forceRefreshSavedPosts() {
+    _loadSavedPosts();
+  }
+
+  // Method to handle post save/unsave actions from other widgets
+  Future<void> handlePostSaveToggle(String postId, bool isSaved) async {
+    try {
+      if (isSaved) {
+        await HiveService.savePostId(postId);
+      } else {
+        await HiveService.removePostId(postId);
+      }
+      
+      // Refresh saved posts if currently viewing them
+      refreshSavedPosts();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error handling post save toggle: $e');
+      }
+    }
   }
 
   Widget _statsContent() {
