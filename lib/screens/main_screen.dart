@@ -63,8 +63,8 @@ class _MainScreenState extends State<MainScreen> {
             children: [
               buildAnimatedNavIcon(Iconsax.home_copy, Iconsax.home_1, 0, 'Home'),
               buildAnimatedNavIcon(Iconsax.location_copy, Iconsax.location, 1, 'Explore'),
-              buildPlusNavIcon('assets/icon/menu_button.png', 'assets/icon/menu_button.png', 2, 'Post'),
-              //buildAnimatedNavIcon(Iconsax.add_square_copy, Iconsax.add_square, 2, 'Post'),
+              //buildPlusNavIcon('assets/icon/menu_button.png', 'assets/icon/menu_button.png', 2, 'Post'),
+              buildAnimatedNavIcon(Iconsax.element_2_copy, Iconsax.element_2, 2, 'Post'),
               buildAnimatedNavIcon(Iconsax.video_play_copy, Iconsax.video_play, 3, 'Reels'),
               buildAnimatedNavIcon(Iconsax.user_copy, Iconsax.user, 4, 'Profile'),
             ],

@@ -373,9 +373,9 @@ class _PostCardModelState extends State<PostCardModel> {
           PopupMenuButton<int>(
             icon: widget.customIcon ??
                 Transform.rotate(
-                  angle: math.pi,
+                  angle: math.pi/2,
                   child: Icon(
-                    CupertinoIcons.dot_radiowaves_left_right,
+                    Iconsax.radar_1_copy,
                     color: widget.iconColor ?? Colors.grey.shade400,
                     size: widget.iconSize,
                   ),
