@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:provider/provider.dart';
 import 'package:workie/l10n/l10n.dart';
 import 'package:workie/screens/splash_screen.dart';
 import 'package:workie/services/hive_service.dart';
+import 'package:workie/services/notification_service.dart';
 import 'package:workie/themes/theme_provider.dart';
 import 'package:workie/providers/language_provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -18,6 +20,16 @@ Future<void> main() async {
   // Initialize HiveService (registers adapters)
   await HiveService.initHive();
 
+  // Initialize notification service
+  await NotificationService.initialize(
+    onNotificationTap: (response) {
+      // Handle notification tap globally
+      print('Notification tapped: ${response.payload}');
+      // You can navigate to specific screens based on payload
+      _handleNotificationTap(response);
+    },
+  );
+
   runApp(
       MultiProvider(
         providers: [
@@ -27,6 +39,21 @@ Future<void> main() async {
         child: const MyApp(),
       )
   );
+}
+
+void _handleNotificationTap(NotificationResponse response) {
+  // Handle different notification types based on payload
+  switch (response.payload) {
+    case 'chat_message':
+    // Navigate to chat screen
+      break;
+    case 'reminder':
+    // Navigate to reminder screen
+      break;
+    case 'download_complete':
+    // Show download complete dialog
+      break;
+  }
 }
 
 class MyApp extends StatefulWidget {

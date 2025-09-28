@@ -9,9 +9,52 @@ import 'package:workie/values/string.dart';
 import 'package:get/get.dart';
 
 import '../providers/language_provider.dart';
+import '../services/notification_service.dart';
 
-class OnboardingScreen extends StatelessWidget {
+class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
+
+  @override
+  State<OnboardingScreen> createState() => _OnboardingScreenState();
+}
+
+class _OnboardingScreenState extends State<OnboardingScreen> {
+
+  @override
+  void initState() {
+    _checkNotificationPermissions();
+    super.initState();
+  }
+
+  Future<void> _checkNotificationPermissions() async {
+    final bool enabled = await NotificationService.areNotificationsEnabled();
+    if (!enabled) {
+      _showPermissionDialog();
+    }
+  }
+
+  void _showPermissionDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Enable Notifications'),
+        content: Text('Please enable notifications to receive updates.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await NotificationService.requestPermissions();
+            },
+            child: Text('Enable'),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _showLanguageBottomSheet(BuildContext context) {
     final _ = Provider.of<LanguageProvider>(context, listen: false);
@@ -146,7 +189,6 @@ class OnboardingScreen extends StatelessWidget {
       ),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {

@@ -6,9 +6,11 @@ import 'package:workie/widgets/custom_textfield.dart';
 import 'package:shimmer_ai/shimmer_ai.dart';
 import '../services/hive_service.dart';
 import '../services/location_service.dart';
+import '../services/notification_service.dart';
 import '../services/pull_data/post_data_service.dart';
 import '../widgets/circular_category_bar.dart';
 import '../widgets/comment_bottom_sheet.dart';
+import 'components/profile_page_post_helper.dart';
 
 class HomeTabPage extends StatefulWidget {
   const HomeTabPage({super.key});
@@ -67,6 +69,8 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
 
     _getLocation();
     _loadPosts();
+
+    _listenToNotifications();
   }
 
   @override
@@ -75,6 +79,35 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
     _scrollController.dispose();
     _animationController.dispose();
     super.dispose();
+  }
+
+  void _listenToNotifications() {
+    NotificationService.onNotificationTap.listen((response) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Notification tapped: ${response.payload}')),
+      );
+    });
+  }
+
+  Future<void> _showSimpleNotification() async {
+    await NotificationService.showNotification(
+      title: 'Simple Notification',
+      body: 'This is a basic notification from HomePage',
+      payload: 'home_notification',
+    );
+  }
+
+  Future<void> _showScheduledNotification() async {
+    await NotificationService.scheduleNotification(
+      title: 'Scheduled Notification',
+      body: 'This notification was scheduled 5 seconds ago!',
+      scheduledDate: DateTime.now().add(Duration(seconds: 5)),
+      payload: 'scheduled_notification',
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Notification scheduled for 5 seconds')),
+    );
   }
 
   Future<void> _searchPosts() async {
@@ -396,6 +429,32 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: InkWell(
+              onTap: () {
+                _showSimpleNotification();
+                /*Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation, secondaryAnimation) =>
+                          ProfilePagePostHelper(),
+                      transitionsBuilder: (context, animation,
+                          secondaryAnimation, child) {
+                        const begin = Offset(1.0, 0.0); // Start from right
+                        const end = Offset.zero; // End at current position
+                        const curve = Curves.easeInOut;
+
+                        var tween = Tween(begin: begin, end: end).chain(
+                          CurveTween(curve: curve),
+                        );
+
+                        return SlideTransition(
+                          position: animation.drive(tween),
+                          child: child,
+                        );
+                      },
+                      transitionDuration: const Duration(milliseconds: 300),
+                    )
+                );*/
+              },
               customBorder: const CircleBorder(),
               child: CustomIconButton(
                 iconData: Iconsax.sms_notification_copy,
