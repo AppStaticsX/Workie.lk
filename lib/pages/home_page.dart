@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/models/post_model.dart';
+import 'package:workie/screens/messages_screen.dart';
 import 'package:workie/widgets/custom_icon_button.dart';
 import 'package:workie/widgets/custom_textfield.dart';
 import 'package:shimmer_ai/shimmer_ai.dart';
@@ -431,11 +432,11 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
             child: InkWell(
               onTap: () {
                 _showSimpleNotification();
-                /*Navigator.push(
+                Navigator.push(
                     context,
                     PageRouteBuilder(
                       pageBuilder: (context, animation, secondaryAnimation) =>
-                          ProfilePagePostHelper(),
+                          MessagesScreen(),
                       transitionsBuilder: (context, animation,
                           secondaryAnimation, child) {
                         const begin = Offset(1.0, 0.0); // Start from right
@@ -453,7 +454,7 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
                       },
                       transitionDuration: const Duration(milliseconds: 300),
                     )
-                );*/
+                );
               },
               customBorder: const CircleBorder(),
               child: CustomIconButton(
