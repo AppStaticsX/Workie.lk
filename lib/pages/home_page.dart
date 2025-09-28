@@ -11,7 +11,6 @@ import '../services/notification_service.dart';
 import '../services/pull_data/post_data_service.dart';
 import '../widgets/circular_category_bar.dart';
 import '../widgets/comment_bottom_sheet.dart';
-import 'components/profile_page_post_helper.dart';
 
 class HomeTabPage extends StatefulWidget {
   const HomeTabPage({super.key});
@@ -33,6 +32,9 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
   int _currentPage = 1;
   final int _postsPerPage = 10;
   bool _hasMorePosts = true;
+
+  int unreadMessageCount = 12;
+  bool hasUnreadMessages = true;
 
   String _currentLoction = '';
   bool _isUpdatingLocation = false;
@@ -457,13 +459,44 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
                 );
               },
               customBorder: const CircleBorder(),
-              child: CustomIconButton(
-                iconData: Iconsax.sms_notification_copy,
-                color: Colors.white.withValues(alpha: 0.3),
-                width: 44,
-                height: 44,
-                size: 24,
-                iconColor: Colors.white,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  CustomIconButton(
+                    iconData: Iconsax.sms_notification_copy,
+                    color: Colors.white.withValues(alpha: 0.3),
+                    width: 44,
+                    height: 44,
+                    size: 24,
+                    iconColor: Colors.white,
+                  ),
+                  // Message indicator badge
+                  if (hasUnreadMessages) // Replace with your condition
+                    Positioned(
+                      right: -2,
+                      top: -2,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          unreadMessageCount > 9 ? '9+' : unreadMessageCount.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           )
