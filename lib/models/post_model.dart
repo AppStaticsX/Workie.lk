@@ -741,7 +741,15 @@ class _PostCardModelState extends State<PostCardModel> {
                       ),
                     );
                   },
-                  icon: Icon(Iconsax.maximize_2_copy)
+                  icon: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.black.withValues(alpha: 0.5)
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Icon(Iconsax.maximize_2_copy, color: Colors.white, size: 24,),
+                      ))
               ),
             ),
             Center(

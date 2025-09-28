@@ -22,7 +22,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
               Navigator.pop(context);
             },
             icon: Icon(Iconsax.arrow_left_2_copy),
-          color: Theme.of(context).colorScheme.surface,
+          color: Colors.white,
         ),
         title: Text(
           'Messages & Notifications',
