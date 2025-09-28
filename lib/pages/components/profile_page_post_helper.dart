@@ -151,20 +151,22 @@ class _ProfilePagePostHelperState extends State<ProfilePagePostHelper> {
   }
 
   Future<bool> _showDeleteConfirmationDialog() async {
-    return await showDialog<bool>(
+    return await showCupertinoDialog<bool>(
       context: context,
+      barrierDismissible: false,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Delete Post'),
-          content: const Text(
+        return CupertinoAlertDialog(
+          title: const Text('Delete Post', style: TextStyle(fontFamily: 'Google Sans', fontWeight: FontWeight.bold)),
+          content: Text(
             'Are you sure you want to delete this post? This action cannot be undone.',
+            style: TextStyle(fontFamily: 'Google Sans', color: Theme.of(context).colorScheme.primary, fontSize: 14),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
               child: Text(
                 'Cancel',
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
             TextButton(
