@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pinput/pinput.dart';
@@ -7,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 import 'package:workie/screens/googlemap_screen.dart';
 import '../services/push_data/worker_post_service.dart';
+import '../services/notification_service.dart';
 
 class WorkerPostScreen extends StatefulWidget {
   final VoidCallback? onPostSuccess;
@@ -31,6 +33,7 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
   List<String> selectedHashtags = [];
   bool _isPosting = false;
   String _pickedLocationAdress = '' ?? 'Unkown';
+  static const int _uploadNotificationId = 12345; // Fixed ID for single notification
 
   VideoPlayerController? _getVideoController(String videoPath) {
     if (!_videoControllers.containsKey(videoPath)) {
@@ -39,6 +42,21 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
       _videoControllers[videoPath] = controller;
     }
     return _videoControllers[videoPath];
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeNotifications();
+  }
+
+  Future<void> _initializeNotifications() async {
+    try {
+      await NotificationService.initialize();
+      await NotificationService.requestPermissions();
+    } catch (e) {
+      debugPrint('Failed to initialize notifications: $e');
+    }
   }
 
   @override
@@ -116,6 +134,45 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
     }
   }
 
+  Future<void> _showProgressNotification(int progress, int maxProgress, String message) async {
+    // Use FlutterLocalNotificationsPlugin directly to maintain same notification ID
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'progress_channel',
+      'Progress Notifications',
+      channelDescription: 'Notifications showing progress',
+      importance: Importance.max,
+      priority: Priority.high,
+      showProgress: true,
+      onlyAlertOnce: true,
+    );
+
+    final AndroidNotificationDetails progressDetails = AndroidNotificationDetails(
+      'progress_channel',
+      'Progress Notifications',
+      channelDescription: 'Notifications showing progress',
+      importance: Importance.max,
+      priority: Priority.high,
+      showProgress: true,
+      progress: progress,
+      maxProgress: maxProgress,
+      onlyAlertOnce: true,
+    );
+
+    const NotificationDetails details = NotificationDetails(android: androidDetails);
+    final NotificationDetails progressDetailsWrapper = NotificationDetails(android: progressDetails);
+    
+    // Import needed for direct access
+    final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+    
+    await flutterLocalNotificationsPlugin.show(
+      _uploadNotificationId,
+      'Uploading Media',
+      message,
+      progressDetailsWrapper,
+      payload: 'media_upload_progress',
+    );
+  }
+
   Future<void> _handleUploadPost() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
@@ -128,11 +185,23 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
       return;
     }
     try {
-      // 1. Upload media files
+      final totalFiles = _selectedImages.length + _selectedVideos.length;
+      
+      if (totalFiles > 0) {
+        // Show initial progress notification
+        await _showProgressNotification(0, 100, 'Preparing to upload ${totalFiles} file(s)...');
+      }
+
+      // 1. Upload media files with progress tracking
+      await _showProgressNotification(10, 100, 'Starting media upload...');
+      
       final uploadedMedia = await WorkerPostService.uploadPostMedia(
         files: [..._selectedImages, ..._selectedVideos], // <-- FIXED
         token: token,
       );
+
+      // Show upload completion progress
+      await _showProgressNotification(70, 100, 'Media uploaded successfully, creating post...');
 
       // 2. Create post with content and uploaded media info
       final post = await WorkerPostService.createPost(
@@ -153,6 +222,14 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
         location: _pickedLocationAdress,
       );
 
+      // Show final progress
+      await _showProgressNotification(100, 100, 'Post created successfully!');
+      
+      // Clear the notification after 2 seconds
+      Future.delayed(Duration(seconds: 2), () {
+        NotificationService.cancelNotification(_uploadNotificationId);
+      });
+
       // Optionally clear UI and show success
       _textController.clear();
       setState(() {
@@ -171,6 +248,13 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
         );
       }
     } catch (e) {
+      // Show error notification
+      await NotificationService.showNotification(
+        title: 'Upload Failed',
+        body: 'Failed to create post: ${e.toString()}',
+        payload: 'upload_error',
+      );
+      
       setState(() {
         _isPosting = false;
       });
