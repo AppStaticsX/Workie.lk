@@ -186,24 +186,47 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
     }
     try {
       final totalFiles = _selectedImages.length + _selectedVideos.length;
+      final allFiles = [..._selectedImages, ..._selectedVideos];
+      List<Map<String, dynamic>> uploadedMedia = [];
       
       if (totalFiles > 0) {
+        // Calculate total size of all files
+        int totalSize = 0;
+        for (final file in allFiles) {
+          totalSize += await file.length();
+        }
+        
         // Show initial progress notification
         await _showProgressNotification(0, 100, 'Preparing to upload ${totalFiles} file(s)...');
+        
+        // Upload media files with real-time progress tracking
+        uploadedMedia = await WorkerPostService.uploadPostMediaWithProgress(
+          files: allFiles,
+          token: token,
+          onProgress: (int sent, int total) async {
+            if (total > 0) {
+              final percentage = ((sent / total) * 70).round(); // Use 70% for upload progress
+              final sizeInMB = (sent / (1024 * 1024)).toStringAsFixed(1);
+              final totalSizeInMB = (total / (1024 * 1024)).toStringAsFixed(1);
+              await _showProgressNotification(
+                percentage, 
+                100, 
+                'Uploading... ${sizeInMB}MB / ${totalSizeInMB}MB'
+              );
+            }
+          },
+        );
+
+        // Show upload completion progress
+        await _showProgressNotification(75, 100, 'Media uploaded successfully, creating post...');
+      } else {
+        // No media files, just creating post
+        await _showProgressNotification(10, 100, 'Creating post...');
       }
 
-      // 1. Upload media files with progress tracking
-      await _showProgressNotification(10, 100, 'Starting media upload...');
-      
-      final uploadedMedia = await WorkerPostService.uploadPostMedia(
-        files: [..._selectedImages, ..._selectedVideos], // <-- FIXED
-        token: token,
-      );
-
-      // Show upload completion progress
-      await _showProgressNotification(70, 100, 'Media uploaded successfully, creating post...');
-
       // 2. Create post with content and uploaded media info
+      await _showProgressNotification(90, 100, 'Finalizing post...');
+      
       final post = await WorkerPostService.createPost(
         token: token,
         content: _textController.text,
