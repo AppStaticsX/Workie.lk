@@ -62,7 +62,7 @@ class _MainScreenState extends State<MainScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               buildAnimatedNavIcon(Iconsax.home_copy, Iconsax.home_1, 0, 'Home'),
-              buildAnimatedNavIcon(Iconsax.location_copy, Iconsax.location, 1, 'Explore'),
+              buildAnimatedNavIcon(Iconsax.briefcase_copy, Iconsax.briefcase, 1, 'Jobs'),
               //buildPlusNavIcon('assets/icon/menu_button.png', 'assets/icon/menu_button.png', 2, 'Post'),
               buildAnimatedNavIcon(Iconsax.element_2_copy, Iconsax.element_2, 2, 'Post'),
               buildAnimatedNavIcon(Iconsax.video_play_copy, Iconsax.video_play, 3, 'Reels'),
@@ -127,7 +127,7 @@ class _MainScreenState extends State<MainScreen> {
       ),
     );
   }
-  Widget buildPlusNavIcon(String icon, String activeIcon, int index, String lable) {
+  /*Widget buildPlusNavIcon(String icon, String activeIcon, int index, String lable) {
     bool isSelected = _selectedIndex == index;
     return GestureDetector(
       onTap: () => _navigateBottomBar(index),
@@ -186,5 +186,5 @@ class _MainScreenState extends State<MainScreen> {
         ),
       ),
     );
-  }
+  }*/
 }

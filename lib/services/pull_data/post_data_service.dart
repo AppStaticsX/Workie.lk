@@ -234,6 +234,47 @@ class PostDataService {
     }
   }
 
+  /// Delete a post by postId
+  static Future<Map<String, dynamic>> deletePost({
+    required String postId,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token == null) {
+        throw Exception('Authentication required');
+      }
+
+      final uri = Uri.parse('$baseUrl/posts/$postId');
+      final response = await http.delete(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return data;
+        } else {
+          throw Exception(data['message'] ?? 'Failed to delete post');
+        }
+      } else if (response.statusCode == 404) {
+        throw Exception('Post not found');
+      } else if (response.statusCode == 403) {
+        throw Exception('Not authorized to delete this post');
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['message'] ?? 'Failed to delete post: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Network error: $e');
+    }
+  }
+
   /// Convert backend post data to PostCardModel format
   static Future<Map<String, dynamic>> formatPostForWidget(Map<String, dynamic> backendPost) async {
     try {

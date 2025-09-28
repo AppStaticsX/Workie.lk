@@ -99,6 +99,87 @@ class _ProfilePagePostHelperState extends State<ProfilePagePostHelper> {
     }
   }
 
+  void _handlePostDelete(String postId) async {
+    try {
+      // Show confirmation dialog
+      final confirmed = await _showDeleteConfirmationDialog();
+      if (!confirmed) return;
+
+      // Show loading indicator
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Deleting post...'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+
+      // Delete the post
+      await PostDataService.deletePost(postId: postId);
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Post deleted successfully'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+
+      // Refresh the posts list
+      await _loadAllUserPosts();
+
+    } catch (e) {
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error deleting post: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+
+      if (kDebugMode) {
+        print('Error deleting post: $e');
+      }
+    }
+  }
+
+  Future<bool> _showDeleteConfirmationDialog() async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Post'),
+          content: const Text(
+            'Are you sure you want to delete this post? This action cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text(
+                'Delete',
+                style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
+    ) ?? false; // Return false if dialog is dismissed
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -256,6 +337,7 @@ class _ProfilePagePostHelperState extends State<ProfilePagePostHelper> {
               options: [
                 PopupMenuOption(title: 'Save', icon: Iconsax.save_add_copy, onTap: (){}, textColor: Theme.of(context).colorScheme.inverseSurface),
                 PopupMenuOption(title: 'Share', icon: Iconsax.share_copy, onTap: (){}, textColor: Theme.of(context).colorScheme.inverseSurface),
+                PopupMenuOption(title: 'Delete', icon: Iconsax.trash_copy, onTap: () => _handlePostDelete(post['id']), textColor: Theme.of(context).colorScheme.inverseSurface, iconColor: Colors.red),
               ],
               iconSize: 24,
             ),
