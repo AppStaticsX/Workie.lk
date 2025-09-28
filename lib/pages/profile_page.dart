@@ -968,7 +968,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Icon(Iconsax.money_2),
+                Icon(Iconsax.money),
                 Text('50.5K', style: TextStyle(fontSize: 18),),
                 Text('Total Earning', style: TextStyle(fontSize: 14),)
               ],

@@ -160,10 +160,10 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
 
     const NotificationDetails details = NotificationDetails(android: androidDetails);
     final NotificationDetails progressDetailsWrapper = NotificationDetails(android: progressDetails);
-    
+
     // Import needed for direct access
     final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-    
+
     await flutterLocalNotificationsPlugin.show(
       _uploadNotificationId,
       'Uploading Media',
@@ -188,30 +188,39 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
       final totalFiles = _selectedImages.length + _selectedVideos.length;
       final allFiles = [..._selectedImages, ..._selectedVideos];
       List<Map<String, dynamic>> uploadedMedia = [];
-      
+
       if (totalFiles > 0) {
         // Calculate total size of all files
         int totalSize = 0;
         for (final file in allFiles) {
           totalSize += await file.length();
         }
-        
+
         // Show initial progress notification
         await _showProgressNotification(0, 100, 'Preparing to upload ${totalFiles} file(s)...');
-        
+
         // Upload media files with real-time progress tracking
         uploadedMedia = await WorkerPostService.uploadPostMediaWithProgress(
           files: allFiles,
           token: token,
-          onProgress: (int sent, int total) async {
+          onProgress: (int sent, int total, double speed, String eta) async {
             if (total > 0) {
               final percentage = ((sent / total) * 70).round(); // Use 70% for upload progress
               final sizeInMB = (sent / (1024 * 1024)).toStringAsFixed(1);
               final totalSizeInMB = (total / (1024 * 1024)).toStringAsFixed(1);
+              final speedMBps = (speed / (1024 * 1024)).toStringAsFixed(2);
+
+              String progressMessage;
+              if (sent == total) {
+                progressMessage = 'Uploaded ${sizeInMB}MB';
+              } else {
+                progressMessage = 'Uploading... ${sizeInMB}MB/${totalSizeInMB}MB • $speedMBps MB/s • ETA $eta';
+              }
+
               await _showProgressNotification(
-                percentage, 
-                100, 
-                'Uploading... ${sizeInMB}MB / ${totalSizeInMB}MB'
+                  percentage,
+                  100,
+                  progressMessage
               );
             }
           },
@@ -226,7 +235,7 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
 
       // 2. Create post with content and uploaded media info
       await _showProgressNotification(90, 100, 'Finalizing post...');
-      
+
       final post = await WorkerPostService.createPost(
         token: token,
         content: _textController.text,
@@ -247,7 +256,7 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
 
       // Show final progress
       await _showProgressNotification(100, 100, 'Post created successfully!');
-      
+
       // Clear the notification after 2 seconds
       Future.delayed(Duration(seconds: 2), () {
         NotificationService.cancelNotification(_uploadNotificationId);
@@ -277,7 +286,7 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
         body: 'Failed to create post: ${e.toString()}',
         payload: 'upload_error',
       );
-      
+
       setState(() {
         _isPosting = false;
       });
@@ -299,17 +308,16 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
         elevation: 0,
         leading: const Icon(
           Iconsax.card_edit_copy,
-          color: Colors.white,
           size: 28,
         ),
         title: Row(
           children: [
             Row(
               children: [
-                const Text(
+                Text(
                   'New Post',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.inverseSurface,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -591,7 +599,7 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF1C1C1E),
+              color: Theme.of(context).colorScheme.surface,
               border: Border(
                 top: BorderSide(
                   color: Colors.grey[800]!,
@@ -608,7 +616,7 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
                       IconButton(
                         icon: Icon(
                           Iconsax.gallery_add_copy,
-                          color: Colors.grey[400],
+                          color: Colors.grey,
                           size: 28,
                         ),
                         onPressed: () {
@@ -624,7 +632,7 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
                       IconButton(
                         icon: Icon(
                           Iconsax.video_vertical_copy,
-                          color: Colors.grey[400],
+                          color: Colors.grey,
                           size: 28,
                         ),
                         onPressed: () {
@@ -640,7 +648,7 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
                       IconButton(
                         icon: Icon(
                           Iconsax.location_copy,
-                          color: Colors.grey[400],
+                          color: Colors.grey,
                           size: 28,
                         ),
                         onPressed: () async {
@@ -655,9 +663,9 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
                                       if (googleMapScreenState != null &&
                                           googleMapScreenState.pickedLocation.isNotEmpty) {
                                         // Use text property instead of setText method
-                                          setState(() {
-                                            _pickedLocationAdress = googleMapScreenState.pickedLocation;
-                                          });
+                                        setState(() {
+                                          _pickedLocationAdress = googleMapScreenState.pickedLocation;
+                                        });
                                       }
                                     },
                                   )
