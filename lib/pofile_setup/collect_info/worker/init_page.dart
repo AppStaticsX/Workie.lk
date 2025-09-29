@@ -19,7 +19,7 @@ class _InitPageState extends State<InitPage> {
         backgroundColor: const Color(0xFF4E6BF5),
         surfaceTintColor: Colors.transparent,
         leading: const Icon(
-          CupertinoIcons.person_crop_circle_badge_plus,
+          CupertinoIcons.person_2_fill,
           color: Colors.white,
           size: 36,
         ),

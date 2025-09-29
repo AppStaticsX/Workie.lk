@@ -539,7 +539,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
         leading: const Icon(
           CupertinoIcons.person_2_fill,
           color: Colors.white,
-          size: 30,
+          size: 36,
         ),
         title: Text('Create & Verify Your Profile',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(

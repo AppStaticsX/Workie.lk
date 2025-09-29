@@ -120,7 +120,7 @@ class WorkerPostService {
     final client = http.Client();
     try {
       // Simulate sending progress in chunks
-      const chunkSize = 8192; // 8KB chunks
+      const chunkSize = 1024*512; // 512KB chunks
       int sentBytes = 0;
 
       // Create a custom stream controller to simulate upload progress
