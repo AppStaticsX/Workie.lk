@@ -1,14 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
-import 'package:lottie/lottie.dart';
+import 'package:flame_lottie/flame_lottie.dart';
 import 'package:pinput/pinput.dart';
 import 'package:workie/authentication/pages/login_page.dart';
 import 'package:workie/services/auth_service.dart';
 import 'package:workie/widgets/custom_textfield.dart';
 import '../../generated/app_localizations.dart';
 import '../../values/color.dart';
-import '../../widgets/custom_toast.dart';
 import '../../widgets/error_dialog.dart';
 
 class ResetPasswordPage extends StatefulWidget {
@@ -41,7 +40,6 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
   void initState() {
     super.initState();
     _lottieController = AnimationController(vsync: this);
-    CustomToast.init(context);
   }
 
   @override
@@ -207,7 +205,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
         }
 
       } else {
-        CustomToast.show(result['message'], Iconsax.close_circle);
+        //CustomToast.show(result['message'], Iconsax.close_circle);
       }
     } catch (e) {
       setState(() {

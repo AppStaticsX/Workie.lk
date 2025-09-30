@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workie/pages/explore_page.dart';
 import 'package:workie/pages/home_page.dart';
 import 'package:workie/pages/post_page.dart';
@@ -127,7 +125,7 @@ class _MainScreenState extends State<MainScreen> {
       ),
     );
   }
-  /*Widget buildPlusNavIcon(String icon, String activeIcon, int index, String lable) {
+/*Widget buildPlusNavIcon(String icon, String activeIcon, int index, String lable) {
     bool isSelected = _selectedIndex == index;
     return GestureDetector(
       onTap: () => _navigateBottomBar(index),

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/media_item_model.dart';
@@ -420,7 +421,9 @@ class PostDataService {
         'likes': List<Map<String, dynamic>>.from(likesList),
       };
     } catch (e) {
-      print('Error formatting post: $e');
+      if (kDebugMode) {
+        print('Error formatting post: $e');
+      }
       // Return a default formatted post in case of error
       return {
         'id': backendPost['_id'] ?? '',
@@ -683,7 +686,7 @@ class PostDataService {
       // Create a comma-separated string of post IDs
       final idsString = postIds.join(',');
       final uri = Uri.parse('$baseUrl/posts/batch?ids=$idsString');
-      
+
       final response = await http.get(
         uri,
         headers: {

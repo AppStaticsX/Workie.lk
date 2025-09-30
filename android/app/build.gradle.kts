@@ -15,7 +15,7 @@ plugins {
 
 android {
     namespace = "com.appstaticsx.app.workie"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = "27.0.12077973"
 
     compileOptions {

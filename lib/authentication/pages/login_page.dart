@@ -14,7 +14,6 @@ import 'package:workie/generated/app_localizations.dart';
 import 'package:workie/screens/select_role_screen.dart';
 import 'package:workie/screens/splash_screen.dart';
 import 'package:workie/widgets/custom_textfield.dart';
-import 'package:workie/widgets/custom_toast.dart';
 import 'package:workie/widgets/full_screen_popup_dialog.dart';
 import '../../services/auth_service.dart';
 import '../../values/color.dart';
@@ -293,7 +292,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
 
   @override
   Widget build(BuildContext context) {
-    CustomToast.init(context);
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: Stack(
