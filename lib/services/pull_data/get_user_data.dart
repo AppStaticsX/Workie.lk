@@ -30,6 +30,14 @@ class GetUserDataService {
     }
   }
 
+  /// Get current user ID (public method)
+  /// 
+  /// Returns the current user's ID from SharedPreferences
+  /// Returns null if no user is logged in
+  static Future<String?> getCurrentUserId() async {
+    return await _getCurrentUserId();
+  }
+
   /// Get current user's basic information
   /// 
   /// Returns a UserData object containing firstName, lastName, email, phone, etc.

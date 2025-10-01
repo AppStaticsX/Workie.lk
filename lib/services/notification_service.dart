@@ -158,6 +158,8 @@ class NotificationService {
   static Future<bool> requestPermissions() async {
     bool permissionGranted = false;
 
+    if (kDebugMode) print('🔔 Requesting notification permissions...');
+
     if (Platform.isIOS || Platform.isMacOS) {
       await _flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
@@ -174,6 +176,7 @@ class NotificationService {
         sound: true,
       );
       permissionGranted = true;
+      if (kDebugMode) print('🔔 iOS/macOS notification permissions requested');
     } else if (Platform.isAndroid) {
       final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
       _flutterLocalNotificationsPlugin
@@ -181,6 +184,7 @@ class NotificationService {
 
       permissionGranted =
           await androidImplementation?.requestNotificationsPermission() ?? false;
+      if (kDebugMode) print('🔔 Android notification permissions: $permissionGranted');
     }
 
     return permissionGranted;
@@ -204,15 +208,32 @@ class NotificationService {
     String? payload,
     NotificationDetails? notificationDetails,
   }) async {
-    final details = notificationDetails ?? _defaultNotificationDetails();
+    try {
+      if (kDebugMode) {
+        print('🔔 ShowNotification called:');
+        print('  - Title: $title');
+        print('  - Body: $body');
+        print('  - Payload: $payload');
+        print('  - Notification ID: $_notificationId');
+      }
 
-    await _flutterLocalNotificationsPlugin.show(
-      _notificationId++,
-      title,
-      body,
-      details,
-      payload: payload,
-    );
+      final details = notificationDetails ?? _defaultNotificationDetails();
+
+      await _flutterLocalNotificationsPlugin.show(
+        _notificationId++,
+        title,
+        body,
+        details,
+        payload: payload,
+      );
+
+      if (kDebugMode) print('✅ Notification shown successfully with ID: ${_notificationId - 1}');
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error in showNotification: $e');
+        print('❌ Stack trace: ${StackTrace.current}');
+      }
+    }
   }
 
   /// Show notification with custom sound
@@ -245,6 +266,126 @@ class NotificationService {
       title: title,
       body: body,
       payload: payload,
+      notificationDetails: details,
+    );
+  }
+
+  /// Show post like notification
+  static Future<void> showPostLikeNotification({
+    required String likerName,
+    required String postContent,
+    String? postId,
+  }) async {
+    try {
+      if (kDebugMode) {
+        print('🔔 Attempting to show like notification:');
+        print('  - Liker: $likerName');
+        print('  - Post ID: $postId');
+        print('  - Content: ${postContent.substring(0, postContent.length > 50 ? 50 : postContent.length)}...');
+      }
+
+      const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+        'post_like_channel',
+        'Post Like Notifications',
+        channelDescription: 'Notifications when someone likes your post',
+        importance: Importance.high,
+        priority: Priority.high,
+        icon: '@mipmap/notification_icon',
+        styleInformation: BigTextStyleInformation(
+          '',
+          contentTitle: 'Post Liked',
+          summaryText: 'Someone liked your post',
+        ),
+      );
+
+      const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+
+      const NotificationDetails details = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+        macOS: iosDetails,
+      );
+
+      final truncatedContent = postContent.length > 50 
+          ? '${postContent.substring(0, 50)}...' 
+          : postContent;
+
+      final title = '👍 Post Liked';
+      final body = '$likerName liked your post: "$truncatedContent"';
+      final payload = 'post_like:$postId';
+
+      if (kDebugMode) {
+        print('🔔 Notification details:');
+        print('  - Title: $title');
+        print('  - Body: $body');
+        print('  - Payload: $payload');
+      }
+
+      await showNotification(
+        title: title,
+        body: body,
+        payload: payload,
+        notificationDetails: details,
+      );
+
+      if (kDebugMode) print('✅ Like notification sent successfully');
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error showing like notification: $e');
+        print('❌ Stack trace: ${StackTrace.current}');
+      }
+    }
+  }
+
+  /// Show post comment notification
+  static Future<void> showPostCommentNotification({
+    required String commenterName,
+    required String commentText,
+    required String postContent,
+    String? postId,
+  }) async {
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'post_comment_channel',
+      'Post Comment Notifications',
+      channelDescription: 'Notifications when someone comments on your post',
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/notification_icon',
+      styleInformation: BigTextStyleInformation(
+        '',
+        contentTitle: 'New Comment',
+        summaryText: 'Someone commented on your post',
+      ),
+    );
+
+    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const NotificationDetails details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+      macOS: iosDetails,
+    );
+
+    final truncatedPostContent = postContent.length > 30 
+        ? '${postContent.substring(0, 30)}...' 
+        : postContent;
+    
+    final truncatedComment = commentText.length > 60 
+        ? '${commentText.substring(0, 60)}...' 
+        : commentText;
+
+    await showNotification(
+      title: '💬 New Comment',
+      body: '$commenterName commented on your post "$truncatedPostContent": "$truncatedComment"',
+      payload: 'post_comment:$postId',
       notificationDetails: details,
     );
   }

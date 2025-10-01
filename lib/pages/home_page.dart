@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/models/post_model.dart';
@@ -261,27 +262,6 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
         SnackBar(content: Text('Notification tapped: ${response.payload}')),
       );
     });
-  }
-
-  Future<void> _showSimpleNotification() async {
-    await NotificationService.showNotification(
-      title: 'Simple Notification',
-      body: 'This is a basic notification from HomePage',
-      payload: 'home_notification',
-    );
-  }
-
-  Future<void> _showScheduledNotification() async {
-    await NotificationService.scheduleNotification(
-      title: 'Scheduled Notification',
-      body: 'This notification was scheduled 5 seconds ago!',
-      scheduledDate: DateTime.now().add(Duration(seconds: 5)),
-      payload: 'scheduled_notification',
-    );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Notification scheduled for 5 seconds')),
-    );
   }
 
   Future<void> _searchPosts() async {
@@ -614,7 +594,6 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: InkWell(
               onTap: () {
-                _showSimpleNotification();
                 Navigator.push(
                     context,
                     PageRouteBuilder(
@@ -680,8 +659,8 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
                 ],
               ),
             ),
-          )
-        ],
+          ),
+        ]
       ),
       body: Column(
         children: [
