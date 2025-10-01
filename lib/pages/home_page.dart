@@ -9,6 +9,7 @@ import '../services/hive_service.dart';
 import '../services/location_service.dart';
 import '../services/notification_service.dart';
 import '../services/pull_data/post_data_service.dart';
+import '../services/socket_service.dart';
 import '../widgets/circular_category_bar.dart';
 import '../widgets/comment_bottom_sheet.dart';
 
@@ -74,6 +75,167 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
     _loadPosts();
 
     _listenToNotifications();
+    _initializeSocketService();
+  }
+
+  Future<void> _initializeSocketService() async {
+    try {
+      final socketService = SocketService.instance;
+      await socketService.initialize();
+      
+      // Setup listeners for live updates
+      _setupSocketListeners();
+      
+      print('✅ Socket service initialized in HomePage');
+    } catch (e) {
+      print('❌ Error initializing socket service: $e');
+    }
+  }
+
+  void _setupSocketListeners() {
+    final socketService = SocketService.instance;
+    
+    // Listen for live post updates that affect the feed
+    socketService.addEventListener('post_like_updated', _onPostLiveUpdate);
+    socketService.addEventListener('post_comment_added', _onPostLiveUpdate);
+    
+    // Listen for new posts being created
+    socketService.addEventListener('new_post_created', _onNewPostCreated);
+    
+    // Listen for post updates/edits
+    socketService.addEventListener('post_updated', _onPostUpdated);
+    
+    // Listen for post deletions
+    socketService.addEventListener('post_deleted', _onPostDeleted);
+  }
+
+  void _onPostLiveUpdate(dynamic data) {
+    try {
+      if (mounted) {
+        final postId = data['postId'];
+        if (postId != null) {
+          // Find the post in current posts list and update it
+          final postIndex = _posts.indexWhere((post) => post['id'] == postId);
+          if (postIndex != -1) {
+            setState(() {
+              // Update like count if available
+              if (data['likesCount'] != null) {
+                _posts[postIndex]['initialLikeCount'] = data['likesCount'];
+              }
+              
+              // Update comment count if available
+              if (data['totalComments'] != null) {
+                _posts[postIndex]['commentCount'] = data['totalComments'];
+              }
+              
+              // Update likes array if available
+              if (data['likes'] != null) {
+                _posts[postIndex]['likes'] = List<Map<String, dynamic>>.from(data['likes']);
+              }
+            });
+            
+            print('🔄 Updated post ${postId} in feed with live data');
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ Error handling live post update in HomePage: $e');
+    }
+  }
+
+  void _onNewPostCreated(dynamic data) {
+    try {
+      if (mounted && !_isSearching) {
+        final newPostData = data['post'];
+        if (newPostData != null) {
+          // Format the new post for display
+          _formatAndAddNewPost(newPostData);
+          print('🆕 Added new post to feed: ${data['postId']}');
+        }
+      }
+    } catch (e) {
+      print('❌ Error handling new post creation: $e');
+    }
+  }
+
+  void _onPostUpdated(dynamic data) {
+    try {
+      if (mounted) {
+        final postId = data['postId'];
+        final updatedPost = data['updatedPost'];
+        
+        if (postId != null && updatedPost != null) {
+          final postIndex = _posts.indexWhere((post) => post['id'] == postId);
+          if (postIndex != -1) {
+            // Re-format the updated post and replace it in the list
+            _formatAndUpdatePost(postIndex, updatedPost);
+            print('✏️ Updated post content in feed: $postId');
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ Error handling post update: $e');
+    }
+  }
+
+  void _onPostDeleted(dynamic data) {
+    try {
+      if (mounted) {
+        final postId = data['postId'];
+        if (postId != null) {
+          setState(() {
+            _posts.removeWhere((post) => post['id'] == postId);
+          });
+          print('🗑️ Removed deleted post from feed: $postId');
+        }
+      }
+    } catch (e) {
+      print('❌ Error handling post deletion: $e');
+    }
+  }
+
+  // Helper method to format and add new post to the beginning of feed
+  Future<void> _formatAndAddNewPost(Map<String, dynamic> backendPost) async {
+    try {
+      final formattedPost = await PostDataService.formatPostForWidget(backendPost);
+      
+      setState(() {
+        // Add to the beginning of the list (newest first)
+        _posts.insert(0, formattedPost);
+        
+        // Optionally limit the number of posts to prevent memory issues
+        if (_posts.length > 100) {
+          _posts.removeLast();
+        }
+      });
+      
+      // Show a subtle notification that a new post was added
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('New post added to feed'),
+            duration: Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(bottom: 80, left: 16, right: 16),
+          ),
+        );
+      }
+    } catch (e) {
+      print('❌ Error formatting new post: $e');
+    }
+  }
+
+  // Helper method to format and update existing post
+  Future<void> _formatAndUpdatePost(int postIndex, Map<String, dynamic> updatedBackendPost) async {
+    try {
+      final formattedPost = await PostDataService.formatPostForWidget(updatedBackendPost);
+      
+      setState(() {
+        _posts[postIndex] = formattedPost;
+      });
+    } catch (e) {
+      print('❌ Error formatting updated post: $e');
+    }
   }
 
   @override
@@ -81,6 +243,15 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _animationController.dispose();
+    
+    // Clean up socket listeners
+    final socketService = SocketService.instance;
+    socketService.removeEventListener('post_like_updated', _onPostLiveUpdate);
+    socketService.removeEventListener('post_comment_added', _onPostLiveUpdate);
+    socketService.removeEventListener('new_post_created', _onNewPostCreated);
+    socketService.removeEventListener('post_updated', _onPostUpdated);
+    socketService.removeEventListener('post_deleted', _onPostDeleted);
+    
     super.dispose();
   }
 

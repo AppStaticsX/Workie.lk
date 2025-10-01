@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 import 'package:workie/screens/media_gallery_screen.dart';
 import 'package:workie/widgets/comment_bottom_sheet.dart';
+import '../services/socket_service.dart';
 
 import 'media_item_model.dart';
 
@@ -95,6 +96,65 @@ class _PostCardModelState extends State<PostCardModel> {
     _isLiked = widget.isLikedByCurrentUser; // Set initial like status
     _initializeVideoControllers();
     _getCurrentUserId();
+    _setupSocketListeners();
+  }
+
+  void _setupSocketListeners() {
+    final socketService = SocketService.instance;
+    
+    // Listen for like updates on this post
+    socketService.addEventListener('post_like_updated', _onPostLikeUpdated);
+    
+    // Listen for comment updates on this post
+    socketService.addEventListener('post_comment_added', _onPostCommentAdded);
+  }
+
+  void _onPostLikeUpdated(dynamic data) {
+    try {
+      // Check if this update is for current post
+      if (data['postId'] == widget.postId) {
+        if (mounted) {
+          setState(() {
+            _likeCount = data['likesCount'] ?? _likeCount;
+            
+            // Update like status based on current user's action
+            if (data['userId'] == _currentUserId) {
+              _isLiked = data['isLiked'] ?? _isLiked;
+            }
+          });
+          
+          if (kDebugMode) {
+            print('🔄 Updated like count for post ${widget.postId}: $_likeCount, isLiked: $_isLiked');
+          }
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print('❌ Error handling like update: $e');
+    }
+  }
+
+  void _onPostCommentAdded(dynamic data) {
+    try {
+      // Check if this update is for current post
+      if (data['postId'] == widget.postId) {
+        if (mounted) {
+          setState(() {
+            _commentCount = data['totalComments'] ?? _commentCount;
+            
+            // Update comment status if current user commented
+            if (data['commenterUserId'] == _currentUserId) {
+              _hasUserCommented = true;
+            }
+          });
+          
+          if (kDebugMode) {
+            print('🔄 Updated comment count for post ${widget.postId}: $_commentCount');
+          }
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print('❌ Error handling comment update: $e');
+    }
   }
 
   void _getCurrentUserId() async {
@@ -213,9 +273,16 @@ class _PostCardModelState extends State<PostCardModel> {
 
   @override
   void dispose() {
+    // Clean up video controllers
     for (var controller in _videoControllers.values) {
       controller.dispose();
     }
+    
+    // Remove socket event listeners
+    final socketService = SocketService.instance;
+    socketService.removeEventListener('post_like_updated', _onPostLikeUpdated);
+    socketService.removeEventListener('post_comment_added', _onPostCommentAdded);
+    
     super.dispose();
   }
 

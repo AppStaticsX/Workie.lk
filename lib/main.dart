@@ -7,6 +7,7 @@ import 'package:workie/l10n/l10n.dart';
 import 'package:workie/screens/splash_screen.dart';
 import 'package:workie/services/hive_service.dart';
 import 'package:workie/services/notification_service.dart';
+import 'package:workie/services/socket_service.dart';
 import 'package:workie/themes/theme_provider.dart';
 import 'package:workie/providers/language_provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -29,6 +30,14 @@ Future<void> main() async {
       _handleNotificationTap(response);
     },
   );
+
+  // Initialize socket service for real-time updates
+  try {
+    await SocketService.instance.initialize();
+    print('✅ Socket service initialized globally');
+  } catch (e) {
+    print('❌ Error initializing socket service: $e');
+  }
 
   runApp(
       MultiProvider(

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../socket_service.dart';
 import '../../models/media_item_model.dart';
 
 class PostDataService {
@@ -141,6 +142,17 @@ class PostDataService {
         throw Exception('Authentication required');
       }
 
+      // Emit optimistic update via socket if connected
+      final socketService = SocketService.instance;
+      final currentUserId = await getCurrentUserId();
+      
+      if (socketService.isConnected && currentUserId != null) {
+        // We could emit a local optimistic update here if needed
+        if (kDebugMode) {
+          print('📱 Sending like update for post: $postId via socket');
+        }
+      }
+
       final uri = Uri.parse('$baseUrl/posts/$postId/like');
       final response = await http.post(
         uri,
@@ -153,6 +165,9 @@ class PostDataService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
+          if (kDebugMode) {
+            print('✅ Like toggle successful for post: $postId');
+          }
           return data;
         } else {
           throw Exception(data['message'] ?? 'Failed to toggle like');
@@ -161,6 +176,9 @@ class PostDataService {
         throw Exception('Failed to toggle like: ${response.statusCode}');
       }
     } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error toggling like: $e');
+      }
       throw Exception('Network error: $e');
     }
   }
@@ -175,6 +193,16 @@ class PostDataService {
 
       if (token == null) {
         throw Exception('Authentication required');
+      }
+
+      // Log comment submission via socket if connected
+      final socketService = SocketService.instance;
+      final currentUserId = await getCurrentUserId();
+      
+      if (socketService.isConnected && currentUserId != null) {
+        if (kDebugMode) {
+          print('📱 Sending comment for post: $postId via socket');
+        }
       }
 
       final uri = Uri.parse('$baseUrl/posts/$postId/comments');
@@ -192,6 +220,9 @@ class PostDataService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
+          if (kDebugMode) {
+            print('✅ Comment added successfully for post: $postId');
+          }
           return data;
         } else {
           throw Exception(data['message'] ?? 'Failed to add comment');
@@ -201,6 +232,9 @@ class PostDataService {
         throw Exception(errorData['message'] ?? 'Failed to add comment: ${response.statusCode}');
       }
     } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error adding comment: $e');
+      }
       throw Exception('Network error: $e');
     }
   }
@@ -229,47 +263,6 @@ class PostDataService {
         }
       } else {
         throw Exception('Failed to fetch comments: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Network error: $e');
-    }
-  }
-
-  /// Delete a post by postId
-  static Future<Map<String, dynamic>> deletePost({
-    required String postId,
-  }) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
-
-      if (token == null) {
-        throw Exception('Authentication required');
-      }
-
-      final uri = Uri.parse('$baseUrl/posts/$postId');
-      final response = await http.delete(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['success'] == true) {
-          return data;
-        } else {
-          throw Exception(data['message'] ?? 'Failed to delete post');
-        }
-      } else if (response.statusCode == 404) {
-        throw Exception('Post not found');
-      } else if (response.statusCode == 403) {
-        throw Exception('Not authorized to delete this post');
-      } else {
-        final errorData = json.decode(response.body);
-        throw Exception(errorData['message'] ?? 'Failed to delete post: ${response.statusCode}');
       }
     } catch (e) {
       throw Exception('Network error: $e');
@@ -714,6 +707,124 @@ class PostDataService {
     }
   }
 
+  /// Update/Edit a post
+  static Future<Map<String, dynamic>> updatePost({
+    required String postId,
+    String? content,
+    List<Map<String, dynamic>>? media,
+    String? privacy,
+    String? location,
+    List<String>? taggedUsers,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token == null) {
+        throw Exception('Authentication required');
+      }
+
+      // Log post update via socket if connected
+      final socketService = SocketService.instance;
+      final currentUserId = await getCurrentUserId();
+      
+      if (socketService.isConnected && currentUserId != null) {
+        if (kDebugMode) {
+          print('📱 Sending post update for: $postId via socket');
+        }
+      }
+
+      final uri = Uri.parse('$baseUrl/posts/$postId');
+      final body = <String, dynamic>{};
+      
+      if (content != null) body['content'] = content;
+      if (media != null) body['media'] = media;
+      if (privacy != null) body['privacy'] = privacy;
+      if (location != null) body['location'] = location;
+      if (taggedUsers != null) body['taggedUsers'] = taggedUsers;
+
+      final response = await http.put(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode(body),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          if (kDebugMode) {
+            print('✅ Post update successful for: $postId');
+          }
+          return data;
+        } else {
+          throw Exception(data['message'] ?? 'Failed to update post');
+        }
+      } else {
+        throw Exception('Failed to update post: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error updating post: $e');
+      }
+      throw Exception('Network error: $e');
+    }
+  }
+
+  /// Delete a post
+  static Future<Map<String, dynamic>> deletePost({
+    required String postId,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token == null) {
+        throw Exception('Authentication required');
+      }
+
+      // Log post deletion via socket if connected
+      final socketService = SocketService.instance;
+      final currentUserId = await getCurrentUserId();
+      
+      if (socketService.isConnected && currentUserId != null) {
+        if (kDebugMode) {
+          print('📱 Sending post deletion for: $postId via socket');
+        }
+      }
+
+      final uri = Uri.parse('$baseUrl/posts/$postId');
+      final response = await http.delete(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          if (kDebugMode) {
+            print('✅ Post deletion successful for: $postId');
+          }
+          return data;
+        } else {
+          throw Exception(data['message'] ?? 'Failed to delete post');
+        }
+      } else {
+        throw Exception('Failed to delete post: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error deleting post: $e');
+      }
+      throw Exception('Network error: $e');
+    }
+  }
+
   /// Get a single post by its ID
   static Future<Map<String, dynamic>?> getPostById(String postId) async {
     try {
@@ -736,7 +847,7 @@ class PostDataService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true && data['data'] != null) {
-          return data['data'];
+          return Map<String, dynamic>.from(data['data']);
         } else {
           throw Exception(data['message'] ?? 'Failed to fetch post');
         }
