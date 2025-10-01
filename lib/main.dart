@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -25,7 +26,9 @@ Future<void> main() async {
   await NotificationService.initialize(
     onNotificationTap: (response) {
       // Handle notification tap globally
-      print('Notification tapped: ${response.payload}');
+      if (kDebugMode) {
+        print('Notification tapped: ${response.payload}');
+      }
       // You can navigate to specific screens based on payload
       _handleNotificationTap(response);
     },
@@ -34,9 +37,13 @@ Future<void> main() async {
   // Initialize socket service for real-time updates
   try {
     await SocketService.instance.initialize();
-    print('✅ Socket service initialized globally');
+    if (kDebugMode) {
+      print('✅ Socket service initialized globally');
+    }
   } catch (e) {
-    print('❌ Error initializing socket service: $e');
+    if (kDebugMode) {
+      print('❌ Error initializing socket service: $e');
+    }
   }
 
   runApp(

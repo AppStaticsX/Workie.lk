@@ -51,11 +51,13 @@ When a user adds a comment:
 
 **Frontend Flow:**
 1. User submits comment via CommentBottomSheet
-2. Local comment list updates (optimistic)
+2. Local comment list updates optimistically (immediate feedback)
 3. API call is made to backend
 4. Socket receives `post_comment_added` event
 5. All PostCardModels update their comment counts
-6. HomePage updates the post in its feed array
+6. All open CommentBottomSheets for the same post receive the new comment
+7. HomePage updates the post in its feed array
+8. Users see subtle notifications when new comments arrive
 
 ### 3. New Post Creation
 When a user creates a new post:
@@ -106,8 +108,16 @@ When a user deletes a post:
 - No manual refresh needed
 - Optimistic updates for smooth UX
 
+### Live Comments Experience
+- Comments appear in real-time in CommentBottomSheet
+- Multiple users can comment simultaneously
+- Comments show with user avatars and timestamps
+- Subtle notifications when new comments arrive
+- Automatic scroll and count updates
+
 ### Smart Event Handling
 - Each PostCardModel only responds to events for its specific post
+- CommentBottomSheet listens for comments on its specific post
 - HomePage updates the feed data structure
 - Proper cleanup of event listeners on widget disposal
 
@@ -238,8 +248,11 @@ const String baseUrl = 'https://workie-lk-backend.onrender.com';
 
 2. **Comment Testing:**
    - Add a comment on one device
-   - Check that comment appears on other devices
-   - Verify comment counts are updated
+   - Check that comment appears on other devices in real-time
+   - Verify comment counts are updated instantly
+   - Test multiple users commenting simultaneously
+   - Verify comments appear in CommentBottomSheet if open
+   - Check that user avatars and names display correctly
 
 3. **New Post Testing:**
    - Create a new post on one device

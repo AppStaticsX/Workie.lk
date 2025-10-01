@@ -3,6 +3,7 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:shimmer_ai/shimmer_ai.dart';
 import '../services/pull_data/get_user_data.dart';
 import '../services/pull_data/post_data_service.dart';
+import '../services/socket_service.dart';
 
 class CommentBottomSheet extends StatefulWidget {
   final List<Map<String, dynamic>> initialComments;
@@ -23,6 +24,7 @@ class CommentBottomSheet extends StatefulWidget {
 class _CommentBottomSheetState extends State<CommentBottomSheet> {
   String _userAvatarUrl = '';
   String _userName = '';
+  String? _currentUserId;
   bool _isLoading = false;
   bool _isSendingComment = false;
 
@@ -34,11 +36,102 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
     super.initState();
     _comments = List.from(widget.initialComments);
     _getUserData();
+    _setupSocketListeners();
+  }
+
+  void _setupSocketListeners() {
+    final socketService = SocketService.instance;
+    
+    // Listen for new comments on this specific post
+    socketService.addEventListener('post_comment_added', _onCommentAdded);
+  }
+
+  void _onCommentAdded(dynamic data) {
+    try {
+      // Check if this comment is for the current post
+      if (data['postId'] == widget.postId && mounted) {
+        final newCommentData = data['comment'];
+        if (newCommentData != null) {
+          // Don't add the comment if it's from the current user (already added optimistically)
+          final commenterUserId = data['commenterUserId'];
+          if (commenterUserId != _currentUserId) {
+            // Format the new comment
+            final formattedComment = {
+              'userId': newCommentData['userId'],
+              'commentedUserProfileImgUrl': newCommentData['userInfo']?['profilePicture'] ?? '',
+              'commentedUserName': '${newCommentData['userInfo']?['firstName'] ?? ''} ${newCommentData['userInfo']?['lastName'] ?? ''}'.trim(),
+              'comment': newCommentData['comment'] ?? '',
+              'ísVerified': false,
+              'timestamp': _formatTimestamp(newCommentData['commentedAt']),
+              'userInfo': newCommentData['userInfo'],
+            };
+
+            setState(() {
+              // Add to the beginning of the list (newest first)
+              _comments.insert(0, formattedComment);
+            });
+
+            // Notify parent about the updated comments
+            widget.onCommentsUpdated?.call(_comments);
+
+            // Show a subtle animation or indicator for new comment
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('${formattedComment['commentedUserName']} added a comment'),
+                  duration: Duration(seconds: 2),
+                  behavior: SnackBarBehavior.floating,
+                  margin: EdgeInsets.only(bottom: 200, left: 16, right: 16),
+                  backgroundColor: Colors.blue,
+                ),
+              );
+            }
+
+            print('💬 Added live comment to bottom sheet for post: ${widget.postId}');
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ Error handling live comment in bottom sheet: $e');
+    }
+  }
+
+  String _formatTimestamp(dynamic timestamp) {
+    try {
+      if (timestamp == null) return 'now';
+
+      DateTime dateTime;
+      if (timestamp is String) {
+        dateTime = DateTime.parse(timestamp);
+      } else {
+        return 'now';
+      }
+
+      final now = DateTime.now();
+      final difference = now.difference(dateTime);
+
+      if (difference.inDays > 0) {
+        return '${difference.inDays}d';
+      } else if (difference.inHours > 0) {
+        return '${difference.inHours}h';
+      } else if (difference.inMinutes > 0) {
+        return '${difference.inMinutes}m';
+      } else {
+        return 'now';
+      }
+    } catch (e) {
+      return 'now';
+    }
   }
 
   @override
   void dispose() {
     _commentController.dispose();
+    
+    // Remove socket event listeners
+    final socketService = SocketService.instance;
+    socketService.removeEventListener('post_comment_added', _onCommentAdded);
+    
     super.dispose();
   }
 
@@ -48,6 +141,9 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
     });
 
     try {
+      // Get current user ID
+      _currentUserId = await PostDataService.getCurrentUserId();
+      
       final userPhotos = await GetUserDataService.getCurrentUserPhotos();
       if (userPhotos != null) {
         setState(() {
@@ -79,8 +175,9 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
       );
 
       if (result['success'] == true) {
-        // Create new comment object
+        // Create new comment object for optimistic update
         final newComment = {
+          'userId': _currentUserId,
           'commentedUserProfileImgUrl': _userAvatarUrl,
           'commentedUserName': _userName.isNotEmpty ? _userName : 'You',
           'comment': commentText,
@@ -89,23 +186,17 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
         };
 
         setState(() {
-          _comments.insert(0, newComment); // Add to top of list
+          _comments.insert(0, newComment); // Add to top of list optimistically
           _commentController.clear();
         });
 
         // Notify parent widget about updated comments
         widget.onCommentsUpdated?.call(_comments);
 
-        // Show success feedback
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Comment added successfully!'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
+        // Note: Real-time socket update will handle showing the comment to other users
+        // The socket event won't add this comment again since it's from current user
+
+        print('✅ Comment added optimistically to bottom sheet');
       }
     } catch (e) {
       if (mounted) {

@@ -138,22 +138,73 @@ class _PostCardModelState extends State<PostCardModel> {
       // Check if this update is for current post
       if (data['postId'] == widget.postId) {
         if (mounted) {
+          final newCommentData = data['comment'];
+          final totalComments = data['totalComments'] ?? _commentCount;
+          
           setState(() {
-            _commentCount = data['totalComments'] ?? _commentCount;
+            _commentCount = totalComments;
             
             // Update comment status if current user commented
             if (data['commenterUserId'] == _currentUserId) {
               _hasUserCommented = true;
             }
           });
+
+          // If there's new comment data, add it to the widget's comments list
+          if (newCommentData != null && widget.onCommentsUpdated != null) {
+            final formattedComment = {
+              'userId': newCommentData['userId'],
+              'commentedUserProfileImgUrl': newCommentData['userInfo']?['profilePicture'] ?? '',
+              'commentedUserName': '${newCommentData['userInfo']?['firstName'] ?? ''} ${newCommentData['userInfo']?['lastName'] ?? ''}'.trim(),
+              'comment': newCommentData['comment'] ?? '',
+              'ísVerified': false,
+              'timestamp': _formatTimestamp(newCommentData['commentedAt']),
+              'userInfo': newCommentData['userInfo'],
+            };
+
+            // Create updated comments list
+            final updatedComments = List<Map<String, dynamic>>.from(widget.comments);
+            updatedComments.insert(0, formattedComment);
+            
+            // Notify parent about the updated comments
+            widget.onCommentsUpdated?.call(updatedComments);
+          }
           
           if (kDebugMode) {
-            print('🔄 Updated comment count for post ${widget.postId}: $_commentCount');
+            print('🔄 Updated comment count and data for post ${widget.postId}: $_commentCount');
           }
         }
       }
     } catch (e) {
       if (kDebugMode) print('❌ Error handling comment update: $e');
+    }
+  }
+
+  String _formatTimestamp(dynamic timestamp) {
+    try {
+      if (timestamp == null) return 'now';
+
+      DateTime dateTime;
+      if (timestamp is String) {
+        dateTime = DateTime.parse(timestamp);
+      } else {
+        return 'now';
+      }
+
+      final now = DateTime.now();
+      final difference = now.difference(dateTime);
+
+      if (difference.inDays > 0) {
+        return '${difference.inDays}d';
+      } else if (difference.inHours > 0) {
+        return '${difference.inHours}h';
+      } else if (difference.inMinutes > 0) {
+        return '${difference.inMinutes}m';
+      } else {
+        return 'now';
+      }
+    } catch (e) {
+      return 'now';
     }
   }
 

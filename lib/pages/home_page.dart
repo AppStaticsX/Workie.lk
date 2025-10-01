@@ -469,7 +469,17 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
           setState(() {
             _posts[postIndex]['comments'] = updatedComments;
             _posts[postIndex]['commentCount'] = updatedComments.length;
+            
+            // Update hasUserCommented flag if current user is in comments
+            final currentUserId = SocketService.instance.currentUserId;
+            if (currentUserId != null) {
+              _posts[postIndex]['hasUserCommented'] = updatedComments.any(
+                (comment) => comment['userId']?.toString() == currentUserId.toString()
+              );
+            }
           });
+          
+          print('🔄 Updated post comments in HomePage feed');
         },
       ),
     );
