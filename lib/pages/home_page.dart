@@ -9,6 +9,7 @@ import 'package:shimmer_ai/shimmer_ai.dart';
 import '../services/hive_service.dart';
 import '../services/location_service.dart';
 import '../services/notification_service.dart';
+import '../services/post_notification_service.dart';
 import '../services/pull_data/post_data_service.dart';
 import '../services/socket_service.dart';
 import '../widgets/circular_category_bar.dart';
@@ -182,16 +183,32 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
   void _onPostDeleted(dynamic data) {
     try {
       if (mounted) {
-        final postId = data['postId'];
-        if (postId != null) {
+        final postId = data['postId']?.toString();
+        if (postId != null && postId.isNotEmpty) {
+          final initialLength = _posts.length;
+          
           setState(() {
-            _posts.removeWhere((post) => post['id'] == postId);
+            // Remove the deleted post and ensure no duplicates remain
+            _posts.removeWhere((post) => post['id']?.toString() == postId);
           });
-          print('🗑️ Removed deleted post from feed: $postId');
+          
+          final finalLength = _posts.length;
+          final removedCount = initialLength - finalLength;
+          
+          if (kDebugMode) {
+            print('🗑️ Post deletion handled: $postId (removed $removedCount posts)');
+            if (removedCount == 0) {
+              print('⚠️ Warning: Post $postId not found in current feed');
+            } else if (removedCount > 1) {
+              print('⚠️ Warning: Removed $removedCount posts with ID $postId (duplicates detected)');
+            }
+          }
+        } else {
+          if (kDebugMode) print('❌ Post deletion received invalid postId: $postId');
         }
       }
     } catch (e) {
-      print('❌ Error handling post deletion: $e');
+      if (kDebugMode) print('❌ Error handling post deletion: $e');
     }
   }
 
@@ -590,6 +607,26 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
           ),
         ),
         actions: [
+          // Temporary test button for notifications
+          if (kDebugMode)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: InkWell(
+                onTap: () async {
+                  if (kDebugMode) print('🧪 Testing notification system...');
+                  await PostNotificationService.testNotification();
+                },
+                customBorder: const CircleBorder(),
+                child: CustomIconButton(
+                  iconData: Iconsax.flash_1_copy,
+                  color: Colors.orange.withValues(alpha: 0.3),
+                  width: 44,
+                  height: 44,
+                  size: 24,
+                  iconColor: Colors.orange,
+                ),
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: InkWell(
@@ -749,6 +786,7 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
 
                     final post = _posts[index];
                     return PostCardModel(
+                      key: ValueKey('post_${post['id']}'), // Add unique key to prevent widget recycling
                       postId: post['id'],
                       profileImageUrl: post['profileImageUrl'],
                       userName: post['userName'],
@@ -768,11 +806,14 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
                       isLikedByCurrentUser: post['isLikedByCurrentUser'] ?? false,
                       likes: post['likes'] ?? [],
                       onCommentsUpdated: (updatedComments) {
-                        // ADD THIS
-                        setState(() {
-                          _posts[index]['comments'] = updatedComments;
-                          _posts[index]['commentCount'] = updatedComments.length;
-                        });
+                        // Find the correct post by ID instead of using index
+                        final postIndex = _posts.indexWhere((p) => p['id'] == post['id']);
+                        if (postIndex != -1) {
+                          setState(() {
+                            _posts[postIndex]['comments'] = updatedComments;
+                            _posts[postIndex]['commentCount'] = updatedComments.length;
+                          });
+                        }
                       }, bRadius: 12,
                       popupMenuItemIcon: Iconsax.save_add_copy,
                       options: [

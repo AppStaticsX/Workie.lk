@@ -64,9 +64,14 @@ class PostNotificationService {
     }
   }
 
-  /// Setup socket listeners for post notifications
+  /// Setup socket listeners for post events
   void _setupSocketListeners() {
     final socketService = SocketService.instance;
+
+    if (kDebugMode) {
+      print('📡 Setting up socket listeners for post notifications');
+      print('📡 Socket service status: connected=${socketService.isConnected}');
+    }
 
     // Listen for like notifications (only for post owners)
     socketService.addEventListener('post_like_notification', _onPostLikeNotification);
@@ -78,13 +83,21 @@ class PostNotificationService {
     socketService.addEventListener('post_like_updated', _onPostLikeUpdated);
     socketService.addEventListener('post_comment_added', _onPostCommentAdded);
 
-    if (kDebugMode) print('📡 Socket listeners setup for post notifications');
+    if (kDebugMode) {
+      print('✅ Socket listeners setup complete for post notifications');
+      print('📡 Listening for events: post_like_notification, post_comment_notification, post_like_updated, post_comment_added');
+    }
   }
 
   /// Alternative handler for like events - check if notification should be shown
   void _onPostLikeUpdated(dynamic data) {
     try {
-      if (kDebugMode) print('🔔 Post like updated event received: $data');
+      if (kDebugMode) {
+        print('🔔 ==========================================');
+        print('🔔 POST LIKE NOTIFICATION EVENT RECEIVED');
+        print('🔔 ==========================================');
+        print('🔔 Raw event data: $data');
+      }
       
       final userId = data['userId']?.toString(); // User who liked
       final postId = data['postId']?.toString();
@@ -96,19 +109,45 @@ class PostNotificationService {
         print('  - Post ID: $postId');
         print('  - Current user ID: $_currentUserId');
         print('  - Is liked: $isLiked');
+        print('  - Service initialized: $_isInitialized');
+      }
+
+      // Validation checks
+      if (!_isInitialized) {
+        if (kDebugMode) print('❌ PostNotificationService not initialized, ignoring event');
+        return;
+      }
+
+      if (postId == null || postId.isEmpty) {
+        if (kDebugMode) print('❌ Invalid postId, ignoring event');
+        return;
+      }
+
+      if (userId == null || userId.isEmpty) {
+        if (kDebugMode) print('❌ Invalid userId, ignoring event');
+        return;
+      }
+
+      if (_currentUserId == null) {
+        if (kDebugMode) print('❌ Current user ID not available, ignoring event');
+        return;
       }
 
       // Only show notification if:
       // 1. Someone else liked it (not current user)
       // 2. It was a like (not unlike) 
       // 3. We need to check if current user owns this post
-      if (userId != _currentUserId && isLiked && postId != null) {
-        
-        // We'll need to determine if current user owns this post
-        // For now, let's use the simple approach and check if we can get post owner info
-        // from the event data or make a determination another way
-        
+      if (userId != _currentUserId && isLiked) {
+        if (kDebugMode) print('✅ Conditions met for like notification, checking post ownership...');
         _checkAndShowLikeNotification(postId, userId, data);
+      } else {
+        if (kDebugMode) {
+          if (userId == _currentUserId) {
+            print('🔔 Skipping notification - user liked their own post');
+          } else if (!isLiked) {
+            print('🔔 Skipping notification - post was unliked');
+          }
+        }
       }
     } catch (e) {
       if (kDebugMode) print('❌ Error handling like updated event: $e');
@@ -317,9 +356,12 @@ class PostNotificationService {
   /// Check if current user owns a specific post and get post content
   Future<Map<String, dynamic>?> _getPostDetails(String postId) async {
     try {
-      if (_currentUserId == null) return null;
+      if (_currentUserId == null) {
+        if (kDebugMode) print('❌ No current user ID available for post ownership check');
+        return null;
+      }
       
-      if (kDebugMode) print('🔔 Fetching post details for: $postId');
+      if (kDebugMode) print('🔔 Fetching post details for: $postId (current user: $_currentUserId)');
       
       // Try to get auth token for the API call
       final prefs = await SharedPreferences.getInstance();
@@ -329,6 +371,8 @@ class PostNotificationService {
         // Make API call to get post details
         final postDetailsUrl = 'https://workie-lk-backend.onrender.com/api/posts/single/$postId';
         
+        if (kDebugMode) print('🔔 Making API call to: $postDetailsUrl');
+        
         try {
           final response = await http.get(
             Uri.parse(postDetailsUrl),
@@ -336,34 +380,48 @@ class PostNotificationService {
               'Content-Type': 'application/json',
               'Authorization': 'Bearer $token',
             },
-          );
+          ).timeout(const Duration(seconds: 10));
+          
+          if (kDebugMode) print('🔔 API response status: ${response.statusCode}');
           
           if (response.statusCode == 200) {
             final data = json.decode(response.body);
+            if (kDebugMode) print('🔔 API response data: $data');
+            
             if (data['success'] == true && data['data'] != null) {
               final post = data['data'];
-              final isOwned = post['userId']?.toString() == _currentUserId;
+              final postOwnerId = post['userId']?['_id']?.toString() ?? post['userId']?.toString();
+              final isOwned = postOwnerId == _currentUserId;
               
-              if (kDebugMode) print('🔔 Post ownership check: $isOwned');
+              if (kDebugMode) {
+                print('🔔 Post ownership analysis:');
+                print('  - Post owner ID: $postOwnerId');
+                print('  - Current user ID: $_currentUserId');
+                print('  - User owns post: $isOwned');
+              }
               
               return {
                 'isOwned': isOwned,
                 'content': post['content']?.toString() ?? 'your post',
-                'userId': post['userId']?.toString(),
+                'userId': postOwnerId,
               };
+            } else {
+              if (kDebugMode) print('❌ API returned unsuccessful response or no data');
             }
+          } else {
+            if (kDebugMode) print('❌ API call failed with status: ${response.statusCode} - ${response.body}');
           }
         } catch (apiError) {
-          if (kDebugMode) print('⚠️ API call failed, using fallback: $apiError');
+          if (kDebugMode) print('⚠️ API call failed with exception: $apiError');
         }
+      } else {
+        if (kDebugMode) print('❌ No auth token available for API call');
       }
       
-      // Fallback: For testing purposes, assume user owns all posts
-      // In production, you might want to be more restrictive
-      if (kDebugMode) print('🔔 Using fallback post details');
+      if (kDebugMode) print('❌ Could not determine post ownership, skipping notification');
       return {
-        'isOwned': true, // For testing - shows notifications for all interactions
-        'content': 'your post', // Fallback content
+        'isOwned': false, // Conservative approach - don't show notification if we can't verify ownership
+        'content': 'your post',
       };
     } catch (e) {
       if (kDebugMode) print('❌ Error getting post details: $e');
@@ -540,6 +598,40 @@ class PostNotificationService {
       print('🧪 Testing socket notification handling...');
       
       // Simulate a like notification event
+      final likeData = {
+        'postOwnerId': instance._currentUserId,
+        'likerName': 'Socket Test User',
+        'postContent': 'This is a simulated socket event for testing notifications.',
+        'postId': 'socket_test_123',
+        'isLiked': true,
+      };
+      
+      instance._onPostLikeNotification(likeData);
+    }
+  }
+
+  /// Test method to verify notifications are working
+  static Future<void> testNotification() async {
+    try {
+      if (kDebugMode) print('🧪 Testing post like notification...');
+      
+      await NotificationService.showPostLikeNotification(
+        likerName: 'Test User',
+        postContent: 'This is a test notification to verify the notification system is working properly.',
+        postId: 'test_123',
+      );
+      
+      if (kDebugMode) print('✅ Test notification sent');
+    } catch (e) {
+      if (kDebugMode) print('❌ Test notification failed: $e');
+    }
+  }
+
+  /// Simulate a like event for testing
+  static void simulateLikeEvent() {
+    if (kDebugMode) print('🧪 Simulating like event for testing...');
+    
+    if (instance._isInitialized) {
       final likeData = {
         'postOwnerId': instance._currentUserId,
         'likerName': 'Socket Test User',

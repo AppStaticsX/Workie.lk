@@ -315,6 +315,7 @@ class _ProfilePagePostHelperState extends State<ProfilePagePostHelper> {
           return Padding(
             padding: const EdgeInsets.only(bottom: 16.0),
             child: PostCardModel(
+              key: ValueKey('profile_post_${post['id']}'), // Add unique key to prevent widget recycling
               postId: post['id'] ?? '',
               profileImageUrl: post['profileImageUrl'] ?? '',
               userName: post['userName'] ?? '',

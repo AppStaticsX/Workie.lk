@@ -272,6 +272,16 @@ class PostDataService {
   /// Convert backend post data to PostCardModel format
   static Future<Map<String, dynamic>> formatPostForWidget(Map<String, dynamic> backendPost) async {
     try {
+      // Validate essential post data
+      if (backendPost == null || backendPost['_id'] == null) {
+        throw Exception('Invalid post data: missing post ID');
+      }
+      
+      final postId = backendPost['_id'].toString();
+      if (kDebugMode) {
+        print('📝 Formatting post for widget: $postId');
+      }
+      
       // Get current user ID
       final currentUserId = await getCurrentUserId();
 
@@ -391,7 +401,7 @@ class PostDataService {
         hashtags.add(match.group(0)!);
       }
 
-      return {
+      final formattedPost = {
         'id': backendPost['_id'] ?? '',
         'profileImageUrl': profilePicture.isNotEmpty
             ? profilePicture
@@ -413,6 +423,17 @@ class PostDataService {
         'hasUserCommented': hasUserCommented, // Add this flag
         'likes': List<Map<String, dynamic>>.from(likesList),
       };
+      
+      // Validate formatted post ID
+      if (formattedPost['id'] == null || formattedPost['id'].toString().isEmpty) {
+        throw Exception('Formatted post missing valid ID');
+      }
+      
+      if (kDebugMode) {
+        print('✅ Successfully formatted post: ${formattedPost['id']}');
+      }
+      
+      return formattedPost;
     } catch (e) {
       if (kDebugMode) {
         print('Error formatting post: $e');

@@ -111,72 +111,82 @@ class _PostCardModelState extends State<PostCardModel> {
 
   void _onPostLikeUpdated(dynamic data) {
     try {
-      // Check if this update is for current post
-      if (data['postId'] == widget.postId) {
-        if (mounted) {
-          setState(() {
-            _likeCount = data['likesCount'] ?? _likeCount;
-            
-            // Update like status based on current user's action
-            if (data['userId'] == _currentUserId) {
-              _isLiked = data['isLiked'] ?? _isLiked;
-            }
-          });
+      // Validate that this widget is still mounted and has the correct postId
+      if (!mounted || widget.postId == null) return;
+      
+      // Check if this update is for current post (strict comparison)
+      if (data['postId']?.toString() == widget.postId.toString()) {
+        if (kDebugMode) {
+          print('🔄 Processing like update for post ${widget.postId}');
+        }
+        
+        setState(() {
+          _likeCount = data['likesCount'] ?? _likeCount;
           
-          if (kDebugMode) {
-            print('🔄 Updated like count for post ${widget.postId}: $_likeCount, isLiked: $_isLiked');
+          // Update like status based on current user's action
+          if (data['userId']?.toString() == _currentUserId?.toString()) {
+            _isLiked = data['isLiked'] ?? _isLiked;
           }
+        });
+        
+        if (kDebugMode) {
+          print('✅ Updated like count for post ${widget.postId}: $_likeCount, isLiked: $_isLiked');
         }
       }
     } catch (e) {
-      if (kDebugMode) print('❌ Error handling like update: $e');
+      if (kDebugMode) print('❌ Error handling like update for post ${widget.postId}: $e');
     }
   }
 
   void _onPostCommentAdded(dynamic data) {
     try {
-      // Check if this update is for current post
-      if (data['postId'] == widget.postId) {
-        if (mounted) {
-          final newCommentData = data['comment'];
-          final totalComments = data['totalComments'] ?? _commentCount;
+      // Validate that this widget is still mounted and has the correct postId
+      if (!mounted || widget.postId == null) return;
+      
+      // Check if this update is for current post (strict comparison)
+      if (data['postId']?.toString() == widget.postId.toString()) {
+        if (kDebugMode) {
+          print('🔄 Processing comment update for post ${widget.postId}');
+        }
+        
+        final newCommentData = data['comment'];
+        final totalComments = data['totalComments'] ?? _commentCount;
+        
+        setState(() {
+          _commentCount = totalComments;
           
-          setState(() {
-            _commentCount = totalComments;
-            
-            // Update comment status if current user commented
-            if (data['commenterUserId'] == _currentUserId) {
-              _hasUserCommented = true;
-            }
-          });
-
-          // If there's new comment data, add it to the widget's comments list
-          if (newCommentData != null && widget.onCommentsUpdated != null) {
-            final formattedComment = {
-              'userId': newCommentData['userId'],
-              'commentedUserProfileImgUrl': newCommentData['userInfo']?['profilePicture'] ?? '',
-              'commentedUserName': '${newCommentData['userInfo']?['firstName'] ?? ''} ${newCommentData['userInfo']?['lastName'] ?? ''}'.trim(),
-              'comment': newCommentData['comment'] ?? '',
-              'ísVerified': false,
-              'timestamp': _formatTimestamp(newCommentData['commentedAt']),
-              'userInfo': newCommentData['userInfo'],
-            };
-
-            // Create updated comments list
-            final updatedComments = List<Map<String, dynamic>>.from(widget.comments);
-            updatedComments.insert(0, formattedComment);
-            
-            // Notify parent about the updated comments
-            widget.onCommentsUpdated?.call(updatedComments);
+          // Update comment status if current user commented
+          if (data['commenterUserId']?.toString() == _currentUserId?.toString()) {
+            _hasUserCommented = true;
           }
+        });
+
+        // If there's new comment data, add it to the widget's comments list
+        if (newCommentData != null && widget.onCommentsUpdated != null) {
+          final formattedComment = {
+            'userId': newCommentData['userId'],
+            'commentedUserProfileImgUrl': newCommentData['userInfo']?['profilePicture'] ?? '',
+            'commentedUserName': '${newCommentData['userInfo']?['firstName'] ?? ''} ${newCommentData['userInfo']?['lastName'] ?? ''}'.trim(),
+            'comment': newCommentData['comment'] ?? '',
+            'ísVerified': false,
+            'timestamp': _formatTimestamp(newCommentData['commentedAt']),
+            'userInfo': newCommentData['userInfo'],
+          };
+
+          // Create updated comments list
+          final updatedComments = List<Map<String, dynamic>>.from(widget.comments);
+          updatedComments.insert(0, formattedComment);
           
-          if (kDebugMode) {
-            print('🔄 Updated comment count and data for post ${widget.postId}: $_commentCount');
-          }
+          // Notify parent about the updated comments
+          widget.onCommentsUpdated?.call(updatedComments);
+        }
+        
+        if (kDebugMode) {
+          print('✅ Updated comment count and data for post ${widget.postId}: $_commentCount');
         }
       }
     } catch (e) {
-      if (kDebugMode) print('❌ Error handling comment update: $e');
+      if (kDebugMode) print('❌ Error handling comment update for post ${widget.postId}: $e');
     }
   }
 
@@ -324,15 +334,32 @@ class _PostCardModelState extends State<PostCardModel> {
 
   @override
   void dispose() {
-    // Clean up video controllers
-    for (var controller in _videoControllers.values) {
-      controller.dispose();
+    if (kDebugMode) {
+      print('🧹 Disposing PostCardModel for post: ${widget.postId}');
     }
     
+    // Clean up video controllers
+    for (var controller in _videoControllers.values) {
+      try {
+        controller.dispose();
+      } catch (e) {
+        if (kDebugMode) print('❌ Error disposing video controller: $e');
+      }
+    }
+    _videoControllers.clear();
+    
     // Remove socket event listeners
-    final socketService = SocketService.instance;
-    socketService.removeEventListener('post_like_updated', _onPostLikeUpdated);
-    socketService.removeEventListener('post_comment_added', _onPostCommentAdded);
+    try {
+      final socketService = SocketService.instance;
+      socketService.removeEventListener('post_like_updated', _onPostLikeUpdated);
+      socketService.removeEventListener('post_comment_added', _onPostCommentAdded);
+      
+      if (kDebugMode) {
+        print('✅ Cleaned up socket listeners for post: ${widget.postId}');
+      }
+    } catch (e) {
+      if (kDebugMode) print('❌ Error cleaning up socket listeners: $e');
+    }
     
     super.dispose();
   }
