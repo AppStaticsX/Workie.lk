@@ -360,10 +360,10 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
                       ),
                     ),
                   const Text(
-                    'Post',
+                    'Publish',
                     style: TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
                 ],
@@ -383,14 +383,14 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
                 expands: true,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 18,
+                  fontSize: 16,
                   height: 1.4,
                 ),
                 decoration: const InputDecoration(
                   hintText: 'Share your thoughts...',
                   hintStyle: TextStyle(
                     color: Color(0xFF666666),
-                    fontSize: 18,
+                    fontSize: 16,
                     fontStyle: FontStyle.italic,
                   ),
                   border: InputBorder.none,
