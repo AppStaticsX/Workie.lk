@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'background_notification_service.dart';
 
 class AuthService {
   // Replace with your actual base URL
@@ -158,6 +159,9 @@ class AuthService {
   Future<void> storeToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_token', token);
+    
+    // Notify background service that user logged in
+    BackgroundNotificationService.notifyUserChanged();
   }
 
   /// Store user ID
@@ -344,6 +348,9 @@ class AuthService {
     } finally {
       // Always clear local data
       await clearAuthData();
+      
+      // Notify background service that user logged out
+      BackgroundNotificationService.notifyUserChanged();
     }
   }
 

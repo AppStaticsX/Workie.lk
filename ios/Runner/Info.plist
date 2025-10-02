@@ -45,5 +45,28 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	
+	<!-- Background notification and app refresh capabilities -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>background-fetch</string>
+		<string>background-processing</string>
+		<string>remote-notification</string>
+	</array>
+	
+	<!-- Allow notifications -->
+	<key>NSNotificationsUsageDescription</key>
+	<string>This app needs notification permissions to alert you about likes and comments on your posts.</string>
+	
+	<!-- Location when in use -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs location access to show nearby jobs and services.</string>
+	
+	<!-- Network usage for background sync -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 </dict>
 </plist>

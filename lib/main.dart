@@ -10,6 +10,8 @@ import 'package:workie/services/hive_service.dart';
 import 'package:workie/services/notification_service.dart';
 import 'package:workie/services/post_notification_service.dart';
 import 'package:workie/services/socket_service.dart';
+import 'package:workie/services/background_notification_service.dart';
+import 'package:workie/services/workspace_service.dart';
 import 'package:workie/themes/theme_provider.dart';
 import 'package:workie/providers/language_provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -76,6 +78,30 @@ Future<void> main() async {
     }
   }
 
+  // Initialize background notification service for notifications when app is in background
+  try {
+    await BackgroundNotificationService.initialize();
+    if (kDebugMode) {
+      print('✅ Background notification service initialized globally');
+    }
+  } catch (e) {
+    if (kDebugMode) {
+      print('❌ Error initializing background notification service: $e');
+    }
+  }
+
+  // Initialize workspace service for background tasks (Android only)
+  try {
+    await WorkspaceService.initialize();
+    if (kDebugMode) {
+      print('✅ Workspace service initialized for background tasks');
+    }
+  } catch (e) {
+    if (kDebugMode) {
+      print('❌ Error initializing workspace service: $e');
+    }
+  }
+
   runApp(
       MultiProvider(
         providers: [
@@ -131,12 +157,55 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _checkPendingNotifications();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    switch (state) {
+      case AppLifecycleState.resumed:
+        if (kDebugMode) print('📱 App resumed - checking pending notifications');
+        _checkPendingNotifications();
+        break;
+      case AppLifecycleState.paused:
+        if (kDebugMode) print('📱 App paused - background notifications active');
+        // Schedule a background check when app goes to background
+        WorkspaceService.scheduleImmediateCheck();
+        break;
+      case AppLifecycleState.detached:
+        if (kDebugMode) print('📱 App detached - disposing services');
+        BackgroundNotificationService.dispose();
+        break;
+      default:
+        break;
+    }
+  }
+
+  /// Check for pending notification actions when app becomes active
+  Future<void> _checkPendingNotifications() async {
+    try {
+      final pendingAction = await BackgroundNotificationService.checkPendingNotificationAction();
+      if (pendingAction != null && pendingAction.isNotEmpty) {
+        if (kDebugMode) print('📱 Processing pending notification action: $pendingAction');
+        _handleNotificationTap(NotificationResponse(
+          notificationResponseType: NotificationResponseType.selectedNotification,
+          id: 0,
+          actionId: null,
+          input: null,
+          payload: pendingAction,
+        ));
+      }
+    } catch (e) {
+      if (kDebugMode) print('❌ Error checking pending notifications: $e');
+    }
   }
 
   @override
