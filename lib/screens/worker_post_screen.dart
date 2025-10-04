@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:pinput/pinput.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 import 'package:workie/screens/googlemap_screen.dart';
 import '../services/push_data/worker_post_service.dart';
 import '../services/notification_service.dart';
+import '../services/ai_post_generation_service.dart';
+import '../widgets/add_hashtag_dialog.dart';
+import '../widgets/ai_content_writer_dialog.dart';
 
 class WorkerPostScreen extends StatefulWidget {
   final VoidCallback? onPostSuccess;
@@ -326,6 +328,25 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
           ],
         ),
         actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: IconButton(
+                onPressed: (){
+                  showDialog(
+                    context: context,
+                    builder: (context) => AIContentWriterDialog(
+                      selectedHashtags: selectedHashtags,
+                      onContentGenerated: (String content) {
+                        setState(() {
+                          _textController.text = content;
+                        });
+                      },
+                    ),
+                  );
+                },
+                icon: Icon(Iconsax.magicpen)
+            ),
+          ),
           Container(
             margin: const EdgeInsets.only(right: 12, top: 0, bottom: 0),
             child: ElevatedButton(
@@ -681,27 +702,141 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
                   IconButton(
                       onPressed: () => _textController.clear(),
                       icon: Icon(Iconsax.trash_copy, size: 28, color: Colors.red,)
-                  )
-                  /*IconButton(
+                  ),
+                  PopupMenuButton<String>(
                     icon: Icon(
                       Iconsax.hashtag_copy,
                       color: Colors.grey[400],
                       size: 26,
                     ),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => AddHashtagsDialog(
-                          selectedHashtags: selectedHashtags,
-                          onHashtagsChanged: (hashtags) {
-                            setState(() {
-                              selectedHashtags = hashtags;
-                            });
-                          },
+                    itemBuilder: (context) => [
+                      PopupMenuItem<String>(
+                        value: 'add_manual',
+                        child: Row(
+                          children: [
+                            Icon(Iconsax.hashtag_1, size: 20),
+                            SizedBox(width: 8),
+                            Text('Add Hashtags'),
+                          ],
                         ),
-                      );
+                      ),
+                      PopupMenuItem<String>(
+                        value: 'suggest_ai',
+                        child: Row(
+                          children: [
+                            Icon(Iconsax.magicpen, size: 20),
+                            SizedBox(width: 8),
+                            Text('AI Suggestions'),
+                          ],
+                        ),
+                      ),
+                    ],
+                    onSelected: (String value) async {
+                      if (value == 'add_manual') {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AddHashtagsDialog(
+                            selectedHashtags: selectedHashtags,
+                            onHashtagsChanged: (hashtags) {
+                              setState(() {
+                                selectedHashtags = hashtags;
+                              });
+                            },
+                          ),
+                        );
+                      } else if (value == 'suggest_ai') {
+                        if (_textController.text.trim().isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Write some content first to get hashtag suggestions')),
+                          );
+                          return;
+                        }
+                        
+                        // Show loading dialog
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (context) => AlertDialog(
+                            content: Row(
+                              children: [
+                                CircularProgressIndicator(),
+                                SizedBox(width: 16),
+                                Text('Generating hashtag suggestions...'),
+                              ],
+                            ),
+                          ),
+                        );
+                        
+                        try {
+                          final suggestions = await AIPostGenerationService.generateHashtagSuggestions(
+                            content: _textController.text,
+                            maxSuggestions: 10,
+                          );
+                          
+                          Navigator.pop(context); // Close loading dialog
+                          
+                          if (suggestions.isNotEmpty) {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: Text('AI Hashtag Suggestions'),
+                                content: Container(
+                                  width: double.maxFinite,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text('Select hashtags to add:'),
+                                      SizedBox(height: 16),
+                                      Container(
+                                        height: 200,
+                                        child: ListView.builder(
+                                          itemCount: suggestions.length,
+                                          itemBuilder: (context, index) {
+                                            final hashtag = suggestions[index];
+                                            final isSelected = selectedHashtags.contains(hashtag);
+                                            
+                                            return CheckboxListTile(
+                                              title: Text('#$hashtag'),
+                                              value: isSelected,
+                                              onChanged: (bool? value) {
+                                                setState(() {
+                                                  if (value == true && !selectedHashtags.contains(hashtag)) {
+                                                    selectedHashtags.add(hashtag);
+                                                  } else if (value == false) {
+                                                    selectedHashtags.remove(hashtag);
+                                                  }
+                                                });
+                                                Navigator.pop(context);
+                                              },
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: Text('Done'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Could not generate hashtag suggestions. Try again later.')),
+                            );
+                          }
+                        } catch (e) {
+                          Navigator.pop(context); // Close loading dialog
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error generating suggestions: $e')),
+                          );
+                        }
+                      }
                     },
-                  ),*/
+                  ),
                 ],
               ),
             ),
@@ -711,3 +846,4 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
     );
   }
 }
+
