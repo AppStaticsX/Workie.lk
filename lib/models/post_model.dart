@@ -1,8 +1,6 @@
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flame_lottie/flame_lottie.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:share_plus/share_plus.dart';
@@ -112,14 +110,10 @@ class _PostCardModelState extends State<PostCardModel> {
   void _onPostLikeUpdated(dynamic data) {
     try {
       // Validate that this widget is still mounted and has the correct postId
-      if (!mounted || widget.postId == null) return;
+      if (!mounted) return;
       
       // Check if this update is for current post (strict comparison)
       if (data['postId']?.toString() == widget.postId.toString()) {
-        if (kDebugMode) {
-          print('🔄 Processing like update for post ${widget.postId}');
-        }
-        
         setState(() {
           _likeCount = data['likesCount'] ?? _likeCount;
           
@@ -128,27 +122,19 @@ class _PostCardModelState extends State<PostCardModel> {
             _isLiked = data['isLiked'] ?? _isLiked;
           }
         });
-        
-        if (kDebugMode) {
-          print('✅ Updated like count for post ${widget.postId}: $_likeCount, isLiked: $_isLiked');
-        }
       }
     } catch (e) {
-      if (kDebugMode) print('❌ Error handling like update for post ${widget.postId}: $e');
+      //
     }
   }
 
   void _onPostCommentAdded(dynamic data) {
     try {
       // Validate that this widget is still mounted and has the correct postId
-      if (!mounted || widget.postId == null) return;
+      if (!mounted) return;
       
       // Check if this update is for current post (strict comparison)
       if (data['postId']?.toString() == widget.postId.toString()) {
-        if (kDebugMode) {
-          print('🔄 Processing comment update for post ${widget.postId}');
-        }
-        
         final newCommentData = data['comment'];
         final totalComments = data['totalComments'] ?? _commentCount;
         
@@ -180,13 +166,9 @@ class _PostCardModelState extends State<PostCardModel> {
           // Notify parent about the updated comments
           widget.onCommentsUpdated?.call(updatedComments);
         }
-        
-        if (kDebugMode) {
-          print('✅ Updated comment count and data for post ${widget.postId}: $_commentCount');
-        }
       }
     } catch (e) {
-      if (kDebugMode) print('❌ Error handling comment update for post ${widget.postId}: $e');
+      //
     }
   }
 
@@ -239,9 +221,7 @@ class _PostCardModelState extends State<PostCardModel> {
         }
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error getting current user ID: $e');
-      }
+      //
     }
   }
 
@@ -334,16 +314,13 @@ class _PostCardModelState extends State<PostCardModel> {
 
   @override
   void dispose() {
-    if (kDebugMode) {
-      print('🧹 Disposing PostCardModel for post: ${widget.postId}');
-    }
     
     // Clean up video controllers
     for (var controller in _videoControllers.values) {
       try {
         controller.dispose();
       } catch (e) {
-        if (kDebugMode) print('❌ Error disposing video controller: $e');
+        //
       }
     }
     _videoControllers.clear();
@@ -353,12 +330,8 @@ class _PostCardModelState extends State<PostCardModel> {
       final socketService = SocketService.instance;
       socketService.removeEventListener('post_like_updated', _onPostLikeUpdated);
       socketService.removeEventListener('post_comment_added', _onPostCommentAdded);
-      
-      if (kDebugMode) {
-        print('✅ Cleaned up socket listeners for post: ${widget.postId}');
-      }
     } catch (e) {
-      if (kDebugMode) print('❌ Error cleaning up socket listeners: $e');
+      //
     }
     
     super.dispose();
@@ -609,9 +582,7 @@ class _PostCardModelState extends State<PostCardModel> {
                 children: widget.hashtags.map((hashtag) {
                   return GestureDetector(
                     onTap: () {
-                      if (kDebugMode) {
-                        print(hashtag);
-                      }
+                      //
                     },
                     child: Text(
                       hashtag.startsWith('#') ? hashtag : '#$hashtag',

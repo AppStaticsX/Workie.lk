@@ -1,10 +1,9 @@
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/services/profile_service.dart';
-import 'package:workie/widgets/dashed_photo_picker.dart';
 import 'dart:typed_data';
 
 import 'custom_dashed_photo_picker.dart';
@@ -142,9 +141,6 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
                               });
                             } catch (e) {
                               // Fallback - could also use reflection or make field public
-                              if (kDebugMode) {
-                                print('Could not access web image bytes: $e');
-                              }
                             }
                           }
                         }

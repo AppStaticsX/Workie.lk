@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/models/post_model.dart';
@@ -9,7 +8,6 @@ import 'package:shimmer_ai/shimmer_ai.dart';
 import '../services/hive_service.dart';
 import '../services/location_service.dart';
 import '../services/notification_service.dart';
-import '../services/post_notification_service.dart';
 import '../services/pull_data/post_data_service.dart';
 import '../services/socket_service.dart';
 import '../widgets/circular_category_bar.dart';
@@ -87,10 +85,8 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
       
       // Setup listeners for live updates
       _setupSocketListeners();
-      
-      print('✅ Socket service initialized in HomePage');
     } catch (e) {
-      print('❌ Error initializing socket service: $e');
+      //
     }
   }
 
@@ -135,13 +131,12 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
                 _posts[postIndex]['likes'] = List<Map<String, dynamic>>.from(data['likes']);
               }
             });
-            
-            print('🔄 Updated post ${postId} in feed with live data');
+
           }
         }
       }
     } catch (e) {
-      print('❌ Error handling live post update in HomePage: $e');
+      //
     }
   }
 
@@ -152,11 +147,10 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
         if (newPostData != null) {
           // Format the new post for display
           _formatAndAddNewPost(newPostData);
-          print('🆕 Added new post to feed: ${data['postId']}');
         }
       }
     } catch (e) {
-      print('❌ Error handling new post creation: $e');
+      //
     }
   }
 
@@ -171,12 +165,11 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
           if (postIndex != -1) {
             // Re-format the updated post and replace it in the list
             _formatAndUpdatePost(postIndex, updatedPost);
-            print('✏️ Updated post content in feed: $postId');
           }
         }
       }
     } catch (e) {
-      print('❌ Error handling post update: $e');
+      //
     }
   }
 
@@ -194,21 +187,14 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
           
           final finalLength = _posts.length;
           final removedCount = initialLength - finalLength;
-          
-          if (kDebugMode) {
-            print('🗑️ Post deletion handled: $postId (removed $removedCount posts)');
-            if (removedCount == 0) {
-              print('⚠️ Warning: Post $postId not found in current feed');
-            } else if (removedCount > 1) {
-              print('⚠️ Warning: Removed $removedCount posts with ID $postId (duplicates detected)');
-            }
-          }
+
+
         } else {
-          if (kDebugMode) print('❌ Post deletion received invalid postId: $postId');
+
         }
       }
     } catch (e) {
-      if (kDebugMode) print('❌ Error handling post deletion: $e');
+      //
     }
   }
 
@@ -239,7 +225,7 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
         );
       }
     } catch (e) {
-      print('❌ Error formatting new post: $e');
+      //
     }
   }
 
@@ -252,7 +238,7 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
         _posts[postIndex] = formattedPost;
       });
     } catch (e) {
-      print('❌ Error formatting updated post: $e');
+      //
     }
   }
 
@@ -275,9 +261,11 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
 
   void _listenToNotifications() {
     NotificationService.onNotificationTap.listen((response) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Notification tapped: ${response.payload}')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Notification tapped: ${response.payload}')),
+        );
+      }
     });
   }
 
@@ -475,8 +463,6 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
               );
             }
           });
-          
-          print('🔄 Updated post comments in HomePage feed');
         },
       ),
     );
@@ -484,7 +470,6 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
 
   void _handleShare(String postId) {
     // Handle share functionality
-    print('Share post: $postId');
   }
 
   void _onScroll() {
@@ -607,26 +592,6 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
           ),
         ),
         actions: [
-          // Temporary test button for notifications
-          if (kDebugMode)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: InkWell(
-                onTap: () async {
-                  if (kDebugMode) print('🧪 Testing notification system...');
-                  await PostNotificationService.testNotification();
-                },
-                customBorder: const CircleBorder(),
-                child: CustomIconButton(
-                  iconData: Iconsax.flash_1_copy,
-                  color: Colors.orange.withValues(alpha: 0.3),
-                  width: 44,
-                  height: 44,
-                  size: 24,
-                  iconColor: Colors.orange,
-                ),
-              ),
-            ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: InkWell(

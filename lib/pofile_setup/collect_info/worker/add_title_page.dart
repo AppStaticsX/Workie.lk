@@ -50,7 +50,6 @@ class AddTitlePageState extends State<AddTitlePage> {
       }
     } catch (e) {
       // Silent fail - user can still enter new title
-      print('Error loading existing title: $e');
     }
   }
 

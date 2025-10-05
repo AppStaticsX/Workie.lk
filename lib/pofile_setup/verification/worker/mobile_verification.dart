@@ -170,7 +170,7 @@ class _MobileVerificationState extends State<MobileVerification>
       body: Column(
         children: [
           // Progress bar
-          _ProgressBar(),
+          _progressBar(),
 
           // Main content
           Expanded(
@@ -184,21 +184,21 @@ class _MobileVerificationState extends State<MobileVerification>
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const SizedBox(height: 20),
-                      _HeaderIcon(),
+                      _headerIcon(),
                       const SizedBox(height: 20),
-                      _TitleSection(),
+                      _titleSection(),
                       const SizedBox(height: 40),
-                      _MobileNumberInput(),
+                      _mobileNumberInput(),
                       const SizedBox(height: 20),
-                      _VerificationCodeSection(),
+                      _verificationCodeSection(),
                       if (_isCodeSent) ...[
                         const SizedBox(height: 16),
-                        _StatusMessage(),
+                        _statusMessage(),
                       ],
                       const SizedBox(height: 40),
-                      _VerifyButton(),
+                      _verifyButton(),
                       const SizedBox(height: 24),
-                      _HelpText(),
+                      _helpText(),
                     ],
                   ),
                 ),
@@ -210,7 +210,7 @@ class _MobileVerificationState extends State<MobileVerification>
     );
   }
 
-  Widget _ProgressBar() {
+  Widget _progressBar() {
     return Row(
       children: [
         Container(
@@ -232,7 +232,7 @@ class _MobileVerificationState extends State<MobileVerification>
     );
   }
 
-  Widget _HeaderIcon() {
+  Widget _headerIcon() {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -247,7 +247,7 @@ class _MobileVerificationState extends State<MobileVerification>
     );
   }
 
-  Widget _TitleSection() {
+  Widget _titleSection() {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -276,7 +276,7 @@ class _MobileVerificationState extends State<MobileVerification>
     );
   }
 
-  Widget _MobileNumberInput() {
+  Widget _mobileNumberInput() {
     return SimplePrefixTextfield(
       controller: _mobileNumberController,
       lableText: 'Mobile Number',
@@ -288,7 +288,7 @@ class _MobileVerificationState extends State<MobileVerification>
     );
   }
 
-  Widget _VerificationCodeSection() {
+  Widget _verificationCodeSection() {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       child: Row(
@@ -304,18 +304,18 @@ class _MobileVerificationState extends State<MobileVerification>
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: _SendCodeButton(),
+            child: _sendCodeButton(),
           ),
         ],
       ),
     );
   }
 
-  Widget _SendCodeButton() {
+  Widget _sendCodeButton() {
     return SizedBox(
       height: 56,
       child: _isLoading
-          ? _LoadingContainer()
+          ? _loadingContainer()
           : IconButton(
         onPressed: _canResend || !_isCodeSent
             ? _sendVerificationCode
@@ -334,7 +334,7 @@ class _MobileVerificationState extends State<MobileVerification>
     );
   }
 
-  Widget _LoadingContainer() {
+  Widget _loadingContainer() {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(
@@ -372,7 +372,7 @@ class _MobileVerificationState extends State<MobileVerification>
     return const Icon(Icons.send, size: 28);
   }
 
-  Widget _StatusMessage() {
+  Widget _statusMessage() {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -405,7 +405,7 @@ class _MobileVerificationState extends State<MobileVerification>
     );
   }
 
-  Widget _VerifyButton() {
+  Widget _verifyButton() {
     return SizedBox(
       width: double.infinity,
       height: 56,
@@ -442,7 +442,7 @@ class _MobileVerificationState extends State<MobileVerification>
     );
   }
 
-  Widget _HelpText() {
+  Widget _helpText() {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 

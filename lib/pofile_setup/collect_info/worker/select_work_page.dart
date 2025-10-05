@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:workie/values/color.dart';
 import '../../../services/hive_service.dart';
@@ -77,26 +76,12 @@ class _SelectWorkPageState extends State<SelectWorkPage> {
     try {
       await HiveService.saveCategorySelections(categorySelections);
       
-      // Debug: Print what's actually stored in Hive
-      if (kDebugMode) {
-        await HiveService.debugPrintAllData();
-      }
-      
       // Also save category titles to backend if user has selected categories
       if (categorySelections.isNotEmpty) {
         final success = await WorkCategoryService.saveWorkCategoriesFromSelections(categorySelections);
-        if (kDebugMode) {
-          if (success) {
-            print('Work category titles saved to backend successfully');
-          } else {
-            print('Failed to save work category titles to backend');
-          }
-        }
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error saving to Hive: $e');
-      }
+      //
     }
   }
 

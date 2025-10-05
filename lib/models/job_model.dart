@@ -221,8 +221,6 @@ class _JobCardState extends State<JobCard> {
       children: [
         ElevatedButton(
           onPressed: () {
-            print("View Job button pressed"); // Debug print
-
             try {
               // Method 1: Try using the static show method
               JobDetailsBottomSheet.show(
@@ -247,8 +245,6 @@ class _JobCardState extends State<JobCard> {
                 },
               );
             } catch (e) {
-              print("Error with JobDetailsBottomSheet.show: $e");
-
               // Method 2: Fallback - use showModalBottomSheet directly
               showModalBottomSheet(
                 context: context,
@@ -291,8 +287,9 @@ class _JobCardState extends State<JobCard> {
         Expanded(
           child: ElevatedButton(
             onPressed: () {
-              print("Apply Now button pressed"); // Debug print
-              // Handle apply now
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Application submitted!')),
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF4E6BF5),

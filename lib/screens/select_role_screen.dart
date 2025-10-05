@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
@@ -38,9 +37,6 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
         _isVideoInitialized = true;
       });
     } catch (e) {
-      if (kDebugMode) {
-        print('Error initializing video: $e');
-      }
       // Video failed to load, you can show a fallback image here
     }
   }

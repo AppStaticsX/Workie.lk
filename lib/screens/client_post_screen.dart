@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
@@ -214,11 +213,6 @@ class _ClientPostScreenState extends State<ClientPostScreen> {
         'jobUrgency': _selectedJobUrgency,
         'createdAt': DateTime.now().toIso8601String(),
       };
-
-      // Here you would typically send the data to your backend API
-      if (kDebugMode) {
-        print('Job Post Data: $jobPostData');
-      }
 
       // Show success message
       if (mounted) {

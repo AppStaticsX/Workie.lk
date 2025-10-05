@@ -27,14 +27,14 @@ class WorkerPostScreen extends StatefulWidget {
 class _WorkerPostScreenState extends State<WorkerPostScreen> {
   final GlobalKey<GoogleMapScreenState> _googleMapScreenKey = GlobalKey();
 
-  Map<String, VideoPlayerController?> _videoControllers = {};
+  final Map<String, VideoPlayerController?> _videoControllers = {};
   final TextEditingController _textController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
   final List<File> _selectedImages = [];
   final List<File> _selectedVideos = [];
   List<String> selectedHashtags = [];
   bool _isPosting = false;
-  String _pickedLocationAdress = '' ?? 'Unkown';
+  String _pickedLocationAdress = '';
   static const int _uploadNotificationId = 12345; // Fixed ID for single notification
 
   VideoPlayerController? _getVideoController(String videoPath) {
@@ -199,7 +199,7 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
         }
 
         // Show initial progress notification
-        await _showProgressNotification(0, 100, 'Preparing to upload ${totalFiles} file(s)...');
+        await _showProgressNotification(0, 100, 'Preparing to upload $totalFiles file(s)...');
 
         // Upload media files with real-time progress tracking
         uploadedMedia = await WorkerPostService.uploadPostMediaWithProgress(
@@ -780,14 +780,14 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
                                   context: context,
                                   builder: (context) => AlertDialog(
                                     title: Text('AI Hashtag Suggestions'),
-                                    content: Container(
+                                    content: SizedBox(
                                       width: double.maxFinite,
                                       child: Column(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Text('Select hashtags to add:'),
                                           SizedBox(height: 16),
-                                          Container(
+                                          SizedBox(
                                             height: 200,
                                             child: ListView.builder(
                                               itemCount: suggestions.length,

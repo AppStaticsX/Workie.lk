@@ -1,13 +1,12 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
-import 'package:lottie/lottie.dart';
+import 'package:flame_lottie/flame_lottie.dart';
 import 'package:workie/authentication/pages/email_verification_page.dart';
 import 'package:workie/authentication/pages/login_page.dart';
 import 'package:workie/generated/app_localizations.dart';
@@ -748,7 +747,6 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
                             },
                           ),
                         );
-                        if (kDebugMode) print('Terms of Use tapped!');
                       },
                   ),
                   const TextSpan(
@@ -787,7 +785,6 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
                             },
                           ),
                         );
-                        if (kDebugMode) print('Privacy Policy tapped!');
                       },
                   ),
                 ],

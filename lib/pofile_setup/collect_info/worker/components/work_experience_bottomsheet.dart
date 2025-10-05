@@ -192,7 +192,6 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
         _hideSuggestionOverlay();
       }
     } catch (e) {
-      print('Error searching companies: $e');
       _hideSuggestionOverlay();
       setState(() {
         _isLoadingSuggestions = false;
@@ -284,7 +283,7 @@ class _WorkExperienceBottomsheetState extends State<WorkExperienceBottomsheet> {
           locationController.text = placeDetails.formattedAddress;
         }
       } catch (e) {
-        print('Error fetching place details: $e');
+        //
       }
     }
     

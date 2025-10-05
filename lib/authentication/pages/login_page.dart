@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flame_lottie/flame_lottie.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,7 +11,6 @@ import 'package:workie/authentication/pages/reset_password_page.dart';
 import 'package:workie/authentication/pages/signup_page.dart';
 import 'package:workie/generated/app_localizations.dart';
 import 'package:workie/screens/select_role_screen.dart';
-import 'package:workie/screens/splash_screen.dart';
 import 'package:workie/screens/terms_privacy_page.dart';
 import 'package:workie/widgets/custom_textfield.dart';
 import 'package:workie/widgets/full_screen_popup_dialog.dart';
@@ -539,7 +537,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
                             },
                           ),
                         );
-                        if (kDebugMode) print('Terms of Use tapped!');
                       },
                   ),
                   TextSpan(
@@ -578,7 +575,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
                             },
                           ),
                         );
-                        if (kDebugMode) print('Privacy Policy tapped!');
                       },
                   ),
                   if (_isLocalLanguage())

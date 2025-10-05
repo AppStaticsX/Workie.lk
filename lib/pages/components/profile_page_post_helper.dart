@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import '../../services/pull_data/current_user_posts.dart';
 import '../../models/post_model.dart';
@@ -48,9 +47,6 @@ class _ProfilePagePostHelperState extends State<ProfilePagePostHelper> {
       setState(() {
         _isLoadingPosts = false;
       });
-      if (kDebugMode) {
-        print('Error loading user posts: $e');
-      }
     }
   }
 
@@ -79,24 +75,16 @@ class _ProfilePagePostHelperState extends State<ProfilePagePostHelper> {
       // Refresh posts to update like status
       await _loadAllUserPosts();
     } catch (e) {
-      if (kDebugMode) {
-        print('Error toggling like: $e');
-      }
+      //
     }
   }
 
   void _handlePostComment(String postId) {
     // Comment handling is managed by the PostCardModel itself
-    if (kDebugMode) {
-      print('Comment on post: $postId');
-    }
   }
 
   void _handlePostShare(String postId) {
     // Handle post sharing
-    if (kDebugMode) {
-      print('Share post: $postId');
-    }
   }
 
   void _handlePostDelete(String postId) async {
@@ -142,10 +130,6 @@ class _ProfilePagePostHelperState extends State<ProfilePagePostHelper> {
             duration: const Duration(seconds: 3),
           ),
         );
-      }
-
-      if (kDebugMode) {
-        print('Error deleting post: $e');
       }
     }
   }

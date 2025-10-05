@@ -464,12 +464,14 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                 }
               } else {
                 // Show error message if somehow an invalid date was selected
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('You must be at least 18 years old'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('You must be at least 18 years old'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               }
             }
           },

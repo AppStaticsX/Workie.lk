@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -21,7 +20,7 @@ class GoogleMapScreen extends StatefulWidget {
 
 class GoogleMapScreenState extends State<GoogleMapScreen> {
   GoogleMapController? _controller;
-  TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
   // Initial position (San Francisco)
   static const CameraPosition _initialPosition = CameraPosition(
@@ -29,7 +28,7 @@ class GoogleMapScreenState extends State<GoogleMapScreen> {
     zoom: 12.0,
   );
 
-  Set<Marker> _markers = {};
+  final Set<Marker> _markers = {};
   LatLng? _selectedLocation;
   String _selectedAddress = '';
   bool _isLoading = false;
@@ -75,14 +74,15 @@ class GoogleMapScreenState extends State<GoogleMapScreen> {
 
     try {
       Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: LocationSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 0,
+        ),
       );
 
       _moveCamera(LatLng(position.latitude, position.longitude));
     } catch (e) {
-      if (kDebugMode) {
-        print('Error getting current location: $e');
-      }
+      //
     }
   }
 
@@ -161,9 +161,7 @@ class GoogleMapScreenState extends State<GoogleMapScreen> {
         });
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error getting address: $e');
-      }
+      //
     }
   }
 

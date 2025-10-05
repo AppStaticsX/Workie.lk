@@ -145,7 +145,6 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
         _hideCitySuggestionsOverlay();
       }
     } catch (e) {
-      print('Error searching cities: $e');
       _hideCitySuggestionsOverlay();
     }
   }
@@ -343,9 +342,8 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
           _isStateOrProvinceEmpty = false;
         }
       });
-      print('Province updated to: $detectedProvince'); // Debug print
     } else {
-      print('No province detected from location: $locationInfo'); // Debug print
+      //
     }
   }
 

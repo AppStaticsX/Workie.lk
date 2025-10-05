@@ -269,7 +269,7 @@ class _NICVerificationState extends State<NICVerification> {
       height: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        color: Colors.black.withOpacity(0.3),
+        color: Colors.black.withValues(alpha: 0.3),
       ),
     );
   }
@@ -293,7 +293,7 @@ class _NICVerificationState extends State<NICVerification> {
           _buildActionButton(
             onPressed: onRemove,
             icon: Icons.close,
-            backgroundColor: Colors.red.withOpacity(0.7),
+            backgroundColor: Colors.red.withValues(alpha: 0.7),
           ),
         ],
       ),

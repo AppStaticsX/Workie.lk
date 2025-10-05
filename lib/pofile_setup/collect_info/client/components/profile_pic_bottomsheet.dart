@@ -113,7 +113,6 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
                                 _webImageBytes = (state as dynamic)._webImageBytes;
                               } catch (e) {
                                 // Fallback - could also use reflection or make field public
-                                print('Could not access web image bytes: $e');
                               }
                             }
                           });

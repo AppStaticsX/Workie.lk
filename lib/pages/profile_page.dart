@@ -7,7 +7,6 @@ import 'package:workie/pages/components/cover_pic_bottomsheet.dart';
 import 'package:workie/pages/components/education_detail_model.dart';
 import 'package:workie/pages/components/profile_page_post_helper.dart';
 import 'package:workie/pages/components/profile_pic_bottomsheet.dart';
-import 'package:workie/values/color.dart';
 import '../services/pull_data/get_user_data.dart';
 import '../services/pull_data/current_user_posts.dart';
 import '../models/post_model.dart';
@@ -89,9 +88,6 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
       setState(() {
         _isLoadingPosts = false;
       });
-      if (kDebugMode) {
-        print('Error loading user posts: $e');
-      }
     }
   }
 
@@ -143,9 +139,6 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
         _userEducation = [];
         _schoolLogos = {};
       });
-      if (kDebugMode) {
-        print('Error loading education data: $e');
-      }
     }
   }
 
@@ -158,16 +151,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
       // Get saved post IDs from Hive
       final savedPostIds = await HiveService.getSavedPostIds();
 
-      if (kDebugMode) {
-        print('=== DEBUG: _loadSavedPosts START ===');
-        print('Retrieved saved post IDs: $savedPostIds');
-        print('Number of saved posts: ${savedPostIds.length}');
-      }
-
       if (savedPostIds.isEmpty) {
-        if (kDebugMode) {
-          print('No saved post IDs found in Hive');
-        }
         setState(() {
           _savedPosts = [];
           _isLoadingSavedPosts = false;
@@ -179,41 +163,20 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
 
       try {
         // Try to fetch posts using batch method first
-        if (kDebugMode) {
-          print('Attempting to fetch posts using getPostsByIds...');
-        }
         final savedPostsFromBackend = await PostDataService.getPostsByIds(savedPostIds);
-
-        if (kDebugMode) {
-          print('Batch fetch returned ${savedPostsFromBackend.length} posts');
-        }
 
         // Format posts for UI
         for (var post in savedPostsFromBackend) {
           try {
-            if (post != null && post.isNotEmpty) {
+            if (post.isNotEmpty) {
               final formattedPost = await PostDataService.formatSavedPostForWidget(post);
               formattedSavedPosts.add(formattedPost);
-              if (kDebugMode) {
-                print('Successfully formatted saved post: ${post['_id']}');
-              }
             }
           } catch (e) {
-            if (kDebugMode) {
-              print('Error formatting post ${post?['_id']}: $e - SKIPPING this post');
-            }
             // Skip this post instead of adding an error template
           }
         }
-
-        if (kDebugMode) {
-          print('Formatted ${formattedSavedPosts.length} posts from batch');
-        }
       } catch (e) {
-        if (kDebugMode) {
-          print('Batch fetch failed, trying individual fetch: $e');
-        }
-
         // Fallback: Try to fetch posts individually
         for (String savedId in savedPostIds) {
           try {
@@ -222,35 +185,21 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
               try {
                 final formattedPost = await PostDataService.formatSavedPostForWidget(post);
                 formattedSavedPosts.add(formattedPost);
-                if (kDebugMode) {
-                  print('Successfully formatted individual saved post: $savedId');
-                }
               } catch (formatError) {
-                if (kDebugMode) {
-                  print('Error formatting individual post $savedId: $formatError - SKIPPING this post');
-                }
                 // Skip malformed posts instead of adding error template
               }
             } else {
-              if (kDebugMode) {
-                print('Post $savedId not found, removing from saved posts');
-              }
               // Remove non-existent post from saved posts
               await HiveService.removePostId(savedId);
             }
           } catch (postError) {
-            if (kDebugMode) {
-              print('Error fetching individual post $savedId: $postError');
-            }
+            //
           }
         }
 
         // If individual fetch also fails, try searching through feed posts
         if (formattedSavedPosts.isEmpty) {
           try {
-            if (kDebugMode) {
-              print('Trying fallback search through feed posts...');
-            }
             final feedPosts = await PostDataService.getFeedPosts(page: 1, limit: 50);
 
             for (String savedId in savedPostIds) {
@@ -264,52 +213,29 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                   try {
                     final formattedPost = await PostDataService.formatSavedPostForWidget(foundPost);
                     formattedSavedPosts.add(formattedPost);
-                    if (kDebugMode) {
-                      print('Successfully formatted fallback saved post: $savedId');
-                    }
                   } catch (formatError) {
-                    if (kDebugMode) {
-                      print('Error formatting fallback post $savedId: $formatError - SKIPPING this post');
-                    }
                     // Skip malformed posts instead of adding error template
                   }
                 }
               } catch (searchError) {
-                if (kDebugMode) {
-                  print('Error searching for fallback post $savedId: $searchError');
-                }
+                //
               }
             }
           } catch (feedError) {
-            if (kDebugMode) {
-              print('Feed fallback also failed: $feedError');
-            }
+            //
           }
         }
-      }
-
-      if (kDebugMode) {
-        print('=== FINAL RESULT ===');
-        print('Total formatted saved posts: ${formattedSavedPosts.length}');
       }
 
       setState(() {
         _savedPosts = formattedSavedPosts;
         _isLoadingSavedPosts = false;
       });
-
-      if (kDebugMode) {
-        print('setState completed. _savedPosts length: ${_savedPosts.length}');
-        print('=== _loadSavedPosts COMPLETED ===');
-      }
     } catch (e) {
       setState(() {
         _isLoadingSavedPosts = false;
         _savedPosts = [];
       });
-      if (kDebugMode) {
-        print('Error loading saved posts: $e');
-      }
     }
   }
 
@@ -564,10 +490,6 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                     if (chipLabels[i] == 'Saved') {
                       _loadSavedPosts();
                     }
-
-                    if (kDebugMode) {
-                      print('Selected: ${chipLabels[i]}');
-                    }
                   },
                   selectedColor: const Color(0xFF36C897),
                   showCheckmark: false,
@@ -644,21 +566,9 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
   }
 
   Widget _buildPostsContent() {
-    if (kDebugMode) {
-      print('=== _buildPostsContent called ===');
-      print('selectedChipIndex: $selectedChipIndex');
-      print('_isLoadingSavedPosts: $_isLoadingSavedPosts');
-      print('_isLoadingPosts: $_isLoadingPosts');
-      print('_savedPosts.length: ${_savedPosts.length}');
-      print('_userPosts.length: ${_userPosts.length}');
-    }
 
     // Show loading indicator for the selected chip
     bool isLoading = selectedChipIndex == 3 ? _isLoadingSavedPosts : _isLoadingPosts;
-
-    if (kDebugMode) {
-      print('isLoading: $isLoading');
-    }
 
     if (isLoading) {
       return const Padding(
@@ -721,18 +631,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
 
     List<Map<String, dynamic>> filteredPosts = _filterPostsByChip();
 
-    if (kDebugMode) {
-      print('filteredPosts.length: ${filteredPosts.length}');
-      if (filteredPosts.isNotEmpty) {
-        print('First post ID: ${filteredPosts[0]['id']}');
-        print('First post userName: ${filteredPosts[0]['userName']}');
-      }
-    }
-
     if (filteredPosts.isEmpty) {
-      if (kDebugMode) {
-        print('filteredPosts is empty - showing empty state');
-      }
       return Padding(
         padding: const EdgeInsets.all(32.0),
         child: Center(
@@ -813,12 +712,6 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
   }
 
   List<Map<String, dynamic>> _filterPostsByChip() {
-    if (kDebugMode) {
-      print('=== _filterPostsByChip called ===');
-      print('selectedChipIndex: $selectedChipIndex');
-      print('_savedPosts.length: ${_savedPosts.length}');
-      print('_userPosts.length: ${_userPosts.length}');
-    }
 
     List<Map<String, dynamic>> result;
     switch (selectedChipIndex) {
@@ -839,20 +732,10 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
         break;
       case 3: // Saved - show saved posts
         result = _savedPosts;
-        if (kDebugMode) {
-          print('Returning saved posts: ${result.length} items');
-          for (int i = 0; i < result.length; i++) {
-            print('  Saved post $i: ID=${result[i]['id']}, User=${result[i]['userName']}');
-          }
-        }
         break;
       default:
         result = _userPosts;
         break;
-    }
-
-    if (kDebugMode) {
-      print('_filterPostsByChip returning ${result.length} posts');
     }
 
     return result;
@@ -864,32 +747,21 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
       // Refresh posts to update like status
       await _loadUserPosts();
     } catch (e) {
-      if (kDebugMode) {
-        print('Error toggling like: $e');
-      }
+      //
     }
   }
 
   void _handlePostComment(String postId) {
     // Comment handling is managed by the PostCardModel itself
-    if (kDebugMode) {
-      print('Comment on post: $postId');
-    }
   }
 
   void _handlePostShare(String postId) {
     // Handle post sharing
-    if (kDebugMode) {
-      print('Share post: $postId');
-    }
   }
 
   void _navigateToEducationEdit() {
     // Navigate to education management page or show bottom sheet
     // For now, just refresh the education data
-    if (kDebugMode) {
-      print('Navigate to education edit');
-    }
     // You can navigate to the AddEducationPage here
     // Navigator.push(context, MaterialPageRoute(builder: (context) => AddEducationPage()));
 
@@ -921,9 +793,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
       // Refresh saved posts if currently viewing them
       refreshSavedPosts();
     } catch (e) {
-      if (kDebugMode) {
-        print('Error handling post save toggle: $e');
-      }
+      //
     }
   }
 
@@ -1054,10 +924,6 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                   onImageAttached: (file, webBytes, scale, angle) {
                     // Handle the image attachment logic here
                     // You can upload the new image and update the UI
-                    if (kDebugMode) {
-                      print('New image attached with scale: $scale, angle: $angle');
-                    }
-
                     // Example: You might want to refresh user data after upload
                     // _getUserData();
                   },

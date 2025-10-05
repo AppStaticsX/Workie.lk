@@ -181,7 +181,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             if (isSelected)
               const Icon(
                 Icons.check_circle,
-                color: const Color(0xFF4E6BF5),
+                color: Color(0xFF4E6BF5),
                 size: 20,
               ),
           ],
