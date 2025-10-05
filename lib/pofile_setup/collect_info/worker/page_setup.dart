@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_education_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_experience_page.dart';
 import 'package:workie/pofile_setup/collect_info/worker/add_overview_page.dart';
@@ -537,11 +538,11 @@ class _ProfileSetupState extends State<ProfileSetup> {
         backgroundColor: const Color(0xFF4E6BF5),
         surfaceTintColor: Colors.transparent,
         leading: const Icon(
-          CupertinoIcons.person_2_fill,
+          Iconsax.user_copy,
           color: Colors.white,
-          size: 36,
+          size: 28,
         ),
-        title: Text('Create & Verify Your Profile',
+        title: Text('Create Your Profile',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Colors.white
@@ -623,7 +624,13 @@ class _ProfileSetupState extends State<ProfileSetup> {
             ),
             BottomNavigation(
               isSaving: _isSaving,
-              actionName: 'Add Skills',
+              actionName: 'Add Job Category',
+              onTapAction: _navigateNext,
+              onBackAction: _navigateBack,
+            ),
+            BottomNavigation(
+              isSaving: _isSaving,
+              actionName: 'Add Your Skills',
               onTapAction: _navigateNext,
               onBackAction: _navigateBack,
             ),
@@ -635,19 +642,13 @@ class _ProfileSetupState extends State<ProfileSetup> {
             ),
             BottomNavigation(
               isSaving: _isSaving,
-              actionName: 'Add Overview',
-              onTapAction: _navigateNext,
-              onBackAction: _navigateBack,
-            ),
-            BottomNavigation(
-              isSaving: _isSaving,
-              actionName: 'Add Experience',
+              actionName: 'Add Your Bio',
               onTapAction: _navigateNext,
               onBackAction: _navigateBack,
             ),
             BottomNavigationWithSkip(
               isSaving: _isSaving,
-              actionName: 'Add Education',
+              actionName: 'Add Experience',
               onTapAction: () {
                 _navigateNext();
                 _dismissKeyboard();
@@ -657,7 +658,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
             ),
             BottomNavigationWithSkip(
               isSaving: _isSaving,
-              actionName: 'Add Personal Info',
+              actionName: 'Add Education',
               onTapAction: _navigateNext,
               onBackAction: _navigateBack,
               onSkip: _skipNext,

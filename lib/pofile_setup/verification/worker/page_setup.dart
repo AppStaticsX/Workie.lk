@@ -195,7 +195,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
           ),
           BottomNavigation(
             isSaving: _isSaving,
-            actionName: _isSaving ? 'Verifying...' : 'Verify Documents',
+            actionName: _isSaving ? 'Verifying...' : 'Complete Verification',
             onTapAction: () {
               Navigator.pushReplacement(
                   context, MaterialPageRoute(

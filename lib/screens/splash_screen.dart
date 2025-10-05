@@ -167,15 +167,16 @@ class _SplashScreenState extends State<SplashScreen> {
               'WORKIE.LK',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                height: 1.1,
+                height: 1.2,
+                fontFamily: 'Audiowide',
                 fontSize: 34,
               ),
             ),
             Text(
               'EMPOWERING PEOPLE',
               style: TextStyle(
-                letterSpacing: 4.6,
-                fontSize: 10,
+                letterSpacing: 4.8,
+                fontSize: 11,
                 color: Theme.of(context).colorScheme.primary,
               ),
             )

@@ -14,6 +14,7 @@ import 'package:workie/generated/app_localizations.dart';
 import 'package:workie/screens/splash_screen.dart';
 import 'package:workie/widgets/custom_textfield.dart';
 import 'package:workie/widgets/error_dialog.dart';
+import '../../screens/terms_privacy_page.dart';
 import '../../services/auth_service.dart';
 import '../../values/color.dart';
 import '../../values/dimension.dart';
@@ -506,15 +507,16 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
               'Workie.LK'.toUpperCase(),
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
-                height: 1.1,
+                height: 1.2,
+                fontFamily: 'Audiowide',
                 fontSize: 34,
               ),
             ),
             Text(
               'Empowering People'.toUpperCase(),
               style: TextStyle(
-                letterSpacing: 4.6,
-                fontSize: 10,
+                letterSpacing: 4.8,
+                fontSize: 11,
                 color: Theme.of(context).colorScheme.primary,
               ),
             ),
@@ -729,8 +731,21 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
                     recognizer: TapGestureRecognizer()
                       ..onTap = () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const SplashScreen(),
+                          PageRouteBuilder(
+                            pageBuilder: (context, animation, secondaryAnimation) => const TermsAndPrivacyPage(),
+                            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                              const begin = Offset(0.0, 1.0); // Start from bottom
+                              const end = Offset.zero; // End at normal position
+                              const curve = Curves.easeInOut;
+
+                              var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                              var offsetAnimation = animation.drive(tween);
+
+                              return SlideTransition(
+                                position: offsetAnimation,
+                                child: child,
+                              );
+                            },
                           ),
                         );
                         if (kDebugMode) print('Terms of Use tapped!');
@@ -755,8 +770,21 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
                     recognizer: TapGestureRecognizer()
                       ..onTap = () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const SplashScreen(),
+                          PageRouteBuilder(
+                            pageBuilder: (context, animation, secondaryAnimation) => const TermsAndPrivacyPage(),
+                            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                              const begin = Offset(0.0, 1.0); // Start from bottom
+                              const end = Offset.zero; // End at normal position
+                              const curve = Curves.easeInOut;
+
+                              var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                              var offsetAnimation = animation.drive(tween);
+
+                              return SlideTransition(
+                                position: offsetAnimation,
+                                child: child,
+                              );
+                            },
                           ),
                         );
                         if (kDebugMode) print('Privacy Policy tapped!');

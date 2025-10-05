@@ -697,145 +697,151 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
                           setState(() {});
                         },
                       ),
+                      Text(
+                        '|',
+                        style: TextStyle(
+                            fontSize: 24
+                        ),
+                      ),
+                      PopupMenuButton<String>(
+                        icon: Icon(
+                          Iconsax.hashtag_copy,
+                          color: Colors.grey,
+                          size: 26,
+                        ),
+                        itemBuilder: (context) => [
+                          PopupMenuItem<String>(
+                            value: 'add_manual',
+                            child: Row(
+                              children: [
+                                Icon(Iconsax.hashtag_1, size: 20),
+                                SizedBox(width: 8),
+                                Text('Add Hashtags'),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem<String>(
+                            value: 'suggest_ai',
+                            child: Row(
+                              children: [
+                                Icon(Iconsax.magicpen, size: 20),
+                                SizedBox(width: 8),
+                                Text('AI Suggestions'),
+                              ],
+                            ),
+                          ),
+                        ],
+                        onSelected: (String value) async {
+                          if (value == 'add_manual') {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AddHashtagsDialog(
+                                selectedHashtags: selectedHashtags,
+                                onHashtagsChanged: (hashtags) {
+                                  setState(() {
+                                    selectedHashtags = hashtags;
+                                  });
+                                },
+                              ),
+                            );
+                          } else if (value == 'suggest_ai') {
+                            if (_textController.text.trim().isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Write some content first to get hashtag suggestions')),
+                              );
+                              return;
+                            }
+
+                            // Show loading dialog
+                            showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (context) => AlertDialog(
+                                content: Row(
+                                  children: [
+                                    CircularProgressIndicator(),
+                                    SizedBox(width: 16),
+                                    Text('Generating hashtag suggestions...'),
+                                  ],
+                                ),
+                              ),
+                            );
+
+                            try {
+                              final suggestions = await AIPostGenerationService.generateHashtagSuggestions(
+                                content: _textController.text,
+                                maxSuggestions: 10,
+                              );
+
+                              Navigator.pop(context); // Close loading dialog
+
+                              if (suggestions.isNotEmpty) {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: Text('AI Hashtag Suggestions'),
+                                    content: Container(
+                                      width: double.maxFinite,
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text('Select hashtags to add:'),
+                                          SizedBox(height: 16),
+                                          Container(
+                                            height: 200,
+                                            child: ListView.builder(
+                                              itemCount: suggestions.length,
+                                              itemBuilder: (context, index) {
+                                                final hashtag = suggestions[index];
+                                                final isSelected = selectedHashtags.contains(hashtag);
+
+                                                return CheckboxListTile(
+                                                  title: Text('#$hashtag'),
+                                                  value: isSelected,
+                                                  onChanged: (bool? value) {
+                                                    setState(() {
+                                                      if (value == true && !selectedHashtags.contains(hashtag)) {
+                                                        selectedHashtags.add(hashtag);
+                                                      } else if (value == false) {
+                                                        selectedHashtags.remove(hashtag);
+                                                      }
+                                                    });
+                                                    Navigator.pop(context);
+                                                  },
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: Text('Done'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Could not generate hashtag suggestions. Try again later.')),
+                                );
+                              }
+                            } catch (e) {
+                              Navigator.pop(context); // Close loading dialog
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Error generating suggestions: $e')),
+                              );
+                            }
+                          }
+                        },
+                      ),
                     ],
                   ),
                   IconButton(
                       onPressed: () => _textController.clear(),
                       icon: Icon(Iconsax.trash_copy, size: 28, color: Colors.red,)
-                  ),
-                  PopupMenuButton<String>(
-                    icon: Icon(
-                      Iconsax.hashtag_copy,
-                      color: Colors.grey[400],
-                      size: 26,
-                    ),
-                    itemBuilder: (context) => [
-                      PopupMenuItem<String>(
-                        value: 'add_manual',
-                        child: Row(
-                          children: [
-                            Icon(Iconsax.hashtag_1, size: 20),
-                            SizedBox(width: 8),
-                            Text('Add Hashtags'),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem<String>(
-                        value: 'suggest_ai',
-                        child: Row(
-                          children: [
-                            Icon(Iconsax.magicpen, size: 20),
-                            SizedBox(width: 8),
-                            Text('AI Suggestions'),
-                          ],
-                        ),
-                      ),
-                    ],
-                    onSelected: (String value) async {
-                      if (value == 'add_manual') {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AddHashtagsDialog(
-                            selectedHashtags: selectedHashtags,
-                            onHashtagsChanged: (hashtags) {
-                              setState(() {
-                                selectedHashtags = hashtags;
-                              });
-                            },
-                          ),
-                        );
-                      } else if (value == 'suggest_ai') {
-                        if (_textController.text.trim().isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Write some content first to get hashtag suggestions')),
-                          );
-                          return;
-                        }
-                        
-                        // Show loading dialog
-                        showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (context) => AlertDialog(
-                            content: Row(
-                              children: [
-                                CircularProgressIndicator(),
-                                SizedBox(width: 16),
-                                Text('Generating hashtag suggestions...'),
-                              ],
-                            ),
-                          ),
-                        );
-                        
-                        try {
-                          final suggestions = await AIPostGenerationService.generateHashtagSuggestions(
-                            content: _textController.text,
-                            maxSuggestions: 10,
-                          );
-                          
-                          Navigator.pop(context); // Close loading dialog
-                          
-                          if (suggestions.isNotEmpty) {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: Text('AI Hashtag Suggestions'),
-                                content: Container(
-                                  width: double.maxFinite,
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text('Select hashtags to add:'),
-                                      SizedBox(height: 16),
-                                      Container(
-                                        height: 200,
-                                        child: ListView.builder(
-                                          itemCount: suggestions.length,
-                                          itemBuilder: (context, index) {
-                                            final hashtag = suggestions[index];
-                                            final isSelected = selectedHashtags.contains(hashtag);
-                                            
-                                            return CheckboxListTile(
-                                              title: Text('#$hashtag'),
-                                              value: isSelected,
-                                              onChanged: (bool? value) {
-                                                setState(() {
-                                                  if (value == true && !selectedHashtags.contains(hashtag)) {
-                                                    selectedHashtags.add(hashtag);
-                                                  } else if (value == false) {
-                                                    selectedHashtags.remove(hashtag);
-                                                  }
-                                                });
-                                                Navigator.pop(context);
-                                              },
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: Text('Done'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Could not generate hashtag suggestions. Try again later.')),
-                            );
-                          }
-                        } catch (e) {
-                          Navigator.pop(context); // Close loading dialog
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error generating suggestions: $e')),
-                          );
-                        }
-                      }
-                    },
                   ),
                 ],
               ),

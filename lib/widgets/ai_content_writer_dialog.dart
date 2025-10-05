@@ -334,7 +334,7 @@ class _AIContentWriterDialogState extends State<AIContentWriterDialog> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Max Length',
+                    'Length',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -540,11 +540,11 @@ class _AIContentWriterDialogState extends State<AIContentWriterDialog> {
             },
             child: Text('Back to Edit'),
           ),
-          const Spacer(),
-          TextButton(
+          //const Spacer(),
+          /*TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text('Cancel'),
-          ),
+          ),*/
         ],
       );
     }
