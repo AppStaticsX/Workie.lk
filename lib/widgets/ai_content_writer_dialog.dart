@@ -489,25 +489,8 @@ class _AIContentWriterDialogState extends State<AIContentWriterDialog> {
         const SizedBox(height: 16),
         Row(
           children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _isGenerating ? null : _regenerateContent,
-                icon: _isGenerating 
-                  ? SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    )
-                  : Icon(Icons.refresh),
-                label: Text(_isGenerating ? 'Regenerating...' : 'Regenerate'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Theme.of(context).colorScheme.primary,
-                  side: BorderSide(color: Theme.of(context).colorScheme.outline),
-                ),
-              ),
+            IconButton(onPressed: _isGenerating ? null : _regenerateContent,
+                icon: Icon(Icons.refresh)
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -541,23 +524,16 @@ class _AIContentWriterDialogState extends State<AIContentWriterDialog> {
             child: Text('Back to Edit'),
           ),
           //const Spacer(),
-          /*TextButton(
+          TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text('Cancel'),
-          ),*/
+          ),
         ],
       );
     }
 
     return Row(
       children: [
-        Expanded(
-          child: TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text('Cancel'),
-          ),
-        ),
-        const SizedBox(width: 12),
         Expanded(
           child: ElevatedButton.icon(
             onPressed: _isGenerating ? null : _generateContent,

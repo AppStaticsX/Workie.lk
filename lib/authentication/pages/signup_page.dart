@@ -10,7 +10,6 @@ import 'package:flame_lottie/flame_lottie.dart';
 import 'package:workie/authentication/pages/email_verification_page.dart';
 import 'package:workie/authentication/pages/login_page.dart';
 import 'package:workie/generated/app_localizations.dart';
-import 'package:workie/screens/splash_screen.dart';
 import 'package:workie/widgets/custom_textfield.dart';
 import 'package:workie/widgets/error_dialog.dart';
 import '../../screens/terms_privacy_page.dart';
@@ -712,7 +711,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
               text: TextSpan(
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.primary,
-                  fontFamily: 'Google Sans',
+                  fontFamily: 'Montserrat',
                   fontSize: 13,
                 ),
                 children: [

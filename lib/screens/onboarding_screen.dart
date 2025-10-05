@@ -510,7 +510,7 @@ class _OnBoardWidgetState extends State<OnBoardWidget>
             },
           ),
 
-          const SizedBox(height: 36),
+          const SizedBox(height: 48),
 
           // Animated Title
           SlideTransition(
@@ -521,7 +521,7 @@ class _OnBoardWidgetState extends State<OnBoardWidget>
                 widget.onBoardTitle,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 23,
                   color: Theme.of(context).colorScheme.onSurface,
                   fontWeight: FontWeight.bold,
                   height: 1.2,
@@ -530,7 +530,7 @@ class _OnBoardWidgetState extends State<OnBoardWidget>
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
 
           // Animated Subtitle
           SlideTransition(

@@ -402,8 +402,8 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
                 controller: _textController,
                 maxLines: null,
                 expands: true,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.inverseSurface,
                   fontSize: 16,
                   height: 1.4,
                 ),

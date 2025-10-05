@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:workie/screens/splash_screen.dart';
+import '../screens/terms_privacy_page.dart';
 import '../values/dimension.dart';
 
 class AgreementDialog extends StatelessWidget {
@@ -39,7 +39,22 @@ class AgreementDialog extends StatelessWidget {
                 recognizer: TapGestureRecognizer()
                   ..onTap = () {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => const SplashScreen()),
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) => const TermsAndPrivacyPage(),
+                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                          const begin = Offset(0.0, 1.0); // Start from bottom
+                          const end = Offset.zero; // End at normal position
+                          const curve = Curves.easeInOut;
+
+                          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                          var offsetAnimation = animation.drive(tween);
+
+                          return SlideTransition(
+                            position: offsetAnimation,
+                            child: child,
+                          );
+                        },
+                      ),
                     );
                     if (kDebugMode) {
                       print('Terms of Use tapped!');
@@ -58,7 +73,22 @@ class AgreementDialog extends StatelessWidget {
                 recognizer: TapGestureRecognizer()
                   ..onTap = () {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => const SplashScreen()),
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) => const TermsAndPrivacyPage(),
+                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                          const begin = Offset(0.0, 1.0); // Start from bottom
+                          const end = Offset.zero; // End at normal position
+                          const curve = Curves.easeInOut;
+
+                          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                          var offsetAnimation = animation.drive(tween);
+
+                          return SlideTransition(
+                            position: offsetAnimation,
+                            child: child,
+                          );
+                        },
+                      ),
                     );
                     if (kDebugMode) {
                       print('Privacy Policy tapped!');

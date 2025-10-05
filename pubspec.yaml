@@ -51,7 +51,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^5.0.0
   hive_generator: ^2.0.1
-  build_runner: ^2.5.4
+  build_runner: ^2.4.13
 
 flutter:
   uses-material-design: true
@@ -68,6 +68,11 @@ flutter:
 
   fonts:
     - family: Google Sans
+      fonts:
+        - asset: assets/font/GoogleSans/GoogleSans-Regular.nohints.ttf
+        - asset: assets/font/GoogleSans/GoogleSans-Bold.nohints.ttf
+
+    - family: Montserrat
       fonts:
         - asset: assets/font/Montserrat/Montserrat-Regular.ttf
         - asset: assets/font/Montserrat/Montserrat-Bold.ttf
