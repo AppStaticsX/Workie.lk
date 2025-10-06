@@ -91,161 +91,15 @@ class PostNotificationService {
     // Listen for comment notifications (only for post owners)  
     socketService.addEventListener('post_comment_notification', _onPostCommentNotification);
 
-    // Alternative approach: Listen to regular events and filter for notifications
-    socketService.addEventListener('post_like_updated', _onPostLikeUpdated);
-
     if (kDebugMode) {
       print('✅ Socket listeners setup complete for post notifications');
-      print('📡 Listening for events: post_like_notification, post_comment_notification, post_like_updated');
+      print('📡 Listening for events: post_like_notification, post_comment_notification');
     }
   }
 
-  /// Alternative handler for like events - check if notification should be shown
-  Future<void> _onPostLikeUpdated(dynamic data) async {
-    try {
-      if (kDebugMode) {
-        print('🔔 ==========================================');
-        print('🔔 POST LIKE NOTIFICATION EVENT RECEIVED');
-        print('🔔 ==========================================');
-        print('🔔 Raw event data: $data');
-      }
 
-      final userId = data['userId']?.toString(); // User who liked
-      final postId = data['postId']?.toString();
-      final isLiked = data['isLiked'] ?? false;
 
-      if (kDebugMode) {
-        print('🔔 Like event analysis:');
-        print('  - Liker user ID: $userId');
-        print('  - Post ID: $postId');
-        print('  - Current user ID: $_currentUserId');
-        print('  - Is liked: $isLiked');
-        print('  - Service initialized: $_isInitialized');
-      }
 
-      // Validation checks
-      if (!_isInitialized) {
-        if (kDebugMode) print('❌ PostNotificationService not initialized, ignoring event');
-        return;
-      }
-
-      if (postId == null || postId.isEmpty) {
-        if (kDebugMode) print('❌ Invalid postId, ignoring event');
-        return;
-      }
-
-      if (userId == null || userId.isEmpty) {
-        if (kDebugMode) print('❌ Invalid userId, ignoring event');
-        return;
-      }
-
-      if (_currentUserId == null) {
-        if (kDebugMode) print('⚠️ Current user ID not available, attempting to refresh...');
-        await _getCurrentUserId();
-        
-        if (_currentUserId == null) {
-          if (kDebugMode) print('❌ Current user ID still not available after refresh, ignoring event');
-          return;
-        } else {
-          if (kDebugMode) print('✅ Current user ID refreshed: $_currentUserId');
-        }
-      }
-
-      // Only show notification if:
-      // 1. Someone else liked it (not current user)
-      // 2. It was a like (not unlike) 
-      // 3. We need to check if current user owns this post
-      if (userId != _currentUserId && isLiked) {
-        if (kDebugMode) print('✅ Conditions met for like notification, checking post ownership...');
-        _checkAndShowLikeNotification(postId, userId, data);
-      } else {
-        if (kDebugMode) {
-          if (userId == _currentUserId) {
-            print('🔔 Skipping notification - user liked their own post');
-          } else if (!isLiked) {
-            print('🔔 Skipping notification - post was unliked');
-          }
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) print('❌ Error handling like updated event: $e');
-    }
-  }
-
-  /// Check if we should show a like notification for this post
-  Future<void> _checkAndShowLikeNotification(String postId, String? likerId, dynamic data) async {
-    try {
-      // Check if current user owns this post and get details
-      if (!_ownedPostIds.contains(postId)) {
-        final postDetails = await _getPostDetails(postId);
-        if (postDetails == null || postDetails['isOwned'] != true) {
-          if (kDebugMode) print('🔔 Post $postId not owned by current user, skipping notification');
-          return;
-        }
-        // Cache this post ID for future use
-        _ownedPostIds.add(postId);
-      }
-
-      // Extract liker name from likes array or use fallback methods
-      String likerName = 'Someone';
-
-      // Try to get liker name from the data
-      if (data['likerName'] != null) {
-        likerName = data['likerName'].toString();
-      } else {
-        final likes = data['likes'] as List?;
-        if (likes != null) {
-          // Find the liker in the likes array
-          for (var like in likes) {
-            if (like['userId']?.toString() == likerId) {
-              final userInfo = like['userInfo'];
-              if (userInfo != null) {
-                final firstName = userInfo['firstName']?.toString() ?? '';
-                final lastName = userInfo['lastName']?.toString() ?? '';
-                if (firstName.isNotEmpty || lastName.isNotEmpty) {
-                  likerName = '$firstName $lastName'.trim();
-                  if (kDebugMode) print('🔔 Extracted liker name: $likerName');
-                }
-              }
-              break;
-            }
-          }
-        }
-      }
-
-      if (kDebugMode && likerName == 'Someone') {
-        print('⚠️ Could not extract liker name, using fallback');
-      }
-
-      // Get post content from various sources
-      String postContent = 'your post';
-      if (data['postContent'] != null) {
-        postContent = data['postContent'].toString();
-      } else {
-        // Try to get content from post details or use a generic message
-        final postDetails = await _getPostDetails(postId);
-        if (postDetails != null && postDetails['content'] != null) {
-          postContent = postDetails['content'].toString();
-        }
-      }
-
-      if (kDebugMode) {
-        print('🔔 Showing like notification for owned post: $postId');
-        print('🔔 Liker: $likerName');
-        print('🔔 Content: ${postContent.length > 50 ? postContent.substring(0, 50) + '...' : postContent}');
-      }
-
-      await NotificationService.showPostLikeNotification(
-        likerName: likerName,
-        postContent: postContent,
-        postId: postId,
-      );
-
-      if (kDebugMode) print('✅ Like notification displayed');
-    } catch (e) {
-      if (kDebugMode) print('❌ Error showing like notification: $e');
-    }
-  }
 
 
 
@@ -666,7 +520,6 @@ class PostNotificationService {
     final socketService = SocketService.instance;
     socketService.removeEventListener('post_like_notification', instance._onPostLikeNotification);
     socketService.removeEventListener('post_comment_notification', instance._onPostCommentNotification);
-    socketService.removeEventListener('post_like_updated', instance._onPostLikeUpdated);
 
     instance._isInitialized = false;
     if (kDebugMode) print('🧹 PostNotificationService disposed');
