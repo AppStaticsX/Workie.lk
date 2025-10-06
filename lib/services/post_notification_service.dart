@@ -17,6 +17,13 @@ class PostNotificationService {
   String? _currentUserId;
   Set<String> _ownedPostIds = {}; // Cache of post IDs owned by current user
 
+  /// Clear user session data - for use by AuthService
+  static void clearUserData() {
+    instance._currentUserId = null;
+    instance._ownedPostIds.clear();
+    if (kDebugMode) print('🧹 PostNotificationService user data cleared');
+  }
+
   /// Initialize the post notification service
   static Future<void> initialize() async {
     if (instance._isInitialized) {
@@ -27,9 +34,14 @@ class PostNotificationService {
     try {
       // Get current user ID
       await instance._getCurrentUserId();
-
-      // Load user's own posts into cache
-      await instance._loadOwnedPosts();
+      
+      if (instance._currentUserId != null) {
+        if (kDebugMode) print('📱 User already logged in: ${instance._currentUserId}');
+        // Load user's own posts into cache
+        await instance._loadOwnedPosts();
+      } else {
+        if (kDebugMode) print('📱 No user logged in at initialization');
+      }
 
       // Setup socket listeners for notification events
       instance._setupSocketListeners();
@@ -90,7 +102,7 @@ class PostNotificationService {
   }
 
   /// Alternative handler for like events - check if notification should be shown
-  void _onPostLikeUpdated(dynamic data) {
+  Future<void> _onPostLikeUpdated(dynamic data) async {
     try {
       if (kDebugMode) {
         print('🔔 ==========================================');
@@ -98,11 +110,11 @@ class PostNotificationService {
         print('🔔 ==========================================');
         print('🔔 Raw event data: $data');
       }
-      
+
       final userId = data['userId']?.toString(); // User who liked
       final postId = data['postId']?.toString();
       final isLiked = data['isLiked'] ?? false;
-      
+
       if (kDebugMode) {
         print('🔔 Like event analysis:');
         print('  - Liker user ID: $userId');
@@ -129,8 +141,15 @@ class PostNotificationService {
       }
 
       if (_currentUserId == null) {
-        if (kDebugMode) print('❌ Current user ID not available, ignoring event');
-        return;
+        if (kDebugMode) print('⚠️ Current user ID not available, attempting to refresh...');
+        await _getCurrentUserId();
+        
+        if (_currentUserId == null) {
+          if (kDebugMode) print('❌ Current user ID still not available after refresh, ignoring event');
+          return;
+        } else {
+          if (kDebugMode) print('✅ Current user ID refreshed: $_currentUserId');
+        }
       }
 
       // Only show notification if:
@@ -167,10 +186,10 @@ class PostNotificationService {
         // Cache this post ID for future use
         _ownedPostIds.add(postId);
       }
-      
+
       // Extract liker name from likes array or use fallback methods
       String likerName = 'Someone';
-      
+
       // Try to get liker name from the data
       if (data['likerName'] != null) {
         likerName = data['likerName'].toString();
@@ -194,11 +213,11 @@ class PostNotificationService {
           }
         }
       }
-      
+
       if (kDebugMode && likerName == 'Someone') {
         print('⚠️ Could not extract liker name, using fallback');
       }
-      
+
       // Get post content from various sources
       String postContent = 'your post';
       if (data['postContent'] != null) {
@@ -216,13 +235,13 @@ class PostNotificationService {
         print('🔔 Liker: $likerName');
         print('🔔 Content: ${postContent.length > 50 ? postContent.substring(0, 50) + '...' : postContent}');
       }
-      
+
       await NotificationService.showPostLikeNotification(
         likerName: likerName,
         postContent: postContent,
         postId: postId,
       );
-      
+
       if (kDebugMode) print('✅ Like notification displayed');
     } catch (e) {
       if (kDebugMode) print('❌ Error showing like notification: $e');
@@ -230,18 +249,31 @@ class PostNotificationService {
   }
 
   /// Alternative handler for comment events - check if notification should be shown  
-  void _onPostCommentAdded(dynamic data) {
+  Future<void> _onPostCommentAdded(dynamic data) async {
     try {
       if (kDebugMode) print('🔔 Post comment added event received: $data');
-      
+
       final commenterUserId = data['commenterUserId']?.toString(); // User who commented
       final postId = data['postId']?.toString();
-      
+
       if (kDebugMode) {
         print('🔔 Comment event analysis:');
         print('  - Commenter user ID: $commenterUserId');
         print('  - Post ID: $postId');
         print('  - Current user ID: $_currentUserId');
+      }
+
+      // Check if current user ID is available, refresh if needed
+      if (_currentUserId == null) {
+        if (kDebugMode) print('⚠️ Current user ID not available for comment notification, attempting to refresh...');
+        await _getCurrentUserId();
+        
+        if (_currentUserId == null) {
+          if (kDebugMode) print('❌ Current user ID still not available after refresh, ignoring comment event');
+          return;
+        } else {
+          if (kDebugMode) print('✅ Current user ID refreshed for comment notification: $_currentUserId');
+        }
       }
 
       // Only show notification if someone else commented (not current user)
@@ -266,10 +298,10 @@ class PostNotificationService {
         // Cache this post ID for future use
         _ownedPostIds.add(postId);
       }
-      
+
       // Extract commenter name from various sources
       String commenterName = 'Someone';
-      
+
       // Try to get commenter name from the data
       if (data['commenterName'] != null) {
         commenterName = data['commenterName'].toString();
@@ -285,11 +317,11 @@ class PostNotificationService {
           }
         }
       }
-      
+
       if (kDebugMode && commenterName == 'Someone') {
         print('⚠️ Could not extract commenter name, using fallback');
       }
-      
+
       // Extract comment text from various sources
       String commentText = 'commented on your post';
       if (data['commentText'] != null) {
@@ -301,7 +333,7 @@ class PostNotificationService {
           commentText = data['comment'].toString();
         }
       }
-      
+
       // Get post content from various sources
       String postContent = 'your post';
       if (data['postContent'] != null) {
@@ -320,14 +352,14 @@ class PostNotificationService {
         print('🔔 Comment: ${commentText.length > 50 ? commentText.substring(0, 50) + '...' : commentText}');
         print('🔔 Content: ${postContent.length > 50 ? postContent.substring(0, 50) + '...' : postContent}');
       }
-      
+
       await NotificationService.showPostCommentNotification(
         commenterName: commenterName,
         commentText: commentText,
         postContent: postContent,
         postId: postId,
       );
-      
+
       if (kDebugMode) print('✅ Comment notification displayed');
     } catch (e) {
       if (kDebugMode) print('❌ Error showing comment notification: $e');
@@ -338,15 +370,15 @@ class PostNotificationService {
   Future<void> _loadOwnedPosts() async {
     try {
       if (_currentUserId == null) return;
-      
+
       // For now, we'll just log that we're loading posts
       // In production, you'd load the user's posts and cache their IDs
       if (kDebugMode) print('🔔 Loading owned posts for user: $_currentUserId');
-      
+
       // TODO: Load actual user posts from API
       // final posts = await PostDataService.getUserPosts(userId: _currentUserId);
       // _ownedPostIds.addAll(posts.map((post) => post['id'].toString()));
-      
+
       if (kDebugMode) print('🔔 Owned posts loaded into cache');
     } catch (e) {
       if (kDebugMode) print('❌ Error loading owned posts: $e');
@@ -360,19 +392,19 @@ class PostNotificationService {
         if (kDebugMode) print('❌ No current user ID available for post ownership check');
         return null;
       }
-      
+
       if (kDebugMode) print('🔔 Fetching post details for: $postId (current user: $_currentUserId)');
-      
+
       // Try to get auth token for the API call
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
-      
+
       if (token != null) {
         // Make API call to get post details
         final postDetailsUrl = 'https://workie-lk-backend.onrender.com/api/posts/single/$postId';
-        
+
         if (kDebugMode) print('🔔 Making API call to: $postDetailsUrl');
-        
+
         try {
           final response = await http.get(
             Uri.parse(postDetailsUrl),
@@ -381,25 +413,25 @@ class PostNotificationService {
               'Authorization': 'Bearer $token',
             },
           ).timeout(const Duration(seconds: 10));
-          
+
           if (kDebugMode) print('🔔 API response status: ${response.statusCode}');
-          
+
           if (response.statusCode == 200) {
             final data = json.decode(response.body);
             if (kDebugMode) print('🔔 API response data: $data');
-            
+
             if (data['success'] == true && data['data'] != null) {
               final post = data['data'];
               final postOwnerId = post['userId']?['_id']?.toString() ?? post['userId']?.toString();
               final isOwned = postOwnerId == _currentUserId;
-              
+
               if (kDebugMode) {
                 print('🔔 Post ownership analysis:');
                 print('  - Post owner ID: $postOwnerId');
                 print('  - Current user ID: $_currentUserId');
                 print('  - User owns post: $isOwned');
               }
-              
+
               return {
                 'isOwned': isOwned,
                 'content': post['content']?.toString() ?? 'your post',
@@ -417,7 +449,7 @@ class PostNotificationService {
       } else {
         if (kDebugMode) print('❌ No auth token available for API call');
       }
-      
+
       if (kDebugMode) print('❌ Could not determine post ownership, skipping notification');
       return {
         'isOwned': false, // Conservative approach - don't show notification if we can't verify ownership
@@ -439,6 +471,25 @@ class PostNotificationService {
       return false;
     }
   }
+
+  /// Refresh current user ID - call this after user login/logout
+  static Future<void> refreshCurrentUser() async {
+    try {
+      if (kDebugMode) print('🔄 Refreshing current user ID in PostNotificationService');
+      await instance._getCurrentUserId();
+      
+      // Clear and reload owned posts cache for the new user
+      instance._ownedPostIds.clear();
+      await instance._loadOwnedPosts();
+      
+      if (kDebugMode) print('✅ Current user ID refreshed: ${instance._currentUserId}');
+    } catch (e) {
+      if (kDebugMode) print('❌ Error refreshing current user ID: $e');
+    }
+  }
+
+  /// Check if the service has a valid current user ID
+  static bool get hasValidCurrentUser => instance._currentUserId != null;
 
   /// Add a post ID to the owned posts cache (call when user creates a post)
   static void addOwnedPost(String postId) {
@@ -492,7 +543,7 @@ class PostNotificationService {
       if (isLiked) {
         // Show notification for like
         if (kDebugMode) print('🔔 Attempting to show like notification...');
-        
+
         NotificationService.showPostLikeNotification(
           likerName: likerName,
           postContent: postContent,
@@ -549,7 +600,7 @@ class PostNotificationService {
 
       // Show notification for comment
       if (kDebugMode) print('🔔 Attempting to show comment notification...');
-      
+
       NotificationService.showPostCommentNotification(
         commenterName: commenterName,
         commentText: commentText,
@@ -576,18 +627,18 @@ class PostNotificationService {
   static Future<void> testNotifications() async {
     if (kDebugMode) {
       print('🧪 Testing notifications...');
-      
+
       // First test if permissions are working
       final permissionsEnabled = await NotificationService.areNotificationsEnabled();
       print('🧪 Notification permissions enabled: $permissionsEnabled');
-      
+
       // Test like notification
       await NotificationService.showPostLikeNotification(
         likerName: 'Test User',
         postContent: 'This is a test post to verify notifications are working properly.',
         postId: 'test123',
       );
-      
+
       if (kDebugMode) print('🧪 Test like notification sent');
     }
   }
@@ -596,7 +647,7 @@ class PostNotificationService {
   static void testSocketNotifications() {
     if (kDebugMode) {
       print('🧪 Testing socket notification handling...');
-      
+
       // Simulate a like notification event
       final likeData = {
         'postOwnerId': instance._currentUserId,
@@ -605,7 +656,7 @@ class PostNotificationService {
         'postId': 'socket_test_123',
         'isLiked': true,
       };
-      
+
       instance._onPostLikeNotification(likeData);
     }
   }
@@ -614,13 +665,13 @@ class PostNotificationService {
   static Future<void> testNotification() async {
     try {
       if (kDebugMode) print('🧪 Testing post like notification...');
-      
+
       await NotificationService.showPostLikeNotification(
         likerName: 'Test User',
         postContent: 'This is a test notification to verify the notification system is working properly.',
         postId: 'test_123',
       );
-      
+
       if (kDebugMode) print('✅ Test notification sent');
     } catch (e) {
       if (kDebugMode) print('❌ Test notification failed: $e');
@@ -630,7 +681,7 @@ class PostNotificationService {
   /// Simulate a like event for testing
   static void simulateLikeEvent() {
     if (kDebugMode) print('🧪 Simulating like event for testing...');
-    
+
     if (instance._isInitialized) {
       final likeData = {
         'postOwnerId': instance._currentUserId,
@@ -639,7 +690,7 @@ class PostNotificationService {
         'postId': 'socket_test_123',
         'isLiked': true,
       };
-      
+
       instance._onPostLikeNotification(likeData);
     }
   }

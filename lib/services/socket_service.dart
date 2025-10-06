@@ -80,7 +80,7 @@ class SocketService {
     _socket?.onConnect((_) {
       _isConnected = true;
       if (kDebugMode) print('🔗 Socket connected');
-      
+
       // Authenticate user with socket
       if (_currentUserId != null) {
         _socket?.emit('authenticate', _currentUserId);

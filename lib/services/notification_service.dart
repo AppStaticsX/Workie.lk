@@ -319,8 +319,8 @@ class NotificationService {
         macOS: iosDetails,
       );
 
-      final truncatedContent = postContent.length > 50 
-          ? '${postContent.substring(0, 50)}...' 
+      final truncatedContent = postContent.length > 50
+          ? '${postContent.substring(0, 50)}...'
           : postContent;
 
       final title = '👍 Post Liked';
@@ -392,12 +392,12 @@ class NotificationService {
       macOS: iosDetails,
     );
 
-    final truncatedPostContent = postContent.length > 30 
-        ? '${postContent.substring(0, 30)}...' 
+    final truncatedPostContent = postContent.length > 30
+        ? '${postContent.substring(0, 30)}...'
         : postContent;
-    
-    final truncatedComment = commentText.length > 60 
-        ? '${commentText.substring(0, 60)}...' 
+
+    final truncatedComment = commentText.length > 60
+        ? '${commentText.substring(0, 60)}...'
         : commentText;
 
     await showNotification(

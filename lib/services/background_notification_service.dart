@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'dart:isolate';
 import 'dart:ui';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'notification_service.dart';
 
 /// Background service for handling notifications when app is in background
 class BackgroundNotificationService {
@@ -21,7 +21,7 @@ class BackgroundNotificationService {
       // Register the background isolate
       const isolateName = _isolateName;
       final port = IsolateNameServer.lookupPortByName(isolateName);
-      
+
       if (port != null) {
         _isolatePort = port;
         if (kDebugMode) print('🔄 Background isolate already running');
@@ -40,12 +40,12 @@ class BackgroundNotificationService {
   static Future<void> _startBackgroundIsolate() async {
     try {
       final receivePort = ReceivePort();
-      
+
       await Isolate.spawn(_backgroundIsolateEntryPoint, receivePort.sendPort);
-      
+
       _isolatePort = await receivePort.first;
       IsolateNameServer.registerPortWithName(_isolatePort!, _isolateName);
-      
+
       if (kDebugMode) print('✅ Background isolate started successfully');
     } catch (e) {
       if (kDebugMode) print('❌ Failed to start background isolate: $e');
@@ -80,10 +80,8 @@ class BackgroundNotificationService {
   /// Initialize services in the background isolate
   static Future<void> _initializeBackgroundServices() async {
     try {
-      // Initialize notification service in background
-      await NotificationService.initialize(
-        onBackgroundNotificationTap: _handleBackgroundNotificationTap,
-      );
+      // Initialize flutter local notifications plugin directly in background isolate
+      await _initializeBackgroundNotifications();
 
       // Setup socket connection for background events
       await _setupBackgroundSocket();
@@ -94,13 +92,161 @@ class BackgroundNotificationService {
     }
   }
 
+  /// Background notification plugin instance for isolate
+  static final FlutterLocalNotificationsPlugin _backgroundNotificationsPlugin = 
+      FlutterLocalNotificationsPlugin();
+  static int _backgroundNotificationId = 1000; // Start from 1000 to avoid conflicts
+
+  /// Initialize flutter local notifications plugin in background isolate
+  static Future<void> _initializeBackgroundNotifications() async {
+    try {
+      const AndroidInitializationSettings initializationSettingsAndroid =
+          AndroidInitializationSettings('@mipmap/notification_icon');
+
+      const DarwinInitializationSettings initializationSettingsIOS =
+          DarwinInitializationSettings(
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
+      );
+
+      const InitializationSettings initializationSettings = InitializationSettings(
+        android: initializationSettingsAndroid,
+        iOS: initializationSettingsIOS,
+        macOS: initializationSettingsIOS,
+      );
+
+      await _backgroundNotificationsPlugin.initialize(
+        initializationSettings,
+        onDidReceiveBackgroundNotificationResponse: _handleBackgroundNotificationTap,
+      );
+
+      if (kDebugMode) print('✅ Background notifications initialized');
+    } catch (e) {
+      if (kDebugMode) print('❌ Error initializing background notifications: $e');
+    }
+  }
+
+  /// Show post like notification in background isolate
+  static Future<void> _showBackgroundPostLikeNotification({
+    required String likerName,
+    required String postContent,
+    String? postId,
+  }) async {
+    try {
+      const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+        'post_like_channel',
+        'Post Like Notifications',
+        channelDescription: 'Notifications when someone likes your post',
+        importance: Importance.high,
+        priority: Priority.high,
+        icon: '@mipmap/notification_icon',
+        enableLights: true,
+        enableVibration: true,
+        playSound: true,
+        autoCancel: true,
+      );
+
+      const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+
+      const NotificationDetails details = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+        macOS: iosDetails,
+      );
+
+      final truncatedContent = postContent.length > 50
+          ? '${postContent.substring(0, 50)}...'
+          : postContent;
+
+      final title = '👍 Post Liked';
+      final body = '$likerName liked your post: "$truncatedContent"';
+      final payload = 'post_like:$postId';
+
+      await _backgroundNotificationsPlugin.show(
+        _backgroundNotificationId++,
+        title,
+        body,
+        details,
+        payload: payload,
+      );
+
+      if (kDebugMode) print('✅ Background like notification sent successfully');
+    } catch (e) {
+      if (kDebugMode) print('❌ Error showing background like notification: $e');
+    }
+  }
+
+  /// Show post comment notification in background isolate
+  static Future<void> _showBackgroundPostCommentNotification({
+    required String commenterName,
+    required String commentText,
+    required String postContent,
+    String? postId,
+  }) async {
+    try {
+      const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+        'post_comment_channel',
+        'Post Comment Notifications',
+        channelDescription: 'Notifications when someone comments on your post',
+        importance: Importance.high,
+        priority: Priority.high,
+        icon: '@mipmap/notification_icon',
+        enableLights: true,
+        enableVibration: true,
+        playSound: true,
+        autoCancel: true,
+      );
+
+      const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+
+      const NotificationDetails details = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+        macOS: iosDetails,
+      );
+
+      final truncatedContent = postContent.length > 50
+          ? '${postContent.substring(0, 50)}...'
+          : postContent;
+      
+      final truncatedComment = commentText.length > 30
+          ? '${commentText.substring(0, 30)}...'
+          : commentText;
+
+      final title = '💬 New Comment';
+      final body = '$commenterName commented "$truncatedComment" on your post: "$truncatedContent"';
+      final payload = 'post_comment:$postId';
+
+      await _backgroundNotificationsPlugin.show(
+        _backgroundNotificationId++,
+        title,
+        body,
+        details,
+        payload: payload,
+      );
+
+      if (kDebugMode) print('✅ Background comment notification sent successfully');
+    } catch (e) {
+      if (kDebugMode) print('❌ Error showing background comment notification: $e');
+    }
+  }
+
   /// Setup socket connection in background isolate
   static Future<void> _setupBackgroundSocket() async {
     try {
       // Get auth token
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
-      
+
       if (token == null) {
         if (kDebugMode) print('⚠️ No auth token for background socket');
         return;
@@ -165,7 +311,7 @@ class BackgroundNotificationService {
       final postContent = data['postContent']?.toString() ?? 'your post';
       final postId = data['postId']?.toString() ?? '';
 
-      await NotificationService.showPostLikeNotification(
+      await _showBackgroundPostLikeNotification(
         likerName: likerName,
         postContent: postContent,
         postId: postId,
@@ -189,7 +335,7 @@ class BackgroundNotificationService {
       final postContent = data['postContent']?.toString() ?? 'your post';
       final postId = data['postId']?.toString() ?? '';
 
-      await NotificationService.showPostCommentNotification(
+      await _showBackgroundPostCommentNotification(
         commenterName: commenterName,
         commentText: commentText,
         postContent: postContent,
@@ -208,11 +354,11 @@ class BackgroundNotificationService {
       if (message is Map<String, dynamic>) {
         switch (message['type']) {
           case 'user_changed':
-            // Reconnect socket with new user
+          // Reconnect socket with new user
             await _setupBackgroundSocket();
             break;
           case 'stop_service':
-            // Stop background services
+          // Stop background services
             await _stopBackgroundServices();
             break;
         }
@@ -226,7 +372,7 @@ class BackgroundNotificationService {
   @pragma('vm:entry-point')
   static void _handleBackgroundNotificationTap(NotificationResponse response) {
     if (kDebugMode) print('📱 Background notification tapped: ${response.payload}');
-    
+
     // Store notification tap for when app becomes active
     SharedPreferences.getInstance().then((prefs) {
       prefs.setString('pending_notification_action', response.payload ?? '');
@@ -240,7 +386,7 @@ class BackgroundNotificationService {
       IsolateNameServer.removePortNameMapping(_isolateName);
       _isolatePort = null;
       _isInitialized = false;
-      
+
       if (kDebugMode) print('🛑 Background services stopped');
     } catch (e) {
       if (kDebugMode) print('❌ Error stopping background services: $e');
@@ -266,13 +412,13 @@ class BackgroundNotificationService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final action = prefs.getString('pending_notification_action');
-      
+
       if (action != null && action.isNotEmpty) {
         // Clear the pending action
         await prefs.remove('pending_notification_action');
         return action;
       }
-      
+
       return null;
     } catch (e) {
       if (kDebugMode) print('❌ Error checking pending notification: $e');

@@ -1,10 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'background_notification_service.dart';
+import 'post_notification_service.dart';
+import 'socket_service.dart';
 
 class AuthService {
   // Replace with your actual base URL
@@ -162,12 +165,28 @@ class AuthService {
     
     // Notify background service that user logged in
     BackgroundNotificationService.notifyUserChanged();
+    
+    // Refresh current user ID in post notification service after successful authentication
+    try {
+      await PostNotificationService.refreshCurrentUser();
+      if (kDebugMode) print('✅ PostNotificationService refreshed after login');
+    } catch (e) {
+      if (kDebugMode) print('⚠️ Could not refresh PostNotificationService after login: $e');
+    }
   }
 
   /// Store user ID
   Future<void> storeUserId(String userId) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('USER_ID', userId);
+    
+    // Update socket service with new user ID
+    try {
+      await SocketService.instance.updateUserId(userId);
+      if (kDebugMode) print('✅ SocketService updated with new user ID');
+    } catch (e) {
+      if (kDebugMode) print('⚠️ Could not update SocketService user ID: $e');
+    }
   }
 
   /// Update user data from validation response
@@ -182,6 +201,22 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
     await prefs.remove('USER_ID');
+    
+    // Clear user data from post notification service
+    try {
+      PostNotificationService.clearUserData();
+      if (kDebugMode) print('✅ PostNotificationService user data cleared');
+    } catch (e) {
+      if (kDebugMode) print('⚠️ Could not clear PostNotificationService data: $e');
+    }
+    
+    // Clear user ID from socket service
+    try {
+      await SocketService.instance.updateUserId(null);
+      if (kDebugMode) print('✅ SocketService user ID cleared');
+    } catch (e) {
+      if (kDebugMode) print('⚠️ Could not clear SocketService user ID: $e');
+    }
   }
 
   /// Login user

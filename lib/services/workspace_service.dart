@@ -8,7 +8,7 @@ import 'background_notification_service.dart';
 class WorkspaceService {
   static const String _taskIdentifier = 'background_notification_task';
   static const String _socketCheckTask = 'socket_check_task';
-  
+
   /// Initialize the workspace for background tasks
   static Future<void> initialize() async {
     if (Platform.isAndroid) {
@@ -72,7 +72,7 @@ class WorkspaceService {
           ),
           initialDelay: const Duration(seconds: 5),
         );
-        
+
         if (kDebugMode) print('⏰ Scheduled immediate background check');
       } catch (e) {
         if (kDebugMode) print('❌ Error scheduling immediate check: $e');
@@ -111,13 +111,13 @@ void callbackDispatcher() {
 Future<void> _handleBackgroundNotificationTask() async {
   try {
     if (kDebugMode) print('📱 Checking for background notifications...');
-    
+
     // Initialize notification service if needed
     await NotificationService.initialize();
-    
+
     // Initialize background notification service
     await BackgroundNotificationService.initialize();
-    
+
     if (kDebugMode) print('✅ Background notification check completed');
   } catch (e) {
     if (kDebugMode) print('❌ Background notification task error: $e');
@@ -128,11 +128,11 @@ Future<void> _handleBackgroundNotificationTask() async {
 Future<void> _handleSocketCheckTask() async {
   try {
     if (kDebugMode) print('🔌 Checking socket connection in background...');
-    
+
     // Initialize services for socket check
     await NotificationService.initialize();
     await BackgroundNotificationService.initialize();
-    
+
     // Test notification to ensure system is working
     if (kDebugMode) {
       await NotificationService.showNotification(
@@ -141,7 +141,7 @@ Future<void> _handleSocketCheckTask() async {
         payload: 'background_test',
       );
     }
-    
+
     if (kDebugMode) print('✅ Socket check completed');
   } catch (e) {
     if (kDebugMode) print('❌ Socket check task error: $e');

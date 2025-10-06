@@ -8,6 +8,7 @@ import 'package:shimmer_ai/shimmer_ai.dart';
 import '../services/hive_service.dart';
 import '../services/location_service.dart';
 import '../services/notification_service.dart';
+import '../services/post_notification_service.dart';
 import '../services/pull_data/post_data_service.dart';
 import '../services/socket_service.dart';
 import '../widgets/circular_category_bar.dart';
