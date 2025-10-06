@@ -93,11 +93,10 @@ class PostNotificationService {
 
     // Alternative approach: Listen to regular events and filter for notifications
     socketService.addEventListener('post_like_updated', _onPostLikeUpdated);
-    socketService.addEventListener('post_comment_added', _onPostCommentAdded);
 
     if (kDebugMode) {
       print('✅ Socket listeners setup complete for post notifications');
-      print('📡 Listening for events: post_like_notification, post_comment_notification, post_like_updated, post_comment_added');
+      print('📡 Listening for events: post_like_notification, post_comment_notification, post_like_updated');
     }
   }
 
@@ -248,42 +247,7 @@ class PostNotificationService {
     }
   }
 
-  /// Alternative handler for comment events - check if notification should be shown  
-  Future<void> _onPostCommentAdded(dynamic data) async {
-    try {
-      if (kDebugMode) print('🔔 Post comment added event received: $data');
 
-      final commenterUserId = data['commenterUserId']?.toString(); // User who commented
-      final postId = data['postId']?.toString();
-
-      if (kDebugMode) {
-        print('🔔 Comment event analysis:');
-        print('  - Commenter user ID: $commenterUserId');
-        print('  - Post ID: $postId');
-        print('  - Current user ID: $_currentUserId');
-      }
-
-      // Check if current user ID is available, refresh if needed
-      if (_currentUserId == null) {
-        if (kDebugMode) print('⚠️ Current user ID not available for comment notification, attempting to refresh...');
-        await _getCurrentUserId();
-        
-        if (_currentUserId == null) {
-          if (kDebugMode) print('❌ Current user ID still not available after refresh, ignoring comment event');
-          return;
-        } else {
-          if (kDebugMode) print('✅ Current user ID refreshed for comment notification: $_currentUserId');
-        }
-      }
-
-      // Only show notification if someone else commented (not current user)
-      if (commenterUserId != _currentUserId && postId != null) {
-        _checkAndShowCommentNotification(postId, commenterUserId, data);
-      }
-    } catch (e) {
-      if (kDebugMode) print('❌ Error handling comment added event: $e');
-    }
-  }
 
   /// Check if we should show a comment notification for this post
   Future<void> _checkAndShowCommentNotification(String postId, String? commenterId, dynamic data) async {
@@ -703,7 +667,6 @@ class PostNotificationService {
     socketService.removeEventListener('post_like_notification', instance._onPostLikeNotification);
     socketService.removeEventListener('post_comment_notification', instance._onPostCommentNotification);
     socketService.removeEventListener('post_like_updated', instance._onPostLikeUpdated);
-    socketService.removeEventListener('post_comment_added', instance._onPostCommentAdded);
 
     instance._isInitialized = false;
     if (kDebugMode) print('🧹 PostNotificationService disposed');
