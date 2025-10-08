@@ -230,13 +230,20 @@ class CurrentUserPostsService {
         );
       }
 
-      // Handle hashtags
+      // Handle hashtags - use hashtags from database if available
       List<String> hashtags = [];
       final content = backendPost['content'] ?? '';
-      final hashtagRegex = RegExp(r'#\w+');
-      final matches = hashtagRegex.allMatches(content);
-      for (var match in matches) {
-        hashtags.add(match.group(0)!);
+      
+      // First check if hashtags are provided directly from the database
+      if (backendPost['hashtags'] != null && backendPost['hashtags'] is List) {
+        hashtags = List<String>.from(backendPost['hashtags']);
+      } else {
+        // Fallback to extracting hashtags from content
+        final hashtagRegex = RegExp(r'#\w+');
+        final matches = hashtagRegex.allMatches(content);
+        for (var match in matches) {
+          hashtags.add(match.group(0)!);
+        }
       }
 
       return {
@@ -252,7 +259,7 @@ class CurrentUserPostsService {
         'isVerified': true,
         'content': content,
         'mediaUrls': mediaItems,
-        'hashtags': hashtags.isNotEmpty ? hashtags : <String>['CustomFurniture', 'Woodworking', 'Woodcraft', 'CarpentryLife'],
+        'hashtags': hashtags,
         'initialLikeCount': backendPost['engagement']?['likesCount'] ?? backendPost['likes']?.length ?? 0,
         'commentCount': backendPost['engagement']?['commentsCount'] ?? backendPost['comments']?.length ?? 0,
         'shareCount': backendPost['engagement']?['sharesCount'] ?? backendPost['shares']?.length ?? 0,
@@ -268,6 +275,24 @@ class CurrentUserPostsService {
       };
     } catch (e) {
       print('Error formatting current user post: $e');
+      
+      // Try to get hashtags from database even in error case
+      List<String> errorHashtags = [];
+      try {
+        if (backendPost['hashtags'] != null && backendPost['hashtags'] is List) {
+          errorHashtags = List<String>.from(backendPost['hashtags']);
+        } else {
+          final content = backendPost['content'] ?? '';
+          final hashtagRegex = RegExp(r'#\w+');
+          final matches = hashtagRegex.allMatches(content);
+          for (var match in matches) {
+            errorHashtags.add(match.group(0)!);
+          }
+        }
+      } catch (_) {
+        errorHashtags = ['MyPost'];
+      }
+      
       // Return a default formatted post in case of error
       return {
         'id': backendPost['_id'] ?? '',
@@ -278,7 +303,7 @@ class CurrentUserPostsService {
         'isVerified': true,
         'content': backendPost['content'] ?? 'No content',
         'mediaUrls': <MediaItem>[],
-        'hashtags': <String>['MyPost'],
+        'hashtags': errorHashtags,
         'initialLikeCount': 0,
         'commentCount': 0,
         'shareCount': 0,

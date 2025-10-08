@@ -778,52 +778,57 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
                               if (suggestions.isNotEmpty) {
                                 showDialog(
                                   context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: Text('AI Hashtag Suggestions', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,
-                                      color: Theme.of(context).colorScheme.onSurface,)),
-                                    content: SizedBox(
-                                      width: double.maxFinite,
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text('Select hashtags to add:'),
-                                          SizedBox(height: 16),
-                                          SizedBox(
-                                            height: 200,
-                                            child: ListView.builder(
-                                              itemCount: suggestions.length,
-                                              itemBuilder: (context, index) {
-                                                final hashtag = suggestions[index];
-                                                final isSelected = selectedHashtags.contains(hashtag);
+                                  builder: (context) => StatefulBuilder(
+                                    builder: (context, setDialogState) => AlertDialog(
+                                      title: Text('AI Hashtag Suggestions', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,
+                                        color: Theme.of(context).colorScheme.onSurface,)),
+                                      content: SizedBox(
+                                        width: double.maxFinite,
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text('Select hashtags to add:'),
+                                            SizedBox(height: 16),
+                                            SizedBox(
+                                              height: 200,
+                                              child: ListView.builder(
+                                                itemCount: suggestions.length,
+                                                itemBuilder: (context, index) {
+                                                  final hashtag = suggestions[index];
+                                                  final isSelected = selectedHashtags.contains(hashtag);
 
-                                                return CheckboxListTile(
-                                                  title: Text('#$hashtag'),
-                                                  value: isSelected,
-                                                  onChanged: (bool? value) {
-                                                    setState(() {
-                                                      if (value == true && !selectedHashtags.contains(hashtag)) {
-                                                        selectedHashtags.add(hashtag);
-                                                      } else if (value == false) {
-                                                        selectedHashtags.remove(hashtag);
-                                                      }
-                                                    });
-                                                    //Navigator.pop(context);
-                                                  },
-                                                  selected: isSelected,
-                                                );
-                                              },
+                                                  return CheckboxListTile(
+                                                    title: Text('#$hashtag', style: TextStyle(color: isSelected? Theme.of(context).colorScheme.inverseSurface : Colors.grey),),
+                                                    value: isSelected,
+                                                    onChanged: (bool? value) {
+                                                      setDialogState(() {
+                                                        if (value == true && !selectedHashtags.contains(hashtag)) {
+                                                          selectedHashtags.add(hashtag);
+                                                        } else if (value == false) {
+                                                          selectedHashtags.remove(hashtag);
+                                                        }
+                                                      });
+                                                      setState(() {}); // Update parent widget
+                                                    },
+                                                    selected: isSelected,
+                                                    activeColor: const Color(0xFF4E6BF5), // Blue color when checked
+                                                    checkColor: Colors.white, // White checkmark
+                                                    selectedTileColor: const Color(0xFF4E6BF5).withOpacity(0.1), // Light blue background when selected
+                                                  );
+                                                },
+                                              ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(context),
+                                          child: Text('Done'),
+                                        ),
+                                      ],
                                     ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: Text('Done'),
-                                      ),
-                                    ],
                                   ),
                                 );
                               } else {

@@ -273,7 +273,7 @@ class PostDataService {
   static Future<Map<String, dynamic>> formatPostForWidget(Map<String, dynamic> backendPost) async {
     try {
       // Validate essential post data
-      if (backendPost == null || backendPost['_id'] == null) {
+      if (backendPost['_id'] == null) {
         throw Exception('Invalid post data: missing post ID');
       }
       
@@ -392,13 +392,22 @@ class PostDataService {
         );
       }
 
-      // Handle hashtags
-      List<String> hashtags = [];
+      // Get content
       final content = backendPost['content'] ?? '';
-      final hashtagRegex = RegExp(r'#\w+');
-      final matches = hashtagRegex.allMatches(content);
-      for (var match in matches) {
-        hashtags.add(match.group(0)!);
+      
+      // Handle hashtags - use hashtags from database if available
+      List<String> hashtags = [];
+      
+      // First check if hashtags are provided directly from the database
+      if (backendPost['hashtags'] != null && backendPost['hashtags'] is List) {
+        hashtags = List<String>.from(backendPost['hashtags']);
+      } else {
+        // Fallback to extracting hashtags from content
+        final hashtagRegex = RegExp(r'#\w+');
+        final matches = hashtagRegex.allMatches(content);
+        for (var match in matches) {
+          hashtags.add(match.group(0)!);
+        }
       }
 
       final formattedPost = {
@@ -414,7 +423,7 @@ class PostDataService {
         'isVerified': true,
         'content': content,
         'mediaUrls': mediaItems,
-        'hashtags': <String>['CustomFurniture', 'Woodworking', 'Woodcraft', 'CarpentryLife'],
+        'hashtags': hashtags,
         'initialLikeCount': backendPost['engagement']?['likesCount'] ?? backendPost['likes']?.length ?? 0,
         'commentCount': backendPost['engagement']?['commentsCount'] ?? backendPost['comments']?.length ?? 0,
         'shareCount': backendPost['engagement']?['sharesCount'] ?? backendPost['shares']?.length ?? 0,
@@ -448,7 +457,7 @@ class PostDataService {
         'isVerified': true,
         'content': backendPost['content'] ?? 'No content',
         'mediaUrls': <MediaItem>[],
-        'hashtags': <String>['CustomFurniture', 'Woodworking', 'Woodcraft', 'CarpentryLife'],
+        'hashtags': <String>[],
         'initialLikeCount': 0,
         'commentCount': 0,
         'shareCount': 0,
@@ -464,7 +473,7 @@ class PostDataService {
   static Future<Map<String, dynamic>> formatSavedPostForWidget(Map<String, dynamic> backendPost) async {
     try {
       // Validate that we have essential post data
-      if (backendPost == null || backendPost.isEmpty) {
+      if (backendPost.isEmpty) {
         throw Exception('Post data is null or empty');
       }
 
@@ -587,13 +596,22 @@ class PostDataService {
         );
       }
 
-      // Handle hashtags
-      List<String> hashtags = [];
+      // Get content
       final content = backendPost['content'] ?? '';
-      final hashtagRegex = RegExp(r'#\w+');
-      final matches = hashtagRegex.allMatches(content);
-      for (var match in matches) {
-        hashtags.add(match.group(0)!);
+      
+      // Handle hashtags - use hashtags from database if available
+      List<String> hashtags = [];
+      
+      // First check if hashtags are provided directly from the database
+      if (backendPost['hashtags'] != null && backendPost['hashtags'] is List) {
+        hashtags = List<String>.from(backendPost['hashtags']);
+      } else {
+        // Fallback to extracting hashtags from content
+        final hashtagRegex = RegExp(r'#\w+');
+        final matches = hashtagRegex.allMatches(content);
+        for (var match in matches) {
+          hashtags.add(match.group(0)!);
+        }
       }
 
       return {
@@ -609,7 +627,7 @@ class PostDataService {
         'isVerified': true,
         'content': content,
         'mediaUrls': mediaItems,
-        'hashtags': hashtags.isNotEmpty ? hashtags : <String>['CustomFurniture', 'Woodworking', 'Woodcraft', 'CarpentryLife'],
+        'hashtags': hashtags,
         'initialLikeCount': backendPost['engagement']?['likesCount'] ?? backendPost['likes']?.length ?? 0,
         'commentCount': backendPost['engagement']?['commentsCount'] ?? backendPost['comments']?.length ?? 0,
         'shareCount': backendPost['engagement']?['sharesCount'] ?? backendPost['shares']?.length ?? 0,
