@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import '../../../widgets/imagesource_dialog.dart';
 
 class NICVerification extends StatefulWidget {
   final Function(bool, {File? frontImage, File? backImage})? onSelectionChanged;
@@ -39,14 +38,18 @@ class _NICVerificationState extends State<NICVerification> {
 
   Future<void> _pickFile({required bool isFront}) async {
     try {
-      final ImageSource? source = await _showImageSourceDialog();
-      if (source == null) return;
-
-      final XFile? image = await _picker.pickImage(source: source);
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
 
       if (image != null) {
         File file = File(image.path);
         int fileSize = await file.length();
+        
+        // Check if file size exceeds 5MB (5 * 1024 * 1024 bytes)
+        const int maxFileSize = 3 * 1024 * 1024;
+        if (fileSize > maxFileSize) {
+          _showFileSizeExceededDialog();
+          return;
+        }
 
         setState(() {
           if (isFront) {
@@ -83,8 +86,44 @@ class _NICVerificationState extends State<NICVerification> {
     });
   }
 
-  Future<ImageSource?> _showImageSourceDialog() async {
-    return showImageSourceDialog(context);
+  void _showFileSizeExceededDialog() {
+    showCupertinoDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return CupertinoAlertDialog(
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Iconsax.warning_2_copy,
+                color: Colors.red,
+                size: 24,
+              ),
+              SizedBox(width: 8),
+              Text('File Size Exceeded', style: TextStyle(fontFamily: 'Montserrat'),),
+            ],
+          ),
+          content: Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Text(
+              'The selected image exceeds the 3MB size limit. Please choose a smaller image or compress the current one.',
+              style: TextStyle(fontFamily: 'Montserrat', fontSize: 15),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'OK',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _previewImage({required bool isFront}) {
@@ -466,7 +505,7 @@ class _NICVerificationState extends State<NICVerification> {
   // Reusable widget for image limit text
   Widget _buildImageLimit() {
     return Text(
-      '360x480 Min / 5 MB Max',
+      '360x480 Min / 3 MB Max',
       style: TextStyle(
           fontSize: 16,
           color: Colors.grey

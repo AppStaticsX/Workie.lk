@@ -21,7 +21,7 @@ class ImageSourceDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CupertinoAlertDialog(
-      title: Text(title, style: TextStyle(fontFamily: 'Google Sans'),),
+      title: Text(title, style: TextStyle(fontFamily: 'Montserrat'),),
       content: Padding(
         padding: const EdgeInsets.only(top: AppDimension.paddingDefault),
         child: Column(
@@ -35,13 +35,13 @@ class ImageSourceDialog extends StatelessWidget {
               child: Row(
                 children: [
                   Icon(
-                    Iconsax.image_copy,
+                    CupertinoIcons.photo,
                     color: const Color(0xFF4E6BF5),
                   ),
                   const SizedBox(width: 12),
                   Text(
                     'Gallery',
-                    style: TextStyle(color: Theme.of(context).colorScheme.inverseSurface, fontFamily: 'Google Sans',),
+                    style: TextStyle(color: Theme.of(context).colorScheme.inverseSurface, fontFamily: 'Montserrat',),
                   ),
                 ],
               ),
@@ -54,13 +54,13 @@ class ImageSourceDialog extends StatelessWidget {
               child: Row(
                 children: [
                   Icon(
-                    Iconsax.camera_copy,
+                    CupertinoIcons.camera_fill,
                     color: const Color(0xFF4E6BF5),
                   ),
                   const SizedBox(width: 12),
                   Text(
                     'Camera',
-                    style: TextStyle(color: Theme.of(context).colorScheme.inverseSurface, fontFamily: 'Google Sans'),
+                    style: TextStyle(color: Theme.of(context).colorScheme.inverseSurface, fontFamily: 'Montserrat'),
                   ),
                 ],
               ),
@@ -75,7 +75,7 @@ class ImageSourceDialog extends StatelessWidget {
           },
           child: Text(
             'Cancel',
-            style: TextStyle(color: Theme.of(context).colorScheme.primary, fontFamily: 'Google Sans', fontWeight: FontWeight.bold),
+            style: TextStyle(color: Theme.of(context).colorScheme.primary, fontFamily: 'Montserrat', fontWeight: FontWeight.bold),
           ),
         ),
       ],

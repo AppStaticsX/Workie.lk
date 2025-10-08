@@ -140,10 +140,10 @@ class _ProfilePagePostHelperState extends State<ProfilePagePostHelper> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return CupertinoAlertDialog(
-          title: const Text('Delete Post', style: TextStyle(fontFamily: 'Google Sans', fontWeight: FontWeight.bold)),
+          title: const Text('Delete Post', style: TextStyle(fontFamily: 'Montserrat', fontWeight: FontWeight.bold)),
           content: Text(
             'Are you sure you want to delete this post? This action cannot be undone.',
-            style: TextStyle(fontFamily: 'Google Sans', color: Theme.of(context).colorScheme.primary, fontSize: 14),
+            style: TextStyle(fontFamily: 'Montserrat', color: Theme.of(context).colorScheme.primary, fontSize: 14),
           ),
           actions: [
             TextButton(

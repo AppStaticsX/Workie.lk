@@ -239,7 +239,7 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Icon(
-                  CupertinoIcons.delete,
+                  Iconsax.trash_copy,
                   size: 22,
                   color: const Color(0xFF4E6BF5),
                 ),
@@ -248,6 +248,7 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
                   'Delete current Image',
                   style: TextStyle(
                     fontSize: 16,
+                    fontWeight: FontWeight.bold,
                     color: const Color(0xFF4E6BF5),
                   ),
                 )
@@ -327,17 +328,26 @@ class _ProfilePicBottomsheetState extends State<ProfilePicBottomsheet> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        TextButton(
+        Expanded(
+          child: ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF353535),
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+              ),
+            ),
             child: Text(
                 'Cancel',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.grey,
-                  fontWeight: FontWeight.bold
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold
                 )
-            )
+            ),
+          ),
         ),
         const SizedBox(width: 24),
         ElevatedButton(

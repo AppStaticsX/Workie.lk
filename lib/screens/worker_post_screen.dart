@@ -779,11 +779,13 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
                                 showDialog(
                                   context: context,
                                   builder: (context) => AlertDialog(
-                                    title: Text('AI Hashtag Suggestions'),
+                                    title: Text('AI Hashtag Suggestions', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,
+                                      color: Theme.of(context).colorScheme.onSurface,)),
                                     content: SizedBox(
                                       width: double.maxFinite,
                                       child: Column(
                                         mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text('Select hashtags to add:'),
                                           SizedBox(height: 16),
@@ -806,8 +808,9 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
                                                         selectedHashtags.remove(hashtag);
                                                       }
                                                     });
-                                                    Navigator.pop(context);
+                                                    //Navigator.pop(context);
                                                   },
+                                                  selected: isSelected,
                                                 );
                                               },
                                             ),

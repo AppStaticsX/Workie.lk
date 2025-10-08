@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'imagesource_dialog.dart';
 
 class DashedPhotoPicker extends StatefulWidget {
   final VoidCallback? onTap;
@@ -96,8 +97,16 @@ class DashedPhotoPickerState extends State<DashedPhotoPicker>
         _errorMessage = null;
       });
 
+      // Show image source dialog first
+      final ImageSource? source = await showImageSourceDialog(context);
+      
+      if (source == null) {
+        // User cancelled the dialog
+        return;
+      }
+
       final XFile? image = await _picker.pickImage(
-        source: ImageSource.gallery,
+        source: source,
         imageQuality: 100,
       );
 

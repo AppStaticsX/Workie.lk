@@ -457,9 +457,9 @@ class GoogleMapScreenState extends State<GoogleMapScreen> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          // Call the callback AND navigate back
-                          widget.onPressed(); // This was missing the ()
-                          Navigator.pop(context);
+                          // Call the callback AND navigate back with selected address
+                          widget.onPressed();
+                          Navigator.pop(context, _selectedAddress);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF4E6BF5),

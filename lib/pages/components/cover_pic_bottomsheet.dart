@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/services/profile_service.dart';
 import 'dart:typed_data';
 
@@ -195,7 +196,7 @@ class _CoverPicBottomsheetState extends State<CoverPicBottomsheet> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Icon(
-                  CupertinoIcons.delete,
+                  Iconsax.trash_copy,
                   size: 22,
                   color: const Color(0xFF4E6BF5),
                 ),
@@ -204,6 +205,7 @@ class _CoverPicBottomsheetState extends State<CoverPicBottomsheet> {
                   'Delete current Image',
                   style: TextStyle(
                     fontSize: 16,
+                    fontWeight: FontWeight.bold,
                     color: const Color(0xFF4E6BF5),
                   ),
                 )
@@ -218,23 +220,25 @@ class _CoverPicBottomsheetState extends State<CoverPicBottomsheet> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        ElevatedButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF353535),
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(10)),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF353535),
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+              ),
             ),
-          ),
-          child: Text(
-              'Cancel',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold
-              )
+            child: Text(
+                'Cancel',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold
+                )
+            ),
           ),
         ),
         const SizedBox(width: 24),

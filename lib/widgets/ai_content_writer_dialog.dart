@@ -135,7 +135,7 @@ class _AIContentWriterDialogState extends State<AIContentWriterDialog> {
                   color: Theme.of(context).colorScheme.primary,
                   size: 24,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Text(
                   'AI Content Writer',
                   style: TextStyle(
@@ -257,7 +257,7 @@ class _AIContentWriterDialogState extends State<AIContentWriterDialog> {
               items: PostType.values.map((PostType type) {
                 return DropdownMenuItem<PostType>(
                   value: type,
-                  child: Text(type.displayName, style: TextStyle(fontFamily: 'Google Sans', fontSize: 15, letterSpacing: 0.5),),
+                  child: Text(type.displayName, style: TextStyle(fontFamily: 'Montserrat', fontSize: 15, letterSpacing: 0.5),),
                 );
               }).toList(),
               onChanged: (PostType? newValue) {
@@ -309,7 +309,7 @@ class _AIContentWriterDialogState extends State<AIContentWriterDialog> {
                         items: _toneOptions.map((String tone) {
                           return DropdownMenuItem<String>(
                             value: tone,
-                            child: Text(tone, style: TextStyle(fontFamily: 'Google Sans', fontSize: 15, letterSpacing: 0.5),),
+                            child: Text(tone, style: TextStyle(fontFamily: 'Montserrat', fontSize: 15, letterSpacing: 0.5),),
                           );
                         }).toList(),
                         onChanged: (String? newValue) {
@@ -448,7 +448,7 @@ class _AIContentWriterDialogState extends State<AIContentWriterDialog> {
               ),
             ),
             const Spacer(),
-            if (_lastUsedApi.isNotEmpty)
+            /*if (_lastUsedApi.isNotEmpty)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
@@ -463,7 +463,7 @@ class _AIContentWriterDialogState extends State<AIContentWriterDialog> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-              ),
+              ),*/
           ],
         ),
         const SizedBox(height: 12),
@@ -523,7 +523,7 @@ class _AIContentWriterDialogState extends State<AIContentWriterDialog> {
             },
             child: Text('Back to Edit'),
           ),
-          //const Spacer(),
+          const Spacer(),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text('Cancel'),
@@ -537,7 +537,7 @@ class _AIContentWriterDialogState extends State<AIContentWriterDialog> {
         Expanded(
           child: ElevatedButton.icon(
             onPressed: _isGenerating ? null : _generateContent,
-            icon: _isGenerating 
+            icon: _isGenerating
               ? SizedBox(
                   width: 16,
                   height: 16,

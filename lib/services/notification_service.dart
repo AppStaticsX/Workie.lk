@@ -29,7 +29,7 @@ class NotificationService {
     await _configureLocalTimeZone();
 
     const AndroidInitializationSettings initializationSettingsAndroid =
-    AndroidInitializationSettings('@mipmap/notification_icon');
+    AndroidInitializationSettings('@mipmap/ic_launcher_foreground');
 
     final List<DarwinNotificationCategory> darwinNotificationCategories = [
       DarwinNotificationCategory(
@@ -290,7 +290,7 @@ class NotificationService {
         channelDescription: 'Notifications when someone likes your post',
         importance: Importance.high,
         priority: Priority.high,
-        icon: '@mipmap/notification_icon',
+        icon: '@mipmap/ic_launcher_foreground',
         enableLights: true,
         enableVibration: true,
         playSound: true,
@@ -363,7 +363,7 @@ class NotificationService {
       channelDescription: 'Notifications when someone comments on your post',
       importance: Importance.high,
       priority: Priority.high,
-      icon: '@mipmap/notification_icon',
+      icon: '@mipmap/ic_launcher_foreground',
       enableLights: true,
       enableVibration: true,
       playSound: true,

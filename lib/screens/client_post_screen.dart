@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/screens/googlemap_screen.dart';
+import 'package:workie/services/client_post_service.dart';
 
 class ClientPostScreen extends StatefulWidget {
   const ClientPostScreen({super.key});
@@ -19,7 +20,6 @@ class _ClientPostScreenState extends State<ClientPostScreen> {
   bool _isJobDescriptionEmpty = false;
   bool _isLocationEmpty = false;
   bool _isContactEmpty = false;
-  bool _isWorkersNeededEmpty = false;
   bool _isBudgetEmpty = false;
   bool _isPaymentTypeEmpty = false;
 
@@ -37,6 +37,7 @@ class _ClientPostScreenState extends State<ClientPostScreen> {
   final TextEditingController _whatsappController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _materialsNotesController = TextEditingController();
+  final TextEditingController _applicationClosingDateController = TextEditingController();
 
   // Focus Nodes
   final FocusNode _jobTitleFocusNode = FocusNode();
@@ -76,12 +77,22 @@ class _ClientPostScreenState extends State<ClientPostScreen> {
     }
   }
 
-  void _selectLocationOnMap() {
-    Navigator.push(
+  void _selectLocationOnMap() async {
+    final String? selectedAddress = await Navigator.push<String>(
         context, MaterialPageRoute(
           builder: (context) => GoogleMapScreen(onPressed: (){},)
       )
     );
+    
+    if (selectedAddress != null && selectedAddress.isNotEmpty) {
+      setState(() {
+        _locationController.text = selectedAddress;
+        // Clear location error if it was empty
+        if (_isLocationEmpty) {
+          _isLocationEmpty = false;
+        }
+      });
+    }
   }
 
   void _saveAsDraft() {
@@ -131,6 +142,7 @@ class _ClientPostScreenState extends State<ClientPostScreen> {
       _whatsappController.clear();
       _emailController.clear();
       _materialsNotesController.clear();
+      _applicationClosingDateController.clear();
 
       // Reset dropdown values
       _selectedJobCategory = null;
@@ -147,28 +159,47 @@ class _ClientPostScreenState extends State<ClientPostScreen> {
       _isJobDescriptionEmpty = false;
       _isLocationEmpty = false;
       _isContactEmpty = false;
-      _isWorkersNeededEmpty = false;
       _isBudgetEmpty = false;
       _isPaymentTypeEmpty = false;
     });
+  }
+
+  bool _validatePhoneNumber(String phone) {
+    if (phone.isEmpty) return false;
+    // Remove spaces and validate Sri Lankan phone formats
+    final cleanPhone = phone.replaceAll(RegExp(r'\s+'), '');
+    // Allow: +94771234567 (12 digits), 0771234567 (10 digits), 771234567 (9 digits)
+    final phoneRegex = RegExp(r'^(\+94[0-9]{9}|0[0-9]{9}|[0-9]{9})$');
+    return phoneRegex.hasMatch(cleanPhone);
+  }
+
+  bool _validateBudget(String budget) {
+    if (budget.isEmpty) return false;
+    try {
+      final budgetAmount = double.parse(budget.replaceAll(RegExp(r'[^\d.]'), ''));
+      return budgetAmount > 0;
+    } catch (e) {
+      return false;
+    }
   }
 
   bool _validateForm() {
     bool isValid = true;
 
     setState(() {
-      _isJobTitleEmpty = _jobTitleController.text.trim().isEmpty;
+      _isJobTitleEmpty = _jobTitleController.text.trim().isEmpty || _jobTitleController.text.trim().length < 5;
       _isJobCategoryEmpty = _selectedJobCategory == null;
-      _isJobDescriptionEmpty = _jobDescriptionController.text.trim().isEmpty;
+      _isJobDescriptionEmpty = _jobDescriptionController.text.trim().isEmpty || _jobDescriptionController.text.trim().length < 20;
       _isLocationEmpty = _locationController.text.trim().isEmpty;
-      _isWorkersNeededEmpty = _workersNeededController.text.trim().isEmpty;
-      _isContactEmpty = _clientNameController.text.trim().isEmpty || _phoneController.text.trim().isEmpty;
-      _isBudgetEmpty = _budgetController.text.trim().isEmpty;
+      _isContactEmpty = _clientNameController.text.trim().isEmpty || 
+                      _phoneController.text.trim().isEmpty || 
+                      !_validatePhoneNumber(_phoneController.text.trim());
+      _isBudgetEmpty = _budgetController.text.trim().isEmpty || !_validateBudget(_budgetController.text.trim());
       _isPaymentTypeEmpty = _selectedPaymentType == null;
     });
 
     if (_isJobTitleEmpty || _isJobCategoryEmpty || _isJobDescriptionEmpty ||
-        _isLocationEmpty || _isWorkersNeededEmpty || _isContactEmpty || _isBudgetEmpty || _isPaymentTypeEmpty) {
+        _isLocationEmpty || _isContactEmpty || _isBudgetEmpty || _isPaymentTypeEmpty) {
       isValid = false;
     }
 
@@ -177,10 +208,45 @@ class _ClientPostScreenState extends State<ClientPostScreen> {
 
   void _submitJobPost() async {
     if (!_validateForm()) {
+      String errorMessage = 'Please fix the following:\n';
+      if (_isJobTitleEmpty) {
+        errorMessage += '• Job title must be at least 5 characters\n';
+      }
+      if (_isJobDescriptionEmpty) {
+        errorMessage += '• Job description must be at least 20 characters\n';
+      }
+      if (_isJobCategoryEmpty) {
+        errorMessage += '• Job category is required\n';
+      }
+      if (_isLocationEmpty) {
+        errorMessage += '• Location is required\n';
+      }
+      if (_isContactEmpty) {
+        if (_clientNameController.text.trim().isEmpty) {
+          errorMessage += '• Name is required\n';
+        }
+        if (_phoneController.text.trim().isEmpty) {
+          errorMessage += '• Phone number is required\n';
+        } else if (!_validatePhoneNumber(_phoneController.text.trim())) {
+          errorMessage += '• Valid phone number required (e.g., +94771234567, 0771234567, or 771234567)\n';
+        }
+      }
+      if (_isBudgetEmpty) {
+        if (_budgetController.text.trim().isEmpty) {
+          errorMessage += '• Budget is required\n';
+        } else {
+          errorMessage += '• Valid budget amount is required (numbers only)\n';
+        }
+      }
+      if (_isPaymentTypeEmpty) {
+        errorMessage += '• Payment type is required\n';
+      }
+      
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill in all required fields'),
+        SnackBar(
+          content: Text(errorMessage.trim()),
           backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
         ),
       );
       return;
@@ -189,42 +255,48 @@ class _ClientPostScreenState extends State<ClientPostScreen> {
     setState(() => _isPosting = true);
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
+      // Call the API service to create the job post
+      final response = await ClientPostService.createJobPost(
+        jobTitle: _jobTitleController.text.trim(),
+        jobCategory: _selectedJobCategory,
+        jobDescription: _jobDescriptionController.text.trim(),
+        location: _locationController.text.trim(),
+        startDate: _startDateController.text.isNotEmpty ? _startDateController.text : null,
+        endDate: _useEndDate && _endDateController.text.isNotEmpty ? _endDateController.text : null,
+        estimatedDays: !_useEndDate && _estimatedDaysController.text.isNotEmpty ? _estimatedDaysController.text : null,
+        paymentType: _selectedPaymentType,
+        budget: _budgetController.text.trim(),
+        workersNeeded: null, // Workers needed section is commented out
+        clientName: _clientNameController.text.trim(),
+        phoneNumber: _phoneController.text.trim(),
+        whatsappNumber: _whatsappController.text.isNotEmpty ? _whatsappController.text : null,
+        email: _emailController.text.isNotEmpty ? _emailController.text : null,
+        materialsProvided: _materialsProvided,
+        materialsNotes: _materialsNotesController.text.isNotEmpty ? _materialsNotesController.text : null,
+        jobUrgency: _selectedJobUrgency,
+        skills: [], // You can add skills selection in the UI later
+        requirements: [], // You can add requirements selection in the UI later
+      );
 
-      // Create job post data
-      final jobPostData = {
-        'jobTitle': _jobTitleController.text.trim(),
-        'jobCategory': _selectedJobCategory,
-        'jobDescription': _jobDescriptionController.text.trim(),
-        'location': _locationController.text.trim(),
-        'startDate': _startDateController.text,
-        'endDate': _useEndDate ? _endDateController.text : null,
-        'estimatedDays': !_useEndDate ? _estimatedDaysController.text : null,
-        'paymentType': _selectedPaymentType,
-        'budget': _budgetController.text.trim(),
-        'workersNeeded': _workersNeededController.text.trim(),
-        'clientName': _clientNameController.text.trim(),
-        'phoneNumber': _phoneController.text.trim(),
-        'whatsappNumber': _whatsappController.text.trim(),
-        'email': _emailController.text.trim(),
-        'materialsProvided': _materialsProvided,
-        'materialsNotes': _materialsNotesController.text.trim(),
-        'jobUrgency': _selectedJobUrgency,
-        'createdAt': DateTime.now().toIso8601String(),
-      };
-
-      // Show success message
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Job posted successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        if (response['success'] == true) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response['message'] ?? 'Job posted successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
 
-        // Navigate back or to job list
-        Navigator.pop(context);
+          // Navigate back or to job list
+          Navigator.pop(context, true); // Return true to indicate success
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response['message'] ?? 'Failed to post job'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -258,6 +330,7 @@ class _ClientPostScreenState extends State<ClientPostScreen> {
     _whatsappController.dispose();
     _emailController.dispose();
     _materialsNotesController.dispose();
+    _applicationClosingDateController.dispose();
 
     // Dispose focus nodes
     _jobTitleFocusNode.dispose();
@@ -369,12 +442,12 @@ class _ClientPostScreenState extends State<ClientPostScreen> {
           controller: _jobTitleController,
           focusNode: _jobTitleFocusNode,
           onChanged: (value) {
-            if (_isJobTitleEmpty && value.isNotEmpty) {
+            if (_isJobTitleEmpty && value.trim().length >= 5) {
               setState(() => _isJobTitleEmpty = false);
             }
           },
           decoration: InputDecoration(
-            hintText: 'E.g. Masonry Work – Boundary Wall Construction',
+            hintText: 'E.g. Masonry Work – Boundary Wall Construction (min 5 chars)',
             hintStyle: const TextStyle(color: Colors.grey),
             filled: true,
             fillColor: Theme.of(context).colorScheme.tertiary,
@@ -455,7 +528,7 @@ class _ClientPostScreenState extends State<ClientPostScreen> {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(
-                color: _isJobTitleEmpty ? Colors.red : const Color(0xFF4E6BF5),
+                color: _isJobCategoryEmpty ? Colors.red : const Color(0xFF4E6BF5),
                 width: 1.5,
               ),
             ),
@@ -504,12 +577,12 @@ class _ClientPostScreenState extends State<ClientPostScreen> {
           controller: _jobDescriptionController,
           maxLines: 2,
           onChanged: (value) {
-            if (_isJobDescriptionEmpty && value.isNotEmpty) {
+            if (_isJobDescriptionEmpty && value.trim().length >= 20) {
               setState(() => _isJobDescriptionEmpty = false);
             }
           },
           decoration: InputDecoration(
-            hintText: 'E.g. Need 2 skilled masons to build a 15ft boundary wall. Cement & sand provided. Work should be completed within 5 days.',
+            hintText: 'E.g. Need 2 skilled masons to build a 15ft boundary wall. Cement & sand provided. Work should be completed within 5 days. (min 20 chars)',
             hintStyle: const TextStyle(color: Colors.grey),
             filled: true,
             fillColor: Theme.of(context).colorScheme.tertiary,
@@ -783,7 +856,7 @@ class _ClientPostScreenState extends State<ClientPostScreen> {
                 keyboardType: TextInputType.number,
                 controller: _budgetController,
                 onChanged: (value) {
-                  if (_isBudgetEmpty && value.isNotEmpty) {
+                  if (_isBudgetEmpty && _validateBudget(value)) {
                     setState(() => _isBudgetEmpty = false);
                   }
                 },
@@ -846,6 +919,11 @@ class _ClientPostScreenState extends State<ClientPostScreen> {
         const SizedBox(height: 8),
         TextFormField(
           controller: _clientNameController,
+          onChanged: (value) {
+            if (_isContactEmpty && value.trim().isNotEmpty && _phoneController.text.trim().isNotEmpty && _validatePhoneNumber(_phoneController.text.trim())) {
+              setState(() => _isContactEmpty = false);
+            }
+          },
           decoration: InputDecoration(
             hintText: 'Your Name',
             hintStyle: TextStyle(
@@ -882,8 +960,13 @@ class _ClientPostScreenState extends State<ClientPostScreen> {
         TextFormField(
           controller: _phoneController,
           keyboardType: TextInputType.phone,
+          onChanged: (value) {
+            if (_isContactEmpty && value.trim().isNotEmpty && _clientNameController.text.trim().isNotEmpty && _validatePhoneNumber(value.trim())) {
+              setState(() => _isContactEmpty = false);
+            }
+          },
           decoration: InputDecoration(
-            hintText: 'Phone Number',
+            hintText: 'Phone Number (e.g., +94771234567 or 0771234567)',
             hintStyle: TextStyle(
                 color: Colors.grey
             ),
@@ -1080,9 +1163,9 @@ class _ClientPostScreenState extends State<ClientPostScreen> {
         ),
         const SizedBox(height: 8),
         TextFormField(
-          controller: _endDateController,
+          controller: _applicationClosingDateController,
           readOnly: true,
-          onTap: () => _selectDate(context, _endDateController),
+          onTap: () => _selectDate(context, _applicationClosingDateController),
           decoration: InputDecoration(
             hintText: 'Application Closing Date',
             hintStyle: TextStyle(
