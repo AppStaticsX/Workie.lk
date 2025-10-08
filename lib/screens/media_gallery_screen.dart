@@ -1,5 +1,6 @@
 import 'package:flame_lottie/flame_lottie.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:tiktok_double_tap_like/double_tap_like_widget.dart';
@@ -59,6 +60,7 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
   late bool _isLiked;
   late int _likeCount;
   late bool _hasUserCommented;
+  bool _isLandscapeMode = false;
 
   @override
   void initState() {
@@ -100,8 +102,30 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
     widget.onLikeStateChanged?.call(_isLiked, _likeCount);
   }
 
+  void _toggleOrientation() {
+    setState(() {
+      _isLandscapeMode = !_isLandscapeMode;
+    });
+
+    if (_isLandscapeMode) {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+    } else {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+      ]);
+    }
+  }
+
   @override
   void dispose() {
+    // Reset orientation to portrait when leaving the screen
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
+    
     widget.onLikeStateChanged?.call(_isLiked, _likeCount);
     for (var controller in _videoControllers.values) {
       controller.dispose();
@@ -165,6 +189,22 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
                       ),
                     ),
                   ),
+                if (widget.mediaItems[_currentIndex].type == MediaType.video) ...[
+                  Positioned(
+                    left: MediaQuery.of(context).size.width * 0.05,
+                    top: MediaQuery.of(context).size.height * 0.1,
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: _toggleOrientation,
+                      child: Icon(
+                        _isLandscapeMode ? Icons.screen_lock_portrait : Icons.screen_lock_landscape,
+                        size: 32,
+                        color: Theme.of(context).colorScheme.inversePrimary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 Positioned(
                   right: MediaQuery.of(context).size.width * 0.05,
                   top: MediaQuery.of(context).size.height * 0.1,
@@ -200,27 +240,23 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
                   ),
                 ),
                 Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
+                  right: MediaQuery.of(context).size.width * 0,
+                  bottom: MediaQuery.of(context).size.height * 0.0,
+                  left: MediaQuery.of(context).size.width * 0,
                   child: SafeArea(
-                    child: SizedBox(
-                      height: 190,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildBottomDetails(),
-                          _buildContent(),
-                        ],
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildBottomDetails(),
+                        _buildContent(),
+                      ],
                     ),
                   ),
                 ),
 
                 Positioned(
-                    bottom: 20,
-                    left: MediaQuery.of(context).size.width -60,
-                    right: 0,
+                    right: MediaQuery.of(context).size.width * 0.05,
+                    bottom: MediaQuery.of(context).size.height * 0,
                     child: SafeArea(child: _buildActionButtons())
                 ),
               ],
@@ -453,59 +489,53 @@ class _MediaGalleryScreenState extends State<MediaGalleryScreen> {
   }
 
   Widget _buildActionButtons() {
-    return Container(
-      decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
-          borderRadius: BorderRadius.circular(15)
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 16),
-          InkWell(
-            customBorder: const CircleBorder(),
-            onTap: () {
-              _toggleLike();
-            },
-            child: Icon(
-              _isLiked ? Iconsax.heart : Iconsax.heart_copy,
-              size: 32,
-              color: _isLiked ? Colors.red : Theme.of(context).colorScheme.inversePrimary,
-            ),
+    return Column(
+      children: [
+        const SizedBox(height: 16),
+        InkWell(
+          customBorder: const CircleBorder(),
+          onTap: () {
+            _toggleLike();
+          },
+          child: Icon(
+            _isLiked ? Iconsax.heart : Iconsax.heart_copy,
+            size: 32,
+            color: _isLiked ? Colors.red : Theme.of(context).colorScheme.inversePrimary,
           ),
-          const SizedBox(height: 16),
-          InkWell(
-            customBorder: const CircleBorder(),
-            onTap: (){},
-            child: Icon(
-              _hasUserCommented ? Iconsax.message_2 : Iconsax.message_2_copy,
-              size: 32,
-              color: Theme.of(context).colorScheme.inversePrimary,
-            ),
+        ),
+        const SizedBox(height: 16),
+        InkWell(
+          customBorder: const CircleBorder(),
+          onTap: (){},
+          child: Icon(
+            _hasUserCommented ? Iconsax.message_2 : Iconsax.message_2_copy,
+            size: 32,
+            color: Theme.of(context).colorScheme.inversePrimary,
           ),
-          const SizedBox(height: 16),
-          InkWell(
-            customBorder: const CircleBorder(),
-            onTap: () async {
-              try {
-                await SharePlus.instance.share(ShareParams(
-                    text: '${widget.userName}\n${widget.userTitle}'
-                ));
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: $e')),
-                  );
-                }
+        ),
+        const SizedBox(height: 16),
+        InkWell(
+          customBorder: const CircleBorder(),
+          onTap: () async {
+            try {
+              await SharePlus.instance.share(ShareParams(
+                  text: '${widget.userName}\n${widget.userTitle}'
+              ));
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error: $e')),
+                );
               }
-            },
-            child: const Icon(
-              Iconsax.send_2_copy,
-              size: 32,
-            ),
+            }
+          },
+          child: const Icon(
+            Iconsax.send_2_copy,
+            size: 32,
           ),
-          const SizedBox(height: 16),
-        ],
-      ),
+        ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 

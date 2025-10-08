@@ -292,6 +292,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                     _profileImage(context),
 
                     _editProfileButton(),
+                    _profileCompletion(),
                     // Edit button for profile picture
                     _profileImagePicker(context),
                   ],
@@ -313,11 +314,49 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                 color: Theme.of(context).colorScheme.secondary,
                 height: 12,
               ),
-              _educationSection(context)
+              _educationSection(context),
+              const SizedBox(height: 12),
+              Container(
+                width: MediaQuery.of(context).size.width,
+                color: Theme.of(context).colorScheme.secondary,
+                height: 12,
+              ),
+              _skillsSection(context)
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _skillsSection(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+              child: Text(
+                  'Skills',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.5
+                  )
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: IconButton(
+                  onPressed: _navigateToEducationEdit,
+                  icon: Icon(CupertinoIcons.add)
+              ),
+            )
+          ],
+        ),
+        // Education content
+        _buildSkillsContent(),
+      ],
     );
   }
 
@@ -385,6 +424,68 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
               const SizedBox(height: 8),
               Text(
                 'Add your education to showcase your qualifications',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[500],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: _userEducation.map((education) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16.0, top: 8),
+          child: EducationDetailModel(
+            school: education.school,
+            degree: education.course,
+            field: education.fieldOfStudy,
+            startDate: education.startYear,
+            endDate: education.endYear ?? 'Present',
+            schoolUrl: _schoolLogos[education.school] ?? 'https://logo.clearbit.com/edu',
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildSkillsContent() {
+    if (_isLoadingEducation) {
+      return const Padding(
+        padding: EdgeInsets.all(32.0),
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_userEducation.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 32.0),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(
+                CupertinoIcons.settings,
+                size: 48,
+                color: Colors.grey[400],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'No Skills Added',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Add your skills to showcase your talents',
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey[500],
@@ -938,6 +1039,29 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
           ),
         ),
       ),
+    );
+  }
+
+  Positioned _profileCompletion() {
+    return Positioned(
+      right: 112,
+        top: 116,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Profile Completion'
+            ),
+            Text(
+              '42%',
+              style: TextStyle(
+                fontSize: 24,
+                color: Colors.green,
+                fontWeight: FontWeight.bold
+              ),
+            )
+          ],
+        )
     );
   }
 

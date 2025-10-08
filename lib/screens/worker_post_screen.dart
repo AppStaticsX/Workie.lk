@@ -5,6 +5,7 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
+import 'package:flame_lottie/flame_lottie.dart';
 import 'package:workie/screens/googlemap_screen.dart';
 import '../services/push_data/worker_post_service.dart';
 import '../services/notification_service.dart';
@@ -756,13 +757,39 @@ class _WorkerPostScreenState extends State<WorkerPostScreen> {
                             showDialog(
                               context: context,
                               barrierDismissible: false,
-                              builder: (context) => AlertDialog(
-                                content: Row(
-                                  children: [
-                                    CircularProgressIndicator(),
-                                    SizedBox(width: 16),
-                                    Text('Generating hashtag suggestions...'),
-                                  ],
+                              builder: (context) => Dialog(
+                                backgroundColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: SizedBox(
+                                  width: 250,
+                                  height: 250,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Transform.scale(
+                                        scale: 2.5,
+                                        child: Lottie.asset(
+                                          'assets/animation/ai_loading_model.json',
+                                          width: 120,
+                                          height: 120,
+                                          frameRate: FrameRate(120),
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                      SizedBox(height: 16),
+                                      Text(
+                                        textAlign: TextAlign.center,
+                                        'Generating...\nPlease wait a moment.',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: Theme.of(context).colorScheme.onSurface,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             );

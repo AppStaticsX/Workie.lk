@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flame_lottie/flame_lottie.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import '../services/ai_post_generation_service.dart';
@@ -115,7 +116,43 @@ class _AIContentWriterDialogState extends State<AIContentWriterDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
+    return _isGenerating
+        ? Dialog(
+      backgroundColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: SizedBox(
+        width: 250,
+        height: 250,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Transform.scale(
+              scale: 2.5,
+              child: Lottie.asset(
+                'assets/animation/ai_loading_model.json',
+                width: 120,
+                height: 120,
+                frameRate: FrameRate(120),
+                fit: BoxFit.cover,
+              ),
+            ),
+            SizedBox(height: 16),
+            Text(
+              textAlign: TextAlign.center,
+              'Generating...\nPlease wait a moment.',
+              style: TextStyle(
+                fontSize: 16,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ) :
+    Dialog(
       backgroundColor: Theme.of(context).colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
@@ -539,15 +576,22 @@ class _AIContentWriterDialogState extends State<AIContentWriterDialog> {
             onPressed: _isGenerating ? null : _generateContent,
             icon: _isGenerating
               ? SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Theme.of(context).colorScheme.onPrimary,
+                  width: 32,
+                  height: 32,
+                  child: Transform.scale(
+                    scale: 0.45, // Makes it half the size
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 0),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 9,
+                        color: Colors.white,
+                        strokeCap: StrokeCap.square,
+                      ),
+                    ),
                   ),
                 )
               : Icon(Icons.auto_awesome),
-            label: Text(_isGenerating ? 'Generating' : 'Generate'),
+            label: Text(_isGenerating ? 'Generating...' : 'Generate'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Theme.of(context).colorScheme.onPrimary,
