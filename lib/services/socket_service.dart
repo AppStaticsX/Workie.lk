@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
@@ -22,7 +21,6 @@ class SocketService {
   Future<void> initialize() async {
     try {
       if (_socket != null && _socket!.connected) {
-        if (kDebugMode) print('🔗 Socket already connected');
         return;
       }
 
@@ -47,10 +45,8 @@ class SocketService {
 
       // Set up post-related event listeners
       _setupPostEventListeners();
-
-      if (kDebugMode) print('🚀 Socket service initialized');
     } catch (e) {
-      if (kDebugMode) print('❌ Error initializing socket: $e');
+      // Handle error silently in production
     }
   }
 
@@ -67,11 +63,10 @@ class SocketService {
             utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))),
           );
           _currentUserId = payload['id'];
-          if (kDebugMode) print('👤 Current user ID: $_currentUserId');
         }
       }
     } catch (e) {
-      if (kDebugMode) print('❌ Error getting user ID: $e');
+      // Handle error silently in production
     }
   }
 
@@ -79,22 +74,18 @@ class SocketService {
   void _setupConnectionListeners() {
     _socket?.onConnect((_) {
       _isConnected = true;
-      if (kDebugMode) print('🔗 Socket connected');
 
       // Authenticate user with socket
       if (_currentUserId != null) {
         _socket?.emit('authenticate', _currentUserId);
-        if (kDebugMode) print('🔐 User authenticated: $_currentUserId');
       }
     });
 
     _socket?.onDisconnect((_) {
       _isConnected = false;
-      if (kDebugMode) print('🔌 Socket disconnected');
     });
 
     _socket?.onReconnect((_) {
-      if (kDebugMode) print('🔄 Socket reconnected');
       // Re-authenticate on reconnection
       if (_currentUserId != null) {
         _socket?.emit('authenticate', _currentUserId);
@@ -102,7 +93,7 @@ class SocketService {
     });
 
     _socket?.onConnectError((error) {
-      if (kDebugMode) print('❌ Socket connection error: $error');
+      // Handle connection error silently in production
     });
   }
 
@@ -110,43 +101,36 @@ class SocketService {
   void _setupPostEventListeners() {
     // Listen for post like updates
     _socket?.on('post_like_updated', (data) {
-      if (kDebugMode) print('👍 Received like update: $data');
       _notifyListeners('post_like_updated', data);
     });
 
     // Listen for new comments
     _socket?.on('post_comment_added', (data) {
-      if (kDebugMode) print('💬 Received comment update: $data');
       _notifyListeners('post_comment_added', data);
     });
 
     // Listen for like notifications (for post owners)
     _socket?.on('post_like_notification', (data) {
-      if (kDebugMode) print('🔔 Received like notification: $data');
       _notifyListeners('post_like_notification', data);
     });
 
     // Listen for comment notifications (for post owners)
     _socket?.on('post_comment_notification', (data) {
-      if (kDebugMode) print('🔔 Received comment notification: $data');
       _notifyListeners('post_comment_notification', data);
     });
 
     // Listen for new posts created
     _socket?.on('new_post_created', (data) {
-      if (kDebugMode) print('🆕 Received new post: $data');
       _notifyListeners('new_post_created', data);
     });
 
     // Listen for post updates/edits
     _socket?.on('post_updated', (data) {
-      if (kDebugMode) print('✏️ Received post update: $data');
       _notifyListeners('post_updated', data);
     });
 
     // Listen for post deletions
     _socket?.on('post_deleted', (data) {
-      if (kDebugMode) print('🗑️ Received post deletion: $data');
       _notifyListeners('post_deleted', data);
     });
   }
@@ -157,14 +141,12 @@ class SocketService {
       _listeners[event] = [];
     }
     _listeners[event]!.add(callback);
-    if (kDebugMode) print('📝 Added listener for event: $event');
   }
 
   // Remove listener for specific events
   void removeEventListener(String event, Function callback) {
     if (_listeners[event] != null) {
       _listeners[event]!.remove(callback);
-      if (kDebugMode) print('🗑️ Removed listener for event: $event');
     }
   }
 
@@ -172,7 +154,6 @@ class SocketService {
   void removeAllListeners(String event) {
     if (_listeners[event] != null) {
       _listeners[event]!.clear();
-      if (kDebugMode) print('🧹 Cleared all listeners for event: $event');
     }
   }
 
@@ -183,7 +164,7 @@ class SocketService {
         try {
           callback(data);
         } catch (e) {
-          if (kDebugMode) print('❌ Error in listener callback: $e');
+          // Handle listener callback error silently in production
         }
       }
     }
@@ -193,9 +174,6 @@ class SocketService {
   void emit(String event, dynamic data) {
     if (_socket != null && _isConnected) {
       _socket?.emit(event, data);
-      if (kDebugMode) print('📤 Emitted event: $event with data: $data');
-    } else {
-      if (kDebugMode) print('❌ Cannot emit: Socket not connected');
     }
   }
 
@@ -210,7 +188,6 @@ class SocketService {
     _socket?.disconnect();
     _isConnected = false;
     _listeners.clear();
-    if (kDebugMode) print('🔌 Socket disconnected and listeners cleared');
   }
 
   // Reconnect socket
@@ -226,7 +203,6 @@ class SocketService {
     _currentUserId = userId;
     if (_socket != null && _isConnected && userId != null) {
       _socket?.emit('authenticate', userId);
-      if (kDebugMode) print('🔄 Updated user authentication: $userId');
     }
   }
 }

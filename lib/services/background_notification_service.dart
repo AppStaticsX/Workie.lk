@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:isolate';
 import 'dart:ui';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
@@ -24,15 +23,13 @@ class BackgroundNotificationService {
 
       if (port != null) {
         _isolatePort = port;
-        if (kDebugMode) print('🔄 Background isolate already running');
       } else {
         await _startBackgroundIsolate();
-        if (kDebugMode) print('🚀 Background notification service initialized');
       }
 
       _isInitialized = true;
     } catch (e) {
-      if (kDebugMode) print('❌ Error initializing background service: $e');
+      // Handle error silently in production
     }
   }
 
@@ -45,10 +42,8 @@ class BackgroundNotificationService {
 
       _isolatePort = await receivePort.first;
       IsolateNameServer.registerPortWithName(_isolatePort!, _isolateName);
-
-      if (kDebugMode) print('✅ Background isolate started successfully');
     } catch (e) {
-      if (kDebugMode) print('❌ Failed to start background isolate: $e');
+      // Handle error silently in production
     }
   }
 
@@ -67,13 +62,11 @@ class BackgroundNotificationService {
         try {
           await _handleBackgroundMessage(message);
         } catch (e) {
-          if (kDebugMode) print('❌ Error handling background message: $e');
+          // Handle error silently in production
         }
       });
-
-      if (kDebugMode) print('🔧 Background isolate listening for messages');
     } catch (e) {
-      if (kDebugMode) print('❌ Error in background isolate: $e');
+      // Handle error silently in production
     }
   }
 
@@ -85,10 +78,8 @@ class BackgroundNotificationService {
 
       // Setup socket connection for background events
       await _setupBackgroundSocket();
-
-      if (kDebugMode) print('✅ Background services initialized');
     } catch (e) {
-      if (kDebugMode) print('❌ Error initializing background services: $e');
+      // Handle error silently in production
     }
   }
 
@@ -101,7 +92,7 @@ class BackgroundNotificationService {
   static Future<void> _initializeBackgroundNotifications() async {
     try {
       const AndroidInitializationSettings initializationSettingsAndroid =
-          AndroidInitializationSettings('@mipmap/notification_icon');
+          AndroidInitializationSettings('@mipmap/ic_launcher_foreground');
 
       const DarwinInitializationSettings initializationSettingsIOS =
           DarwinInitializationSettings(
@@ -120,10 +111,8 @@ class BackgroundNotificationService {
         initializationSettings,
         onDidReceiveBackgroundNotificationResponse: _handleBackgroundNotificationTap,
       );
-
-      if (kDebugMode) print('✅ Background notifications initialized');
     } catch (e) {
-      if (kDebugMode) print('❌ Error initializing background notifications: $e');
+      // Handle error silently in production
     }
   }
 
@@ -140,7 +129,7 @@ class BackgroundNotificationService {
         channelDescription: 'Notifications when someone likes your post',
         importance: Importance.high,
         priority: Priority.high,
-        icon: '@mipmap/notification_icon',
+        icon: '@mipmap/ic_launcher_foreground',
         enableLights: true,
         enableVibration: true,
         playSound: true,
@@ -174,10 +163,8 @@ class BackgroundNotificationService {
         details,
         payload: payload,
       );
-
-      if (kDebugMode) print('✅ Background like notification sent successfully');
     } catch (e) {
-      if (kDebugMode) print('❌ Error showing background like notification: $e');
+      // Handle error silently in production
     }
   }
 
@@ -195,7 +182,7 @@ class BackgroundNotificationService {
         channelDescription: 'Notifications when someone comments on your post',
         importance: Importance.high,
         priority: Priority.high,
-        icon: '@mipmap/notification_icon',
+        icon: '@mipmap/ic_launcher_foreground',
         enableLights: true,
         enableVibration: true,
         playSound: true,
@@ -233,10 +220,8 @@ class BackgroundNotificationService {
         details,
         payload: payload,
       );
-
-      if (kDebugMode) print('✅ Background comment notification sent successfully');
     } catch (e) {
-      if (kDebugMode) print('❌ Error showing background comment notification: $e');
+      // Handle error silently in production
     }
   }
 
@@ -248,7 +233,6 @@ class BackgroundNotificationService {
       final token = prefs.getString('auth_token');
 
       if (token == null) {
-        if (kDebugMode) print('⚠️ No auth token for background socket');
         return;
       }
 
@@ -276,7 +260,6 @@ class BackgroundNotificationService {
 
       // Setup authentication and listeners
       socket.onConnect((_) {
-        if (kDebugMode) print('🔗 Background socket connected');
         socket.emit('authenticate', userId);
       });
 
@@ -291,12 +274,10 @@ class BackgroundNotificationService {
       });
 
       socket.onDisconnect((_) {
-        if (kDebugMode) print('🔌 Background socket disconnected');
+        // Handle disconnect silently in production
       });
-
-      if (kDebugMode) print('✅ Background socket setup complete');
     } catch (e) {
-      if (kDebugMode) print('❌ Error setting up background socket: $e');
+      // Handle error silently in production
     }
   }
 
@@ -316,10 +297,8 @@ class BackgroundNotificationService {
         postContent: postContent,
         postId: postId,
       );
-
-      if (kDebugMode) print('📱 Background like notification shown');
     } catch (e) {
-      if (kDebugMode) print('❌ Error handling background like notification: $e');
+      // Handle error silently in production
     }
   }
 
@@ -341,10 +320,8 @@ class BackgroundNotificationService {
         postContent: postContent,
         postId: postId,
       );
-
-      if (kDebugMode) print('📱 Background comment notification shown');
     } catch (e) {
-      if (kDebugMode) print('❌ Error handling background comment notification: $e');
+      // Handle error silently in production
     }
   }
 
@@ -364,15 +341,13 @@ class BackgroundNotificationService {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('❌ Error handling background message: $e');
+      // Handle error silently in production
     }
   }
 
   /// Handle background notification taps
   @pragma('vm:entry-point')
   static void _handleBackgroundNotificationTap(NotificationResponse response) {
-    if (kDebugMode) print('📱 Background notification tapped: ${response.payload}');
-
     // Store notification tap for when app becomes active
     SharedPreferences.getInstance().then((prefs) {
       prefs.setString('pending_notification_action', response.payload ?? '');
@@ -386,10 +361,8 @@ class BackgroundNotificationService {
       IsolateNameServer.removePortNameMapping(_isolateName);
       _isolatePort = null;
       _isInitialized = false;
-
-      if (kDebugMode) print('🛑 Background services stopped');
     } catch (e) {
-      if (kDebugMode) print('❌ Error stopping background services: $e');
+      // Handle error silently in production
     }
   }
 
@@ -398,7 +371,7 @@ class BackgroundNotificationService {
     try {
       _isolatePort?.send(message);
     } catch (e) {
-      if (kDebugMode) print('❌ Error sending to background: $e');
+      // Handle error silently in production
     }
   }
 
@@ -421,7 +394,6 @@ class BackgroundNotificationService {
 
       return null;
     } catch (e) {
-      if (kDebugMode) print('❌ Error checking pending notification: $e');
       return null;
     }
   }

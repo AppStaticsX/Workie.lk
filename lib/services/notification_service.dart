@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -96,7 +95,7 @@ class NotificationService {
 
   /// Configure local timezone
   static Future<void> _configureLocalTimeZone() async {
-    if (kIsWeb || Platform.isLinux) {
+    if (Platform.isLinux) {
       return;
     }
     tz.initializeTimeZones();
@@ -146,19 +145,12 @@ class NotificationService {
   /// Background notification tap handler
   @pragma('vm:entry-point')
   static void _notificationTapBackground(NotificationResponse notificationResponse) {
-    debugPrint('notification(${notificationResponse.id}) action tapped: '
-        '${notificationResponse.actionId} with'
-        ' payload: ${notificationResponse.payload}');
-    if (notificationResponse.input?.isNotEmpty ?? false) {
-      debugPrint('notification action tapped with input: ${notificationResponse.input}');
-    }
+    // Handle notification tap silently in production
   }
 
   /// Request permissions for notifications
   static Future<bool> requestPermissions() async {
     bool permissionGranted = false;
-
-    if (kDebugMode) print('🔔 Requesting notification permissions...');
 
     if (Platform.isIOS || Platform.isMacOS) {
       await _flutterLocalNotificationsPlugin
@@ -176,7 +168,6 @@ class NotificationService {
         sound: true,
       );
       permissionGranted = true;
-      if (kDebugMode) print('🔔 iOS/macOS notification permissions requested');
     } else if (Platform.isAndroid) {
       final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
       _flutterLocalNotificationsPlugin
@@ -184,7 +175,6 @@ class NotificationService {
 
       permissionGranted =
           await androidImplementation?.requestNotificationsPermission() ?? false;
-      if (kDebugMode) print('🔔 Android notification permissions: $permissionGranted');
     }
 
     return permissionGranted;
@@ -209,14 +199,6 @@ class NotificationService {
     NotificationDetails? notificationDetails,
   }) async {
     try {
-      if (kDebugMode) {
-        print('🔔 ShowNotification called:');
-        print('  - Title: $title');
-        print('  - Body: $body');
-        print('  - Payload: $payload');
-        print('  - Notification ID: $_notificationId');
-      }
-
       final details = notificationDetails ?? _defaultNotificationDetails();
 
       await _flutterLocalNotificationsPlugin.show(
@@ -226,13 +208,8 @@ class NotificationService {
         details,
         payload: payload,
       );
-
-      if (kDebugMode) print('✅ Notification shown successfully with ID: ${_notificationId - 1}');
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error in showNotification: $e');
-        print('❌ Stack trace: ${StackTrace.current}');
-      }
+      // Handle error silently in production
     }
   }
 
@@ -277,13 +254,6 @@ class NotificationService {
     String? postId,
   }) async {
     try {
-      if (kDebugMode) {
-        print('🔔 Attempting to show like notification:');
-        print('  - Liker: $likerName');
-        print('  - Post ID: $postId');
-        print('  - Content: ${postContent.substring(0, postContent.length > 50 ? 50 : postContent.length)}...');
-      }
-
       const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
         'post_like_channel',
         'Post Like Notifications',
@@ -327,26 +297,14 @@ class NotificationService {
       final body = '$likerName liked your post: "$truncatedContent"';
       final payload = 'post_like:$postId';
 
-      if (kDebugMode) {
-        print('🔔 Notification details:');
-        print('  - Title: $title');
-        print('  - Body: $body');
-        print('  - Payload: $payload');
-      }
-
       await showNotification(
         title: title,
         body: body,
         payload: payload,
         notificationDetails: details,
       );
-
-      if (kDebugMode) print('✅ Like notification sent successfully');
     } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error showing like notification: $e');
-        print('❌ Stack trace: ${StackTrace.current}');
-      }
+      // Handle error silently in production
     }
   }
 

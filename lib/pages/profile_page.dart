@@ -14,6 +14,7 @@ import '../services/pull_data/post_data_service.dart';
 import '../services/education_data_service.dart';
 import '../models/education_model.dart';
 import '../services/hive_service.dart';
+import '../services/get_user_skills.dart';
 
 class ProfileTabPage extends StatefulWidget {
 
@@ -57,6 +58,10 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
   List<Map<String, dynamic>> _savedPosts = [];
   bool _isLoadingSavedPosts = false;
 
+  // Add these variables for skills
+  List<Map<String, dynamic>> _userSkills = [];
+  bool _isLoadingSkills = false;
+
   @override
   void initState() {
     _loadUserRole();
@@ -64,6 +69,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     _loadUserPosts();
     _loadEducationData();
     _loadSavedPosts();
+    _loadUserSkills();
     super.initState();
   }
 
@@ -138,6 +144,33 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
         _isLoadingEducation = false;
         _userEducation = [];
         _schoolLogos = {};
+      });
+    }
+  }
+
+  Future<void> _loadUserSkills() async {
+    setState(() {
+      _isLoadingSkills = true;
+    });
+
+    try {
+      final result = await GetUserSkillsService.getCurrentUserSkills();
+      if (result['success'] == true && result['skills'] != null) {
+        setState(() {
+          _userSkills = List<Map<String, dynamic>>.from(result['skills']);
+          _isLoadingSkills = false;
+        });
+      } else {
+        setState(() {
+          _userSkills = [];
+          _isLoadingSkills = false;
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error loading user skills: $e');
+      setState(() {
+        _isLoadingSkills = false;
+        _userSkills = [];
       });
     }
   }
@@ -245,6 +278,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     await _loadUserPosts();
     await _loadEducationData();
     await _loadSavedPosts();
+    await _loadUserSkills();
   }
 
   @override
@@ -331,6 +365,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
 
   Widget _skillsSection(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -338,7 +373,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
               child: Text(
-                  'Skills',
+                  'Top Skills',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w900,
                       letterSpacing: 0.5
@@ -348,7 +383,9 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: IconButton(
-                  onPressed: _navigateToEducationEdit,
+                  onPressed: (){
+                    _loadUserSkills();
+                  },
                   icon: Icon(CupertinoIcons.add)
               ),
             )
@@ -454,7 +491,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
   }
 
   Widget _buildSkillsContent() {
-    if (_isLoadingEducation) {
+    if (_isLoadingSkills) {
       return const Padding(
         padding: EdgeInsets.all(32.0),
         child: Center(
@@ -463,7 +500,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
       );
     }
 
-    if (_userEducation.isEmpty) {
+    if (_userSkills.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 32.0),
         child: Center(
@@ -498,22 +535,56 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
       );
     }
 
-    return Column(
-      children: _userEducation.map((education) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16.0, top: 8),
-          child: EducationDetailModel(
-            school: education.school,
-            degree: education.course,
-            field: education.fieldOfStudy,
-            startDate: education.startYear,
-            endDate: education.endYear ?? 'Present',
-            schoolUrl: _schoolLogos[education.school] ?? 'https://logo.clearbit.com/edu',
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            alignment: WrapAlignment.start,
+            crossAxisAlignment: WrapCrossAlignment.start,
+            spacing: 12.0,
+            runSpacing: 12.0,
+            children: _userSkills.map((skill) => _buildSkillChip(skill)).toList(),
           ),
-        );
-      }).toList(),
+        ],
+      ),
     );
   }
+
+  Widget _buildSkillChip(Map<String, dynamic> skill) {
+    final skillName = skill['name']?.toString() ?? '';
+    final _ = skill['level']?.toString() ?? 'beginner';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.inverseSurface.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Iconsax.diamonds, size: 18, color: const Color(0xFF36C897)),
+          const SizedBox(width: 12),
+          Text(
+            skillName,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+
 
   Widget _myMediaContents(BuildContext context) {
     return Column(
@@ -1056,7 +1127,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
               '42%',
               style: TextStyle(
                 fontSize: 24,
-                color: Colors.green,
+                color: const Color(0xFF36C897),
                 fontWeight: FontWeight.bold
               ),
             )

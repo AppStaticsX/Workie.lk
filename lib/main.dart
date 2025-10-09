@@ -24,6 +24,16 @@ Future<void> main() async {
     DeviceOrientation.portraitDown,
   ]);
 
+  runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (context) => ThemeProvider()),
+          ChangeNotifierProvider(create: (context) => LanguageProvider()),
+        ],
+        child: const MyApp(),
+      )
+  );
+
   // Initialize Hive
   await Hive.initFlutter();
   // Initialize HiveService (registers adapters)
@@ -80,7 +90,7 @@ Future<void> main() async {
     //
   }
 
-  runApp(
+  /*runApp(
       MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (context) => ThemeProvider()),
@@ -88,7 +98,7 @@ Future<void> main() async {
         ],
         child: const MyApp(),
       )
-  );
+  );*/
 }
 
 void _handleNotificationTap(NotificationResponse response) {
