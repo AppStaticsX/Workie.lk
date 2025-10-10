@@ -751,6 +751,7 @@ class PostDataService {
     required String postId,
     String? content,
     List<Map<String, dynamic>>? media,
+    List<String>? hashtags,
     String? privacy,
     String? location,
     List<String>? taggedUsers,
@@ -778,6 +779,7 @@ class PostDataService {
       
       if (content != null) body['content'] = content;
       if (media != null) body['media'] = media;
+      if (hashtags != null) body['hashtags'] = hashtags;
       if (privacy != null) body['privacy'] = privacy;
       if (location != null) body['location'] = location;
       if (taggedUsers != null) body['taggedUsers'] = taggedUsers;

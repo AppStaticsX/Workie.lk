@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workie/pages/components/cover_pic_bottomsheet.dart';
+import 'package:workie/pages/components/edit_post_screen.dart';
 import 'package:workie/pages/components/education_detail_model.dart';
 import 'package:workie/pages/components/profile_page_post_helper.dart';
 import 'package:workie/pages/components/profile_pic_bottomsheet.dart';
@@ -873,6 +874,12 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                       onTap: () => _handlePostShare(filteredPosts[0]['id']),
                       textColor: Theme.of(context).colorScheme.inverseSurface
                   ),
+                  PopupMenuOption(
+                      title: 'Edit',
+                      icon: Iconsax.edit_2_copy,
+                      onTap: () => _handlePostEdit(filteredPosts[0]),
+                      textColor: Theme.of(context).colorScheme.inverseSurface
+                  ),
                 ],
                 iconSize: 24,
               ),
@@ -929,6 +936,21 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
 
   void _handlePostShare(String postId) {
     // Handle post sharing
+  }
+
+  void _handlePostEdit(Map<String, dynamic> postData) {
+    showModalBottomSheet(
+        context: context,
+        builder: (context)=> EditPostScreen(
+          postToEdit: postData,
+          onPostSuccess: () {
+            // Refresh posts after successful edit
+            _loadUserPosts();
+          },
+        ),
+      scrollControlDisabledMaxHeightRatio: 1,
+      showDragHandle: true
+    );
   }
 
   void _navigateToEducationEdit() {

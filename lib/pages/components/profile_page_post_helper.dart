@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:workie/pages/components/edit_post_screen.dart';
+import 'package:workie/screens/worker_post_screen.dart';
 import '../../services/pull_data/current_user_posts.dart';
 import '../../models/post_model.dart';
 import '../../models/media_item_model.dart';
@@ -132,6 +134,21 @@ class _ProfilePagePostHelperState extends State<ProfilePagePostHelper> {
         );
       }
     }
+  }
+
+  void _handlePostEdit(Map<String, dynamic> postData) {
+    showModalBottomSheet(
+        context: context,
+        builder: (context)=> EditPostScreen(
+          postToEdit: postData,
+          onPostSuccess: () {
+            // Refresh posts after successful edit
+            _loadAllUserPosts();
+          },
+        ),
+      scrollControlDisabledMaxHeightRatio: 1,
+      showDragHandle: true
+    );
   }
 
   Future<bool> _showDeleteConfirmationDialog() async {
@@ -322,9 +339,31 @@ class _ProfilePagePostHelperState extends State<ProfilePagePostHelper> {
               popupMenuItemIcon: Iconsax.trash_copy,
               popupMenuItemIconColor: Colors.red,
               options: [
-                PopupMenuOption(title: 'Save', icon: Iconsax.save_add_copy, onTap: (){}, textColor: Theme.of(context).colorScheme.inverseSurface),
-                PopupMenuOption(title: 'Share', icon: Iconsax.share_copy, onTap: (){}, textColor: Theme.of(context).colorScheme.inverseSurface),
-                PopupMenuOption(title: 'Delete', icon: Iconsax.trash_copy, onTap: () => _handlePostDelete(post['id']), textColor: Theme.of(context).colorScheme.inverseSurface, iconColor: Colors.red),
+                PopupMenuOption(
+                    title: 'Save',
+                    icon: Iconsax.save_add_copy,
+                    onTap: (){},
+                    textColor: Theme.of(context).colorScheme.inverseSurface
+                ),
+                PopupMenuOption(
+                    title: 'Share',
+                    icon: Iconsax.share_copy,
+                    onTap: (){},
+                    textColor: Theme.of(context).colorScheme.inverseSurface
+                ),
+                PopupMenuOption(
+                    title: 'Edit',
+                    icon: Iconsax.edit_2_copy,
+                    onTap: () => _handlePostEdit(post),
+                    textColor: Theme.of(context).colorScheme.inverseSurface
+                ),
+                PopupMenuOption(
+                    title: 'Delete',
+                    icon: Iconsax.trash_copy,
+                    onTap: () => _handlePostDelete(post['id']),
+                    textColor: Theme.of(context).colorScheme.inverseSurface,
+                    iconColor: Colors.red
+                ),
               ],
               iconSize: 24,
             ),
