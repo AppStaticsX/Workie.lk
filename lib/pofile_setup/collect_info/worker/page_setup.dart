@@ -168,7 +168,8 @@ class _ProfileSetupState extends State<ProfileSetup> {
         return;
       }
 
-      final result = await AddSkillsService.addSkillsToProfile(
+      // Use replaceSkillsInProfile to replace existing skills with currently selected ones
+      final result = await AddSkillsService.replaceSkillsInProfile(
         userId: userId,
         skills: addSkillsState.selectedSkills,
         defaultLevel: 'beginner',
@@ -176,6 +177,10 @@ class _ProfileSetupState extends State<ProfileSetup> {
       );
 
       if (result?['success'] == true) {
+        // Show success message
+        final replacedCount = result?['replaced'] ?? 0;
+        _showSnackBar('Successfully saved $replacedCount skills to your profile');
+        
         // Navigate to next page after successful save
         if (_selectedIndex < _maxIndex) {
           setState(() {

@@ -30,6 +30,66 @@ class AddSkillsService {
     }
   }
 
+  // Replace all skills in user profile
+  static Future<Map<String, dynamic>?> replaceSkillsInProfile({
+    required String userId,
+    required List<String> skills,
+    String defaultLevel = 'beginner',
+    int defaultExperience = 0,
+  }) async {
+    try {
+      final token = await _getAuthToken();
+      if (token == null) {
+        throw Exception('Authentication token not found');
+      }
+
+      // Prepare skills data for replacement
+      final skillsData = skills.map((skillName) => {
+        'name': skillName.trim(),
+        'level': defaultLevel,
+        'yearsOfExperience': defaultExperience,
+      }).toList();
+
+      // Update the entire profile with new skills (replacing existing ones)
+      final uri = Uri.parse('$_baseUrl/api/profiles/$userId');
+      final response = await http.put(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode({
+          'skills': skillsData,
+        }),
+      );
+
+      final responseData = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        if (kDebugMode) {
+          print('Skills replaced successfully: ${skills.join(', ')}');
+          print('Response: $responseData');
+        }
+        return {
+          'success': true,
+          'message': 'Skills replaced successfully',
+          'data': responseData['data'],
+          'replaced': skills.length,
+          'skills': skills,
+        };
+      } else {
+        throw Exception(responseData['message'] ?? 'Failed to replace skills');
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error replacing skills: $e');
+      return {
+        'success': false,
+        'message': e.toString(),
+        'data': null,
+      };
+    }
+  }
+
   // Add multiple skills to user profile
   static Future<Map<String, dynamic>?> addSkillsToProfile({
     required String userId,
@@ -194,7 +254,11 @@ class AddSkillsService {
       final responseData = json.decode(response.body);
 
       if (response.statusCode == 200) {
-        return responseData['data'];
+        // Backend returns data in format: { success: true, data: { user: {...}, profile: {...} } }
+        // We need to return the profile part specifically
+        final profileData = responseData['data']['profile'];
+        if (kDebugMode) print('Profile data retrieved: ${profileData != null ? 'Found' : 'Not found'}');
+        return profileData;
       } else {
         if (kDebugMode) print('Profile not found, will create new one');
         return null;
@@ -297,10 +361,25 @@ class AddSkillsService {
   // Get user skills from profile
   static Future<List<Map<String, dynamic>>?> getUserSkills(String userId) async {
     try {
+      if (kDebugMode) print('Fetching skills for user: $userId');
+      
       final profile = await _getCurrentProfile(userId);
-      if (profile != null && profile['skills'] != null) {
-        return List<Map<String, dynamic>>.from(profile['skills']);
+      if (profile != null) {
+        final skills = profile['skills'];
+        if (kDebugMode) print('Skills found: ${skills != null ? skills.length : 0} skills');
+        
+        if (skills != null) {
+          final skillsList = List<Map<String, dynamic>>.from(skills);
+          if (kDebugMode) {
+            final skillNames = skillsList.map((skill) => skill['name']).toList();
+            print('User skills: $skillNames');
+          }
+          return skillsList;
+        }
+      } else {
+        if (kDebugMode) print('No profile found for user: $userId');
       }
+      
       return [];
     } catch (e) {
       if (kDebugMode) print('Error getting user skills: $e');
@@ -314,5 +393,36 @@ class AddSkillsService {
 
     // Check for empty or whitespace-only skills
     return skills.every((skill) => skill.trim().isNotEmpty);
+  }
+
+  // Test method to check if the service is working properly
+  static Future<Map<String, dynamic>> testGetUserSkills() async {
+    try {
+      final userId = await getCurrentUserId();
+      if (userId == null) {
+        return {
+          'success': false,
+          'message': 'No user ID found',
+          'data': null,
+        };
+      }
+
+      final skills = await getUserSkills(userId);
+      return {
+        'success': true,
+        'message': 'Skills fetched successfully',
+        'data': {
+          'userId': userId,
+          'skills': skills,
+          'skillCount': skills?.length ?? 0,
+        },
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Test failed: $e',
+        'data': null,
+      };
+    }
   }
 }

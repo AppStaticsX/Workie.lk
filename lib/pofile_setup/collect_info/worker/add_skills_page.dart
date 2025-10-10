@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/values/color.dart';
+import 'package:workie/services/add_skills_service.dart';
 
 class AddSkillsPage extends StatefulWidget {
   final ValueChanged<bool>? onSkillsChanged; // <-- Add this callback
@@ -16,6 +17,8 @@ class AddSkillsPageState extends State<AddSkillsPage> {
   final TextEditingController _skillController = TextEditingController();
 
   List<String> selectedSkills = [];
+  bool isLoading = true;
+  String? errorMessage;
 
   List<String> suggestedSkills = [
     // Masonry & Construction Work
@@ -48,20 +51,52 @@ class AddSkillsPageState extends State<AddSkillsPage> {
     if (selectedSkills.length >= maxSkills) return;
     setState(() {
       selectedSkills.add(skill);
-      suggestedSkills.remove(skill);
+      _removeSuggestedSkill(skill);
     });
     _skillController.clear();
     _notifyParent();
   }
 
+  void _removeSuggestedSkill(String skill) {
+    suggestedSkills.removeWhere((s) => s.toLowerCase() == skill.toLowerCase());
+  }
+
   void _removeSkill(String skill) {
     setState(() {
       selectedSkills.remove(skill);
-      if (!suggestedSkills.contains(skill)) {
-        suggestedSkills.add(skill);
-      }
+      _addBackToSuggested(skill);
     });
     _notifyParent();
+  }
+
+  void _addBackToSuggested(String skill) {
+    // Add back to suggested if it was in the original suggested list
+    final originalSuggested = [
+      // Masonry & Construction Work
+      'Bricklaying',
+      'Concrete Work',
+
+      // Carpentry & Wood Work
+      'Furniture Making',
+      'Door and Window Installation',
+
+      // Welding & Metal Fabrication
+      'Arc Welding',
+      'Metal Gate Fabrication',
+
+      // Painting & Finishing Work
+      'Wall Painting',
+      'Wood Polishing',
+
+      // Tile & Flooring Work
+      'Tile Laying',
+      'Floor Finishing',
+    ];
+    
+    if (originalSuggested.any((s) => s.toLowerCase() == skill.toLowerCase()) &&
+        !suggestedSkills.any((s) => s.toLowerCase() == skill.toLowerCase())) {
+      suggestedSkills.add(skill);
+    }
   }
 
   void _onSkillInput(String value) {
@@ -78,27 +113,110 @@ class AddSkillsPageState extends State<AddSkillsPage> {
   @override
   void initState() {
     super.initState();
-    // Notify parent on first build
-    WidgetsBinding.instance.addPostFrameCallback((_) => _notifyParent());
+    _loadExistingSkills();
+  }
+
+  Future<void> _loadExistingSkills() async {
+    try {
+      setState(() {
+        isLoading = true;
+        errorMessage = null;
+      });
+
+      // Get current user ID
+      String? userId = await AddSkillsService.getCurrentUserId();
+      
+      if (userId != null) {
+        // Fetch existing skills from database
+        List<Map<String, dynamic>>? userSkills = await AddSkillsService.getUserSkills(userId);
+        
+        if (userSkills != null) {
+          setState(() {
+            // Extract skill names from the response
+            selectedSkills = userSkills
+                .map((skill) => skill['name']?.toString() ?? '')
+                .where((name) => name.isNotEmpty)
+                .toList();
+            
+            // Remove existing skills from suggested skills
+            for (String selectedSkill in selectedSkills) {
+              _removeSuggestedSkill(selectedSkill);
+            }
+            
+            isLoading = false;
+          });
+          
+          // Notify parent after loading
+          _notifyParent();
+        } else {
+          setState(() {
+            isLoading = false;
+          });
+          _notifyParent();
+        }
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+        _notifyParent();
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Failed to load existing skills: $e';
+      });
+      _notifyParent();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 24),
-            Text(
-              'Nearly there! Add the work skills you know',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                height: 1.2
-              ),
-            ),
+      body: isLoading 
+        ? const Center(
+            child: CircularProgressIndicator(),
+          )
+        : SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 24),
+                if (errorMessage != null)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      border: Border.all(color: Colors.red, width: 1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.error_outline, color: Colors.red, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            errorMessage!,
+                            style: TextStyle(color: Colors.red, fontSize: 14),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: _loadExistingSkills,
+                          icon: Icon(Icons.refresh, color: Colors.red, size: 20),
+                          tooltip: 'Retry',
+                        ),
+                      ],
+                    ),
+                  ),
+                Text(
+                  'Nearly there! Add the work skills you know',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    height: 1.2
+                  ),
+                ),
             const SizedBox(height: 12),
             Text(
               'Your skills show clients what jobs you can do and help us suggest work for you. You can add, remove, or type new skills anytime.',
@@ -220,10 +338,10 @@ class AddSkillsPageState extends State<AddSkillsPage> {
                 );
               }).toList(),
             ),
-            const SizedBox(height: 32),
-          ],
-        ),
-      ),
+                const SizedBox(height: 32),
+              ],
+            ),
+          ),
     );
   }
 }
