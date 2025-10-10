@@ -294,7 +294,7 @@ class _AIContentWriterDialogState extends State<AIContentWriterDialog> {
               items: PostType.values.map((PostType type) {
                 return DropdownMenuItem<PostType>(
                   value: type,
-                  child: Text(type.displayName, style: TextStyle(fontFamily: 'Lato', fontSize: 15, letterSpacing: 0.5),),
+                  child: Text(type.displayName, style: TextStyle(fontFamily: 'Montserrat', fontSize: 15, letterSpacing: 0.5),),
                 );
               }).toList(),
               onChanged: (PostType? newValue) {
@@ -346,7 +346,7 @@ class _AIContentWriterDialogState extends State<AIContentWriterDialog> {
                         items: _toneOptions.map((String tone) {
                           return DropdownMenuItem<String>(
                             value: tone,
-                            child: Text(tone, style: TextStyle(fontFamily: 'Lato', fontSize: 15, letterSpacing: 0.5),),
+                            child: Text(tone, style: TextStyle(fontFamily: 'Montserrat', fontSize: 15, letterSpacing: 0.5),),
                           );
                         }).toList(),
                         onChanged: (String? newValue) {

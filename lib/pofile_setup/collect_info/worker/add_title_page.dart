@@ -24,7 +24,7 @@ class AddTitlePageState extends State<AddTitlePage> {
   void initState() {
     super.initState();
     professionController.addListener(_countLetters);
-    //_loadExistingTitle();
+    _loadExistingTitle();
   }
 
   void _countLetters() {
@@ -98,7 +98,7 @@ class AddTitlePageState extends State<AddTitlePage> {
                 controller: professionController,
                 hintText: 'Ex: Skilled Carpenter for Custom Furniture & Wood Work',
                 obscureText: false,
-                maxLines: 2,
+                maxLines: 4,
             ),
             const SizedBox(height: 4),
             Row(

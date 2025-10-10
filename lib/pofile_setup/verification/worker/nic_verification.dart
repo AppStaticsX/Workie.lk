@@ -100,14 +100,14 @@ class _NICVerificationState extends State<NICVerification> {
                 size: 24,
               ),
               SizedBox(width: 8),
-              Text('File Size Exceeded', style: TextStyle(fontFamily: 'Lato'),),
+              Text('File Size Exceeded', style: TextStyle(fontFamily: 'Montserrat'),),
             ],
           ),
           content: Padding(
             padding: const EdgeInsets.only(top: 8.0),
             child: Text(
               'The selected image exceeds the 3MB size limit. Please choose a smaller image or compress the current one.',
-              style: TextStyle(fontFamily: 'Lato', fontSize: 15),
+              style: TextStyle(fontFamily: 'Montserrat', fontSize: 15),
             ),
           ),
           actions: [

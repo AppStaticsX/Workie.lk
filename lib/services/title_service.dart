@@ -68,7 +68,7 @@ class TitleService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
-      final userId = prefs.getString('user_id');
+      final userId = prefs.getString('USER_ID');
 
       if (token == null || userId == null) {
         return {
