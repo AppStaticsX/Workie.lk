@@ -21,7 +21,7 @@ class ImageSourceDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CupertinoAlertDialog(
-      title: Text(title, style: TextStyle(fontFamily: 'Montserrat'),),
+      title: Text(title, style: TextStyle(fontFamily: 'Lato'),),
       content: Padding(
         padding: const EdgeInsets.only(top: AppDimension.paddingDefault),
         child: Column(
@@ -41,7 +41,7 @@ class ImageSourceDialog extends StatelessWidget {
                   const SizedBox(width: 12),
                   Text(
                     'Gallery',
-                    style: TextStyle(color: Theme.of(context).colorScheme.inverseSurface, fontFamily: 'Montserrat',),
+                    style: TextStyle(color: Theme.of(context).colorScheme.inverseSurface, fontFamily: 'Lato',),
                   ),
                 ],
               ),
@@ -60,7 +60,7 @@ class ImageSourceDialog extends StatelessWidget {
                   const SizedBox(width: 12),
                   Text(
                     'Camera',
-                    style: TextStyle(color: Theme.of(context).colorScheme.inverseSurface, fontFamily: 'Montserrat'),
+                    style: TextStyle(color: Theme.of(context).colorScheme.inverseSurface, fontFamily: 'Lato'),
                   ),
                 ],
               ),
@@ -75,7 +75,7 @@ class ImageSourceDialog extends StatelessWidget {
           },
           child: Text(
             'Cancel',
-            style: TextStyle(color: Theme.of(context).colorScheme.primary, fontFamily: 'Montserrat', fontWeight: FontWeight.bold),
+            style: TextStyle(color: Theme.of(context).colorScheme.primary, fontFamily: 'Lato', fontWeight: FontWeight.bold),
           ),
         ),
       ],

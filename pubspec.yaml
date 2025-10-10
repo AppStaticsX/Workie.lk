@@ -77,6 +77,11 @@ flutter:
         - asset: assets/font/Montserrat/Montserrat-Regular.ttf
         - asset: assets/font/Montserrat/Montserrat-Bold.ttf
 
+    - family: Lato
+      fonts:
+        - asset: assets/font/Lato/Lato-Regular.ttf
+        - asset: assets/font/Lato/Lato-Bold.ttf
+
     - family: Google Sans Medium
       fonts:
         - asset: assets/font/GoogleSans/GoogleSans-Medium.nohints.ttf

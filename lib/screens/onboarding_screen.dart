@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
@@ -34,22 +35,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _showPermissionDialog() {
-    showDialog(
+    showCupertinoDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Enable Notifications'),
-        content: Text('Please enable notifications to receive updates.'),
+      builder: (context) => CupertinoAlertDialog(
+        title: Text('Enable Notifications', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Lato'),),
+        content: Text('Please enable notifications to receive updates.', style: TextStyle(fontFamily: 'Lato', fontSize: 15)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
+            child: Text('Cancel', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Lato')),
           ),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
               await NotificationService.requestPermissions();
             },
-            child: Text('Enable'),
+            child: Text('Enable', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Lato')),
           ),
         ],
       ),

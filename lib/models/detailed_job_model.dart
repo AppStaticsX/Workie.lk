@@ -269,10 +269,12 @@ class _JobDetailsBottomSheetState extends State<JobDetailsBottomSheet> with Sing
                     unselectedLabelColor: Colors.grey,
                     labelStyle: TextStyle(
                       fontSize: 16,
+                      fontFamily: 'Lato',
                       fontWeight: FontWeight.bold,
                     ),
                     unselectedLabelStyle: TextStyle(
                       fontSize: 16,
+                      fontFamily: 'Lato',
                       fontWeight: FontWeight.bold,
                     ),
                     tabs: const [

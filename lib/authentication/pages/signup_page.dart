@@ -711,7 +711,7 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
               text: TextSpan(
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.primary,
-                  fontFamily: 'Montserrat',
+                  fontFamily: 'Lato',
                   fontSize: 13,
                 ),
                 children: [

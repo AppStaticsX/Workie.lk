@@ -499,13 +499,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
             child: RichText(
               textAlign: TextAlign.start,
               text: TextSpan(
-                style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 13, fontFamily: 'Montserrat'),
+                style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 13, fontFamily: 'Lato'),
                 children: [
                   TextSpan(
                     text: AppLocalizations.of(context)!.termsAgreement,
                     style: TextStyle(
                       fontWeight: FontWeight.normal,
-                      fontFamily: 'Montserrat',
+                      fontFamily: 'Lato',
                       fontSize: _getLocaleFontSize(),
                     ),
                   ),
@@ -514,7 +514,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.inversePrimary,
                       fontSize: _getLocaleFontSize(),
-                      fontFamily: 'Montserrat',
+                      fontFamily: 'Lato',
                       fontWeight: FontWeight.bold,
                     ),
                     recognizer: TapGestureRecognizer()
@@ -543,7 +543,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
                     text: AppLocalizations.of(context)!.and,
                     style: TextStyle(
                       fontSize: _getLocaleFontSize(),
-                      fontFamily: 'Montserrat',
+                      fontFamily: 'Lato',
                       fontWeight: FontWeight.normal,
                     ),
                   ),
@@ -553,7 +553,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
                       color: Theme.of(context).colorScheme.inversePrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: _getLocaleFontSize(),
-                      fontFamily: 'Montserrat'
+                      fontFamily: 'Lato'
                     ),
                     recognizer: TapGestureRecognizer()
                       ..onTap = () {

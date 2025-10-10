@@ -19,11 +19,6 @@ import 'generated/app_localizations.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-
   runApp(
       MultiProvider(
         providers: [
@@ -33,6 +28,11 @@ Future<void> main() async {
         child: const MyApp(),
       )
   );
+
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
 
   // Initialize Hive
   await Hive.initFlutter();
