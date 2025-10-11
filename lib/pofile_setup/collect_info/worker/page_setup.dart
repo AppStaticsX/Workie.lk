@@ -23,7 +23,16 @@ import '../../../services/work_category_service.dart';
 import 'start_page.dart';
 
 class ProfileSetup extends StatefulWidget {
-  const ProfileSetup({super.key});
+  final int? selectedIndex;
+  final VoidCallback? onSuccessRedirect;
+  final bool isProfileEditing;
+
+  const ProfileSetup({
+    super.key,
+    this.selectedIndex,
+    this.onSuccessRedirect,
+    required this.isProfileEditing
+  });
 
   @override
   State<ProfileSetup> createState() => _ProfileSetupState();
@@ -54,6 +63,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
   @override
   void initState() {
     super.initState();
+    _selectedIndex = widget.selectedIndex ?? 0;
     _initializeHive();
     _checkForExistingWorkSelection();
   }
@@ -180,6 +190,8 @@ class _ProfileSetupState extends State<ProfileSetup> {
         // Show success message
         final replacedCount = result?['replaced'] ?? 0;
         _showSnackBar('Successfully saved $replacedCount skills to your profile');
+
+        widget.onSuccessRedirect?.call();  // ✅ This calls the function
         
         // Navigate to next page after successful save
         if (_selectedIndex < _maxIndex) {
@@ -404,6 +416,8 @@ class _ProfileSetupState extends State<ProfileSetup> {
 
       if (result?['success'] == true) {
         // Navigate to next page after successful save
+        widget.onSuccessRedirect?.call();  // ✅ This calls the function
+
         if (_selectedIndex < _maxIndex) {
           setState(() {
             _selectedIndex++;
@@ -541,19 +555,22 @@ class _ProfileSetupState extends State<ProfileSetup> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF4E6BF5),
         surfaceTintColor: Colors.transparent,
-        leading: const Icon(
-          Iconsax.user_copy,
+        leading: Icon( widget.isProfileEditing
+          ? Iconsax.user_edit_copy
+          : Iconsax.user_copy,
           color: Colors.white,
           size: 28,
         ),
-        title: Text('Create Your Profile',
+        title: Text(widget.isProfileEditing? 'Edit Your Profile' : 'Create Your Profile',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Colors.white
             )
         ),
         // Progress indicator at bottom of app bar
-        bottom: PreferredSize(
+        bottom: widget.isProfileEditing
+            ? null
+            : PreferredSize(
           preferredSize: const Size.fromHeight(4.0),
           child: LinearProgressIndicator(
             value: (_selectedIndex) / (_maxIndex),
@@ -627,24 +644,28 @@ class _ProfileSetupState extends State<ProfileSetup> {
               onTapAction: _navigateNext,
             ),
             BottomNavigation(
+              isProfileEditing: widget.isProfileEditing,
               isSaving: _isSaving,
               actionName: 'Add Job Category',
               onTapAction: _navigateNext,
               onBackAction: _navigateBack,
             ),
             BottomNavigation(
+              isProfileEditing: widget.isProfileEditing,
               isSaving: _isSaving,
-              actionName: 'Add Your Skills',
+              actionName: widget.isProfileEditing? 'Update Your Skills' : 'Add Your Skills',
               onTapAction: _navigateNext,
               onBackAction: _navigateBack,
             ),
             BottomNavigation(
+              isProfileEditing: widget.isProfileEditing,
               isSaving: _isSaving,
               actionName: 'Add Profile Title',
               onTapAction: _navigateNext,
               onBackAction: _navigateBack,
             ),
             BottomNavigation(
+              isProfileEditing: widget.isProfileEditing,
               isSaving: _isSaving,
               actionName: 'Add Your Bio',
               onTapAction: _navigateNext,
@@ -668,6 +689,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
               onSkip: _skipNext,
             ),
             BottomNavigation(
+              isProfileEditing: widget.isProfileEditing,
               isSaving: _isSaving,
               actionName: 'Complete Profile',
               onTapAction: _navigateNext,

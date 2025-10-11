@@ -150,7 +150,7 @@ class _InitPageState extends State<InitPage> {
           padding: EdgeInsets.symmetric(horizontal: 24),
           child: ElevatedButton(
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileSetup()));
+                Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileSetup(isProfileEditing: false,)));
               },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF4E6BF5),

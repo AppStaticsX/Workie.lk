@@ -6,13 +6,15 @@ class BottomNavigation extends StatelessWidget {
   final VoidCallback onTapAction;
   final VoidCallback onBackAction;
   final bool isSaving;
+  final bool isProfileEditing;
 
   const BottomNavigation({
     super.key,
     required this.actionName,
     required this.onTapAction,
     required this.onBackAction,
-    required this.isSaving
+    required this.isSaving,
+    required this.isProfileEditing
   });
 
   @override
@@ -32,11 +34,18 @@ class BottomNavigation extends StatelessWidget {
               border: Border.all(
                 color: isSaving
                     ? Colors.grey
-                    : const Color(0xFF4E6BF5),
+                    : isProfileEditing? Colors.grey : const Color(0xFF4E6BF5),
                 width: 2.5
               )
             ),
-            child: IconButton(
+            child: isProfileEditing
+                ? IconButton(
+              onPressed: null,
+              icon: Icon(
+                  Iconsax.arrow_left_2_copy,
+                  color: Colors.grey
+              ),
+            ) : IconButton(
               onPressed: isSaving? null : onBackAction,
               icon: Icon(
                   Iconsax.arrow_left_2_copy,
@@ -44,7 +53,7 @@ class BottomNavigation extends StatelessWidget {
                       ? Colors.grey
                       : Theme.of(context).colorScheme.inverseSurface
               ),
-            ),
+            )
           ),
           SizedBox(
             height: 50,

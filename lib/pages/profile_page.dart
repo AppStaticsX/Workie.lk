@@ -8,6 +8,8 @@ import 'package:workie/pages/components/edit_post_screen.dart';
 import 'package:workie/pages/components/education_detail_model.dart';
 import 'package:workie/pages/components/profile_page_post_helper.dart';
 import 'package:workie/pages/components/profile_pic_bottomsheet.dart';
+
+import '../pofile_setup/collect_info/worker/page_setup.dart';
 import '../services/pull_data/get_user_data.dart';
 import '../services/pull_data/current_user_posts.dart';
 import '../models/post_model.dart';
@@ -385,7 +387,35 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: IconButton(
                   onPressed: (){
-                    _loadUserSkills();
+                    //_loadUserSkills();
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) => ProfileSetup(
+                          isProfileEditing: true,
+                          selectedIndex: 2,
+                          onSuccessRedirect: () {
+                            Navigator.pop(context);
+                          },
+                        ),
+                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                          const begin = Offset(0.0, 1.0); // Start from bottom (0.0, 1.0)
+                          const end = Offset.zero; // End at normal position
+                          const curve = Curves.easeInOut;
+
+                          var tween = Tween(begin: begin, end: end).chain(
+                            CurveTween(curve: curve),
+                          );
+
+                          var offsetAnimation = animation.drive(tween);
+
+                          return SlideTransition(
+                            position: offsetAnimation,
+                            child: child,
+                          );
+                        },
+                      ),
+                    );
                   },
                   icon: Icon(CupertinoIcons.add)
               ),
@@ -417,7 +447,37 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: IconButton(
-                  onPressed: _navigateToEducationEdit,
+                  onPressed: (){
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) => ProfileSetup(
+                          isProfileEditing: true,
+                          selectedIndex: 6,
+                          onSuccessRedirect: () {
+                            Navigator.pop(context);
+                          },
+                        ),
+                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                          const begin = Offset(0.0, 1.0); // Start from bottom
+                          const end = Offset.zero; // End at normal position
+                          const curve = Curves.easeInOut;
+
+                          var tween = Tween(begin: begin, end: end).chain(
+                            CurveTween(curve: curve),
+                          );
+
+                          var offsetAnimation = animation.drive(tween);
+
+                          return SlideTransition(
+                            position: offsetAnimation,
+                            child: child,
+                          );
+                        },
+                      ),
+                    );
+                    _navigateToEducationEdit();
+                  },
                   icon: Icon(CupertinoIcons.add)
               ),
             )

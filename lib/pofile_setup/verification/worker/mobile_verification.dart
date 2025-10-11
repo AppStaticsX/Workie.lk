@@ -155,7 +155,9 @@ class _MobileVerificationState extends State<MobileVerification>
       });
 
       Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => const ProfileSetup()),
+        MaterialPageRoute(builder: (context) => const ProfileSetup(
+          isProfileEditing: false,
+        )),
       );
     }
   }

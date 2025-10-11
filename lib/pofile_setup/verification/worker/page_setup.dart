@@ -188,12 +188,14 @@ class _ProfileSetupState extends State<ProfileSetup> {
         index: _selectedIndex,
         children: [
           BottomNavigation(
+            isProfileEditing: false,
             isSaving: _isSaving,
             actionName: _isSaving ? 'Uploading...' : 'Next Step',
             onTapAction: _handleNextStep,
             onBackAction: () {},
           ),
           BottomNavigation(
+            isProfileEditing: false,
             isSaving: _isSaving,
             actionName: _isSaving ? 'Verifying...' : 'Complete Verification',
             onTapAction: () {
