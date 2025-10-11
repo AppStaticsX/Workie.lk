@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:workie/values/color.dart';
 import 'package:workie/widgets/simple_textfeild.dart';
+import 'package:workie/services/overview_service.dart';
 
 class AddOverviewPage extends StatefulWidget {
   final ValueChanged<bool>? onTextChanged;
@@ -22,6 +24,29 @@ class AddOverviewPageState extends State<AddOverviewPage> {
   void initState() {
     super.initState();
     overviewController.addListener(_countLetters);
+    _loadExistingOverview();
+  }
+
+  Future<void> _loadExistingOverview() async {
+    try {
+      if (kDebugMode) print('Loading existing overview...');
+      final existingOverview = await OverviewService.getOverview();
+      if (kDebugMode) print('Fetched overview: $existingOverview');
+      
+      if (existingOverview != null && existingOverview.isNotEmpty) {
+        if (kDebugMode) print('Setting overview text: $existingOverview');
+        setState(() {
+          overviewController.text = existingOverview;
+          _letterCount = existingOverview.length;
+        });
+        _notifyParent();
+        if (kDebugMode) print('Overview loaded successfully');
+      } else {
+        if (kDebugMode) print('No existing overview found');
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error loading existing overview: $e');
+    }
   }
 
   void _countLetters() {
@@ -36,6 +61,12 @@ class AddOverviewPageState extends State<AddOverviewPage> {
     // Check if text has minimum 100 characters
     bool hasValidText = overviewController.text.trim().length >= 100;
     widget.onTextChanged?.call(hasValidText);
+  }
+
+  @override
+  void dispose() {
+    overviewController.dispose();
+    super.dispose();
   }
 
   @override
