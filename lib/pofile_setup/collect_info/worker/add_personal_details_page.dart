@@ -905,12 +905,13 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
             Expanded(
               child: DropdownButtonFormField<String>(
                 value: selectedProvince,
+                icon: const SizedBox.shrink(), // This removes the arrow icon
                 decoration: InputDecoration(
-                  hintText: 'Select Province',
+                  hintText: 'Province',
                   hintStyle: const TextStyle(color: Colors.grey, fontWeight: FontWeight.normal),
                   filled: true,
                   fillColor: Theme.of(context).colorScheme.tertiary,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  contentPadding: const EdgeInsets.only(left: 16, right: 16, top: 12, bottom: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
@@ -951,7 +952,7 @@ class AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                   });
                 },
               ),
-            ),
+            )
           ],
         ),
       ],

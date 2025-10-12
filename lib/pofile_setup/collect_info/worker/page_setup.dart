@@ -660,7 +660,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
             BottomNavigation(
               isProfileEditing: widget.isProfileEditing,
               isSaving: _isSaving,
-              actionName: 'Add Profile Title',
+              actionName: widget.isProfileEditing? 'Update Profile Title' : 'Add Profile Title',
               onTapAction: _navigateNext,
               onBackAction: _navigateBack,
             ),
@@ -680,6 +680,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
               },
               onBackAction: _navigateBack,
               onSkip: _skipNext,
+              isProfileEditing: widget.isProfileEditing,
             ),
             BottomNavigationWithSkip(
               isSaving: _isSaving,
@@ -687,6 +688,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
               onTapAction: _navigateNext,
               onBackAction: _navigateBack,
               onSkip: _skipNext,
+              isProfileEditing: widget.isProfileEditing,
             ),
             BottomNavigation(
               isProfileEditing: widget.isProfileEditing,

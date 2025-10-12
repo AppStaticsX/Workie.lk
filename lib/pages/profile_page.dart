@@ -337,28 +337,31 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
               ),
               // Profile content section
               _profileContent(context),
-              _statsContent(),
-              const SizedBox(height: 12),
-              Container(
-                width: MediaQuery.of(context).size.width,
-                color: Theme.of(context).colorScheme.secondary,
-                height: 12,
-              ),
-              _myMediaContents(context),
-              const SizedBox(height: 12),
-              Container(
-                width: MediaQuery.of(context).size.width,
-                color: Theme.of(context).colorScheme.secondary,
-                height: 12,
-              ),
-              _educationSection(context),
-              const SizedBox(height: 12),
-              Container(
-                width: MediaQuery.of(context).size.width,
-                color: Theme.of(context).colorScheme.secondary,
-                height: 12,
-              ),
-              _skillsSection(context)
+
+              if (selectedRole == 'job_seeker') ...[
+                _statsContent(),
+                const SizedBox(height: 12),
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  color: Theme.of(context).colorScheme.secondary,
+                  height: 12,
+                ),
+                _myMediaContents(context),
+                const SizedBox(height: 12),
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  color: Theme.of(context).colorScheme.secondary,
+                  height: 12,
+                ),
+                _educationSection(context),
+                const SizedBox(height: 12),
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  color: Theme.of(context).colorScheme.secondary,
+                  height: 12,
+                ),
+                _skillsSection(context),
+              ],
             ],
           ),
         ),
@@ -1223,7 +1226,36 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
         right: 16,
         top: 125, // Position to overlap background
         child: IconButton(
-            onPressed: (){},
+            onPressed: (){
+              Navigator.push(
+                context,
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) => ProfileSetup(
+                    isProfileEditing: true,
+                    selectedIndex: 3,
+                    onSuccessRedirect: () {
+                      Navigator.pop(context);
+                    },
+                  ),
+                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                    const begin = Offset(0.0, 1.0); // Start from bottom (0.0, 1.0)
+                    const end = Offset.zero; // End at normal position
+                    const curve = Curves.easeInOut;
+
+                    var tween = Tween(begin: begin, end: end).chain(
+                      CurveTween(curve: curve),
+                    );
+
+                    var offsetAnimation = animation.drive(tween);
+
+                    return SlideTransition(
+                      position: offsetAnimation,
+                      child: child,
+                    );
+                  },
+                ),
+              );
+            },
             icon: Icon(CupertinoIcons.pencil_outline, size: 32)
         )
     );

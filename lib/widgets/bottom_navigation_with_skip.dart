@@ -7,6 +7,7 @@ class BottomNavigationWithSkip extends StatelessWidget {
   final VoidCallback onBackAction;
   final VoidCallback onSkip;
   final bool isSaving;
+  final bool isProfileEditing;
 
   const BottomNavigationWithSkip({
     super.key,
@@ -14,7 +15,8 @@ class BottomNavigationWithSkip extends StatelessWidget {
     required this.onTapAction,
     required this.onBackAction,
     required this.onSkip,
-    required this.isSaving
+    required this.isSaving,
+    required this.isProfileEditing
   });
 
   @override
@@ -34,30 +36,37 @@ class BottomNavigationWithSkip extends StatelessWidget {
                 border: Border.all(
                     color: isSaving
                         ? Colors.grey
-                        : const Color(0xFF4E6BF5),
+                        : isProfileEditing? Colors.grey : const Color(0xFF4E6BF5),
                     width: 2.5
                 )
             ),
-            child: IconButton(
-              onPressed: isSaving? null : onBackAction,
-              icon: Icon(
-                  Iconsax.arrow_left_2_copy,
-                  color: isSaving
-                      ? Colors.grey
-                      : Theme.of(context).colorScheme.inverseSurface
-              ),
-            ),
+              child: isProfileEditing
+                  ? IconButton(
+                onPressed: null,
+                icon: Icon(
+                    Iconsax.arrow_left_2_copy,
+                    color: Colors.grey
+                ),
+              ) : IconButton(
+                onPressed: isSaving? null : onBackAction,
+                icon: Icon(
+                    Iconsax.arrow_left_2_copy,
+                    color: isSaving
+                        ? Colors.grey
+                        : Theme.of(context).colorScheme.inverseSurface
+                ),
+              )
           ),
           TextButton(
               onPressed: isSaving
                   ? null
-                  : onSkip,
+                  : isProfileEditing? null : onSkip,
               child: Text(
                 'Skip',
                 style: TextStyle(
                   color: isSaving
                       ? Colors.grey
-                      : Color(0xFF4E6BF5),
+                      : isProfileEditing? Colors.grey : Color(0xFF4E6BF5),
                   fontWeight: FontWeight.w900,
                   fontSize: 16,
                 ),

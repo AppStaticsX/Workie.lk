@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 
 class JobDetailsBottomSheet extends StatefulWidget {
@@ -279,7 +280,7 @@ class _JobDetailsBottomSheetState extends State<JobDetailsBottomSheet> with Sing
                     ),
                     tabs: const [
                       Tab(text: 'About'),
-                      Tab(text: 'Company'),
+                      Tab(text: 'Contact'),
                       Tab(text: 'Review'),
                     ],
                   ),
@@ -371,22 +372,11 @@ class _JobDetailsBottomSheetState extends State<JobDetailsBottomSheet> with Sing
               height: 1.5,
             ),
           ),
-          GestureDetector(
-            onTap: () {},
-            child: const Text(
-              'Read more',
-              style: TextStyle(
-                fontSize: 14,
-                color: Color(0xFF4E6BF5),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
 
           const SizedBox(height: 24),
 
           // Job Description section
-          Text(
+          /*Text(
             'Job Description',
             style: TextStyle(
               fontSize: 18,
@@ -422,7 +412,7 @@ class _JobDetailsBottomSheetState extends State<JobDetailsBottomSheet> with Sing
                 ],
               ),
             ),
-          ),
+          ),*/
 
           const SizedBox(height: 100),
         ],
@@ -434,28 +424,117 @@ class _JobDetailsBottomSheetState extends State<JobDetailsBottomSheet> with Sing
     return SingleChildScrollView(
       controller: scrollController,
       padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'About Company',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.inverseSurface,
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 6.0),
+                  child: CircleAvatar(
+                    radius: 40,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Anushka Umayanga',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () {},
+                              icon: const Icon(Icons.phone_in_talk, size: 24),
+                              label: const Text(
+                                'Call',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF4E6BF5),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 0,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () {},
+                              icon: const Icon(Icons.chat_rounded, size: 24),
+                              label: const Text(
+                                'Chat',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Theme.of(context).colorScheme.inverseSurface,
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                side: const BorderSide(
+                                  color: Color(0xFF4E6BF5),
+                                  width: 2,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          )
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Company information will be displayed here.',
-            style: const TextStyle(
-              fontSize: 15,
-              color: Colors.grey,
-              height: 1.5,
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton.icon(
+                onPressed: () {},
+                icon: SvgPicture.asset('assets/icon/whatsapp-svgrepo-com.svg', width: 24,),
+                label: const Text(
+                  'WhatsApp',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF38DE56),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+              ),
             ),
-          ),
-          const SizedBox(height: 100),
-        ],
+            const SizedBox(height: 100),
+          ],
+        ),
       ),
     );
   }
