@@ -38,18 +38,31 @@ This document outlines the fixes applied to resolve the "verification code email
 
 ## Testing the Fix
 
-### Backend Email Service Test
+### Enhanced Email Service Test
 Run this command to test if email configuration works:
 ```bash
 cd backend
-node test-email.js
+npm run test:email
+# OR
+node test-email-enhanced.js
 ```
 
 ### OTP Endpoints Test
 To test the OTP endpoints (requires server running):
 ```bash
 cd backend
-node test-otp.js
+npm run test:otp
+# OR
+node test-otp-enhanced.js
+```
+
+### Interactive Fix Utility
+Run this for comprehensive diagnosis and fixes:
+```bash
+cd backend
+npm run fix:email
+# OR
+node fix-email.js
 ```
 
 ## Verification Steps
