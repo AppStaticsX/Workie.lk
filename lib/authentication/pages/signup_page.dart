@@ -247,15 +247,31 @@ class _SignupPageState extends State<SignupPage> with TickerProviderStateMixin {
       });
 
       if (result['success'] == true) { // More explicit boolean check
-        showDialog(
-            context: context,
-            builder: (context) => FullScreenPopupDialog(
-                darkLottie: 'assets/animation/lottie_feedback_happy_dark.json',
-                lightLottie: 'assets/animation/lottie_feedback_happy.json',
-                title: 'Hooooray!',
-                subTitle: 'Your account created successfully. Please check your email for verification.'
-            )
-        );
+        // Check if email was successfully sent
+        bool emailSent = result['emailSent'] ?? true; // Default to true for backwards compatibility
+        
+        if (emailSent) {
+          showDialog(
+              context: context,
+              builder: (context) => FullScreenPopupDialog(
+                  darkLottie: 'assets/animation/lottie_feedback_happy_dark.json',
+                  lightLottie: 'assets/animation/lottie_feedback_happy.json',
+                  title: 'Hooooray!',
+                  subTitle: 'Your account created successfully. Please check your email for verification.'
+              )
+          );
+        } else {
+          // Registration successful but email failed to send
+          showDialog(
+              context: context,
+              builder: (context) => FullScreenPopupDialog(
+                  darkLottie: 'assets/animation/lottie_feedback_happy_dark.json',
+                  lightLottie: 'assets/animation/lottie_feedback_happy.json',
+                  title: 'Account Created!',
+                  subTitle: 'Your account was created successfully, but we couldn\'t send the verification email. Please use the resend option on the next page.'
+              )
+          );
+        }
 
         _navigateToVerification();
       } else {

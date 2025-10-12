@@ -901,4 +901,155 @@ class PostDataService {
       throw Exception('Network error: $e');
     }
   }
+
+  /// Extract user ID from post data
+  static String? getUserIdFromPostData(Map<String, dynamic> postData) {
+    try {
+      // Check different possible fields for user ID
+      if (postData['userId'] != null) {
+        // If userId is a string or object with _id
+        if (postData['userId'] is String) {
+          return postData['userId'];
+        } else if (postData['userId'] is Map && postData['userId']['_id'] != null) {
+          return postData['userId']['_id'].toString();
+        }
+      }
+
+      // Check userInfo field
+      if (postData['userInfo'] != null && postData['userInfo']['userId'] != null) {
+        return postData['userInfo']['userId'].toString();
+      }
+
+      // Check if there's a direct _id in userInfo
+      if (postData['userInfo'] != null && postData['userInfo']['_id'] != null) {
+        return postData['userInfo']['_id'].toString();
+      }
+
+      // Check author field (sometimes posts might have this)
+      if (postData['author'] != null) {
+        if (postData['author'] is String) {
+          return postData['author'];
+        } else if (postData['author'] is Map && postData['author']['_id'] != null) {
+          return postData['author']['_id'].toString();
+        }
+      }
+
+      if (kDebugMode) {
+        print('⚠️ Could not extract user ID from post data');
+        print('Available keys: ${postData.keys.toList()}');
+      }
+
+      return null;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error extracting user ID from post data: $e');
+      }
+      return null;
+    }
+  }
+
+  /// Get user profile data by user ID and extract title
+  static Future<String?> getUserTitleByUserId(String userId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token == null) {
+        if (kDebugMode) {
+          print('❌ Authentication token not found');
+        }
+        return null;
+      }
+
+      final uri = Uri.parse('$baseUrl/profiles/$userId');
+      final response = await http.get(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          final profileData = data['data'];
+          
+          // Extract title from profile data
+          String? title;
+          
+          // Check direct title field
+          if (profileData['title'] != null && profileData['title'].toString().isNotEmpty) {
+            title = profileData['title'].toString();
+          }
+          
+          // Check profile object within profile data
+          else if (profileData['profile'] != null && profileData['profile']['title'] != null) {
+            title = profileData['profile']['title'].toString();
+          }
+          
+          if (kDebugMode) {
+            print('✅ Retrieved title for user $userId: $title');
+          }
+          
+          return title;
+        } else {
+          if (kDebugMode) {
+            print('⚠️ No profile data found for user: $userId');
+          }
+          return null;
+        }
+      } else if (response.statusCode == 404) {
+        if (kDebugMode) {
+          print('⚠️ Profile not found for user: $userId');
+        }
+        return null;
+      } else {
+        if (kDebugMode) {
+          print('❌ Failed to fetch profile for user $userId: ${response.statusCode}');
+        }
+        return null;
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error fetching user title for user $userId: $e');
+      }
+      return null;
+    }
+  }
+
+  /// Get user title from post data by extracting user ID and fetching profile
+  static Future<String?> getUserTitleFromPostData(Map<String, dynamic> postData) async {
+    try {
+      // First extract user ID from post data
+      final userId = getUserIdFromPostData(postData);
+      
+      if (userId == null) {
+        if (kDebugMode) {
+          print('⚠️ Cannot get user title: User ID not found in post data');
+        }
+        return null;
+      }
+
+      // Then fetch user title using the user ID
+      final title = await getUserTitleByUserId(userId);
+      
+      if (title != null) {
+        if (kDebugMode) {
+          print('✅ Successfully retrieved user title from post data: $title');
+        }
+        return title;
+      } else {
+        if (kDebugMode) {
+          print('⚠️ No title found for user ID: $userId');
+        }
+        return null;
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error getting user title from post data: $e');
+      }
+      return null;
+    }
+  }
 }
