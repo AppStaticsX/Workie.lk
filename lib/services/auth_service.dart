@@ -11,7 +11,8 @@ import 'socket_service.dart';
 
 class AuthService {
   // Replace with your actual base URL
-  static const String baseUrl = 'https://workie-lk-backend.onrender.com/api/auth';
+  // static const String baseUrl = 'http://localhost:5000/api/auth'; // Local backend for testing
+  static const String baseUrl = 'https://workie-lk-backend.onrender.com/api/auth'; // Production backend
 
   // Singleton pattern
   static final AuthService _instance = AuthService._internal();
@@ -326,7 +327,8 @@ class AuthService {
         return {
           'success': true,
           'data': responseData['data'],
-          'message': responseData['message'] ?? 'Registration successful'
+          'message': responseData['message'] ?? 'Registration successful',
+          'emailSent': responseData['emailSent'] ?? true
         };
       } else {
         return {

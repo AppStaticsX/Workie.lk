@@ -30,6 +30,7 @@ class _CoverPicBottomsheetState extends State<CoverPicBottomsheet> {
   File? _selectedImage;
   Uint8List? _webImageBytes;
   bool _showCurrentImage = true;
+  bool _isUploading = false;
 
   final GlobalKey<CustomDashedCoverPhotoPickerState> _photoPickerKey = GlobalKey<CustomDashedCoverPhotoPickerState>();
 
@@ -243,14 +244,16 @@ class _CoverPicBottomsheetState extends State<CoverPicBottomsheet> {
         ),
         const SizedBox(width: 24),
         ElevatedButton(
-          onPressed: (_selectedImage != null || _webImageBytes != null) ? () async {
+          onPressed: (_selectedImage != null || _webImageBytes != null) && !_isUploading ? () async {
+            // Set uploading state
+            setState(() {
+              _isUploading = true;
+            });
+
             // Generate a filename based on current timestamp
             final fileName = 'cover_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
             try {
-              // Show loading indicator (optional)
-              // You might want to add a loading state here
-
               // Upload the cover photo
               final result = await ProfileService.uploadCoverPhoto(
                 imageFile: _selectedImage,
@@ -294,6 +297,13 @@ class _CoverPicBottomsheetState extends State<CoverPicBottomsheet> {
                   ),
                 );
               }
+            } finally {
+              // Reset uploading state
+              if (mounted) {
+                setState(() {
+                  _isUploading = false;
+                });
+              }
             }
           } : null,
           style: ElevatedButton.styleFrom(
@@ -303,13 +313,42 @@ class _CoverPicBottomsheetState extends State<CoverPicBottomsheet> {
               borderRadius: BorderRadius.all(Radius.circular(10)),
             ),
           ),
-          child: Text(
-              'Upload Photo',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold
-              )
-          ),
+          child: _isUploading
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Transform.scale(
+                        scale: 0.45, // Makes it half the size
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 0),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 9,
+                            color: Colors.white,
+                            strokeCap: StrokeCap.square,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Uploading...',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold
+                      )
+                    ),
+                  ],
+                )
+              : Text(
+                  'Upload Photo',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold
+                  )
+                ),
         ),
       ],
     );

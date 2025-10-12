@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/work_experience_model.dart';
+import 'company_logo_service.dart';
 
 /// Service class for handling work experience data operations with the backend API
 /// 
@@ -396,5 +397,71 @@ class ExperienceDataService {
         'message': 'An error occurred while saving work experience: ${e.toString()}',
       };
     }
+  }
+
+  /// Get user experience data with company logos
+  static Future<Map<String, dynamic>> getUserExperienceDataWithLogos() async {
+    try {
+      // Get experience data
+      final List<WorkExperienceModel>? experienceData = await getUserExperienceData();
+      
+      if (experienceData == null || experienceData.isEmpty) {
+        return {
+          'experience': <WorkExperienceModel>[],
+          'logos': <String, String>{},
+        };
+      }
+
+      // Extract unique company names
+      final Set<String> uniqueCompanyNames = experienceData
+          .map((experience) => experience.company)
+          .where((company) => company.isNotEmpty)
+          .toSet();
+
+      // Get company logos using the company logo service
+      Map<String, String> companyLogos = {};
+      
+      try {
+        final companyInfoResults = await CompanyLogoService.getMultipleCompanyLogos(
+          uniqueCompanyNames.toList()
+        );
+
+        for (var entry in companyInfoResults.entries) {
+          final companyName = entry.key;
+          final companyInfo = entry.value;
+          
+          if (companyInfo.logoUrl != null && companyInfo.logoUrl!.isNotEmpty) {
+            companyLogos[companyName] = companyInfo.logoUrl!;
+          } else {
+            // Use fallback logo URL
+            companyLogos[companyName] = CompanyLogoService.getFallbackLogoUrl(companyName);
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) print('Error fetching company logos: $e');
+        // Fallback: use simple clearbit approach for all companies
+        for (String companyName in uniqueCompanyNames) {
+          companyLogos[companyName] = 'https://logo.clearbit.com/${_extractDomainFromCompany(companyName)}';
+        }
+      }
+
+      return {
+        'experience': experienceData,
+        'logos': companyLogos,
+      };
+    } catch (e) {
+      if (kDebugMode) print('Error fetching experience data with logos: $e');
+      return {
+        'experience': <WorkExperienceModel>[],
+        'logos': <String, String>{},
+      };
+    }
+  }
+
+  /// Extract domain-like string from company name for logo service
+  static String _extractDomainFromCompany(String companyName) {
+    // Convert company name to lowercase and replace spaces with empty string
+    // This is a simple approach - you might want to make it more sophisticated
+    return companyName.toLowerCase().replaceAll(' ', '').replaceAll(',', '').replaceAll('.', '');
   }
 }

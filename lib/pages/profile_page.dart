@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workie/pages/components/cover_pic_bottomsheet.dart';
 import 'package:workie/pages/components/edit_post_screen.dart';
 import 'package:workie/pages/components/education_detail_model.dart';
+import 'package:workie/pages/components/experience_detail_model.dart';
 import 'package:workie/pages/components/profile_page_post_helper.dart';
 import 'package:workie/pages/components/profile_pic_bottomsheet.dart';
 
@@ -15,7 +16,9 @@ import '../services/pull_data/current_user_posts.dart';
 import '../models/post_model.dart';
 import '../services/pull_data/post_data_service.dart';
 import '../services/education_data_service.dart';
+import '../services/experience_data_service.dart';
 import '../models/education_model.dart';
+import '../models/work_experience_model.dart';
 import '../services/hive_service.dart';
 import '../services/get_user_skills.dart';
 
@@ -57,6 +60,11 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
   Map<String, String> _schoolLogos = {};
   bool _isLoadingEducation = false;
 
+  // Add these variables for experience
+  List<WorkExperienceModel> _userExperience = [];
+  Map<String, String> _companyLogos = {};
+  bool _isLoadingExperience = false;
+
   // Add these variables for saved posts
   List<Map<String, dynamic>> _savedPosts = [];
   bool _isLoadingSavedPosts = false;
@@ -71,6 +79,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     _getUserData();
     _loadUserPosts();
     _loadEducationData();
+    _loadExperienceData();
     _loadSavedPosts();
     _loadUserSkills();
     super.initState();
@@ -147,6 +156,30 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
         _isLoadingEducation = false;
         _userEducation = [];
         _schoolLogos = {};
+      });
+    }
+  }
+
+  Future<void> _loadExperienceData() async {
+    setState(() {
+      _isLoadingExperience = true;
+    });
+
+    try {
+      final result = await ExperienceDataService.getUserExperienceDataWithLogos();
+      final experienceData = result['experience'] as List<WorkExperienceModel>;
+      final logos = result['logos'] as Map<String, String>;
+
+      setState(() {
+        _userExperience = experienceData;
+        _companyLogos = logos;
+        _isLoadingExperience = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingExperience = false;
+        _userExperience = [];
+        _companyLogos = {};
       });
     }
   }
@@ -280,6 +313,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     await _getUserData();
     await _loadUserPosts();
     await _loadEducationData();
+    await _loadExperienceData();
     await _loadSavedPosts();
     await _loadUserSkills();
   }
@@ -354,6 +388,13 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                   height: 12,
                 ),
                 _educationSection(context),
+                const SizedBox(height: 12),
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  color: Theme.of(context).colorScheme.secondary,
+                  height: 12,
+                ),
+                _experienceSection(context),
                 const SizedBox(height: 12),
                 Container(
                   width: MediaQuery.of(context).size.width,
@@ -492,6 +533,67 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     );
   }
 
+  Widget _experienceSection(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+              child: Text(
+                  'Experience',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.5
+                  )
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: IconButton(
+                  onPressed: (){
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) => ProfileSetup(
+                          isProfileEditing: true,
+                          selectedIndex: 5, // Assuming experience is at index 5
+                          onSuccessRedirect: () {
+                            Navigator.pop(context);
+                          },
+                        ),
+                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                          const begin = Offset(0.0, 1.0); // Start from bottom
+                          const end = Offset.zero; // End at normal position
+                          const curve = Curves.easeInOut;
+
+                          var tween = Tween(begin: begin, end: end).chain(
+                            CurveTween(curve: curve),
+                          );
+
+                          var offsetAnimation = animation.drive(tween);
+
+                          return SlideTransition(
+                            position: offsetAnimation,
+                            child: child,
+                          );
+                        },
+                      ),
+                    );
+                    _navigateToExperienceEdit();
+                  },
+                  icon: Icon(CupertinoIcons.add)
+              ),
+            )
+          ],
+        ),
+        // Experience content
+        _buildExperienceContent(),
+      ],
+    );
+  }
+
   Widget _buildEducationContent() {
     if (_isLoadingEducation) {
       return const Padding(
@@ -548,6 +650,69 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
             startDate: education.startYear,
             endDate: education.endYear ?? 'Present',
             schoolUrl: _schoolLogos[education.school] ?? 'https://logo.clearbit.com/edu',
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildExperienceContent() {
+    if (_isLoadingExperience) {
+      return const Padding(
+        padding: EdgeInsets.all(32.0),
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_userExperience.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 32.0),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(
+                CupertinoIcons.briefcase,
+                size: 48,
+                color: Colors.grey[400],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'No Experience Added',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Add your work experience to showcase your background',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[500],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: _userExperience.map((experience) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16.0, top: 8),
+          child: ExperienceDetailModel(
+            company: experience.company,
+            position: experience.title,
+            location: experience.location,
+            startDate: experience.startMonth,
+            endDate: experience.dateRange,
+            companyUrl: _companyLogos[experience.company] ?? 'https://logo.clearbit.com/company.com',
+            isCurrentJob: experience.isCurrentWork,
           ),
         );
       }).toList(),
@@ -1024,6 +1189,16 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
 
     // For now, just refresh education data
     _loadEducationData();
+  }
+
+  void _navigateToExperienceEdit() {
+    // Navigate to experience management page or show bottom sheet
+    // For now, just refresh the experience data
+    // You can navigate to the AddExperiencePage here
+    // Navigator.push(context, MaterialPageRoute(builder: (context) => AddExperiencePage()));
+
+    // For now, just refresh experience data
+    _loadExperienceData();
   }
 
   // Method to refresh saved posts when called from other parts of the app

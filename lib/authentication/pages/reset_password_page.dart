@@ -205,7 +205,9 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> with TickerProvid
         }
 
       } else {
-        //CustomToast.show(result['message'], Iconsax.close_circle);
+        setState(() {
+          _errorMessage = result['message'] ?? 'Failed to send reset PIN. Please try again.';
+        });
       }
     } catch (e) {
       setState(() {

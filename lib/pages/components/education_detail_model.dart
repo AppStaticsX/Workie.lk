@@ -33,10 +33,29 @@ class _EducationDetailModelState extends State<EducationDetailModel> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Image.network(
-            widget.schoolUrl,
-            width: 50,
-            height: 50,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(50),
+            child: Image.network(
+              widget.schoolUrl,
+              width: 50,
+              height: 50,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.secondary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Iconsax.building,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 24,
+                  ),
+                );
+              },
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
