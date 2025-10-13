@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:async';
 import 'package:http/http.dart' as http;
-import 'package:workie/secrets/apikeys.dart';
+import 'package:workie/secrets/app_secrets.dart';
 
 class GooglePlacesService {
   // TODO: Replace with your actual Google Places API key

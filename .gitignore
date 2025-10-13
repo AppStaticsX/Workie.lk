@@ -57,3 +57,5 @@ Workie.zip
 
 #frontend
 /lib/secrets/
+/lib/services/twilio_config.dart
+lib/services/twilio_config.dart

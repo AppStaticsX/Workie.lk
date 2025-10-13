@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
-import '../secrets/apikeys.dart';
+import '../secrets/app_secrets.dart';
 class AIPostGenerationService {
   // Multiple API endpoints for redundancy (as suggested in Puter tutorial)
   static const List<Map<String, String>> _apiEndpoints = [

@@ -19,6 +19,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
   int _selectedIndex = 0;
   bool _isNicSelected = false;
   bool _isSaving = false;
+  bool _isMobileVerified = false;
 
   // Store uploaded images
   File? _frontImage;
@@ -181,14 +182,20 @@ class _ProfileSetupState extends State<ProfileSetup> {
           NICVerification(
             onSelectionChanged: _onNicSelectionChanged,
           ),
-          const MobileVerification()
+          MobileVerification(
+            onVerificationComplete: (isVerified) {
+              setState(() {
+                _isMobileVerified = isVerified;
+              });
+            },
+          )
         ],
       ),
       bottomNavigationBar: IndexedStack(
         index: _selectedIndex,
         children: [
           BottomNavigation(
-            isProfileEditing: false,
+            isProfileEditing: true,
             isSaving: _isSaving,
             actionName: _isSaving ? 'Uploading...' : 'Next Step',
             onTapAction: _handleNextStep,
@@ -199,10 +206,26 @@ class _ProfileSetupState extends State<ProfileSetup> {
             isSaving: _isSaving,
             actionName: _isSaving ? 'Verifying...' : 'Complete Verification',
             onTapAction: () {
+              if (!_isMobileVerified) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Please verify your mobile number before continuing.',
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.inverseSurface
+                      ),
+                    ),
+                    backgroundColor: Theme.of(context).colorScheme.secondary,
+                  ),
+                );
+                return;
+              }
+
               Navigator.pushReplacement(
-                  context, MaterialPageRoute(
-                    builder: (context) => MainScreen()
-                )
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => MainScreen()
+                  )
               );
             },
             onBackAction: () {
