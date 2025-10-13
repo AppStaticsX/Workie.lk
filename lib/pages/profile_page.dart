@@ -21,6 +21,7 @@ import '../models/education_model.dart';
 import '../models/work_experience_model.dart';
 import '../services/hive_service.dart';
 import '../services/get_user_skills.dart';
+import '../services/get_current_user_profile_data.dart';
 
 class ProfileTabPage extends StatefulWidget {
 
@@ -43,8 +44,9 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
   String _userAvatarUrl = '';
   String _userTitle = '';
   String _userCoverImageUrl = '';
-
   String _selectedChipLable = 'Posts';
+
+  bool _isVerified = false;
 
   // Add this variable to track selected chip
   int selectedChipIndex = 0;
@@ -73,6 +75,13 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
   List<Map<String, dynamic>> _userSkills = [];
   bool _isLoadingSkills = false;
 
+  // Add these variables for profile stats
+  double _averageRating = 0.0;
+  int _ratingCount = 0;
+  int _completedJobs = 0;
+  double _totalEarnings = 0.0;
+  bool _isLoadingStats = false;
+
   @override
   void initState() {
     _loadUserRole();
@@ -82,6 +91,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     _loadExperienceData();
     _loadSavedPosts();
     _loadUserSkills();
+    _loadProfileStats();
     super.initState();
   }
 
@@ -117,6 +127,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
         _userCity = userData.address!.city!;
         _userProvince = userData.address!.state!;
         _userTitle = userData.profile!.title!;
+        _isVerified = userData.isVerified;
       });
     }
 
@@ -207,6 +218,43 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
       setState(() {
         _isLoadingSkills = false;
         _userSkills = [];
+      });
+    }
+  }
+
+  Future<void> _loadProfileStats() async {
+    setState(() {
+      _isLoadingStats = true;
+    });
+
+    try {
+      final stats = await GetCurrentUserProfileDataService.getCurrentUserStats();
+      if (stats != null) {
+        final ratings = stats['ratings'] as Map<String, dynamic>?;
+        setState(() {
+          _averageRating = (ratings?['average'] as num?)?.toDouble() ?? 0.0;
+          _ratingCount = (ratings?['count'] as num?)?.toInt() ?? 0;
+          _completedJobs = (stats['completedJobs'] as num?)?.toInt() ?? 0;
+          _totalEarnings = (stats['totalEarnings'] as num?)?.toDouble() ?? 0.0;
+          _isLoadingStats = false;
+        });
+      } else {
+        setState(() {
+          _averageRating = 0.0;
+          _ratingCount = 0;
+          _completedJobs = 0;
+          _totalEarnings = 0.0;
+          _isLoadingStats = false;
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error loading profile stats: $e');
+      setState(() {
+        _isLoadingStats = false;
+        _averageRating = 0.0;
+        _ratingCount = 0;
+        _completedJobs = 0;
+        _totalEarnings = 0.0;
       });
     }
   }
@@ -316,6 +364,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     await _loadExperienceData();
     await _loadSavedPosts();
     await _loadUserSkills();
+    await _loadProfileStats();
   }
 
   @override
@@ -339,7 +388,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
             onPressed: () {
               // Navigate to settings
             },
-            icon: const Icon(Iconsax.setting, color: Colors.white),
+            icon: const Icon(Iconsax.setting_copy, color: Colors.white),
           ),
         ],
       ),
@@ -1230,6 +1279,17 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
   }
 
   Widget _statsContent() {
+    // Helper function to format earnings display
+    String formatEarnings(double amount) {
+      if (amount >= 1000000) {
+        return '${(amount / 1000000).toStringAsFixed(1)}M';
+      } else if (amount >= 1000) {
+        return '${(amount / 1000).toStringAsFixed(1)}K';
+      } else {
+        return amount.toStringAsFixed(0);
+      }
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Row(
@@ -1239,8 +1299,8 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Icon(Iconsax.star),
-                Text('4.9', style: TextStyle(fontSize: 18),),
-                Text('(23 Reviews)', style: TextStyle(fontSize: 14),)
+                Text('${_averageRating.toStringAsFixed(1)}', style: TextStyle(fontSize: 18),),
+                Text('($_ratingCount Review${_ratingCount != 1 ? 's' : ''})', style: TextStyle(fontSize: 14),)
               ],
             ),
           ),
@@ -1255,7 +1315,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Icon(Iconsax.briefcase),
-                Text('23', style: TextStyle(fontSize: 18),),
+                Text('$_completedJobs', style: TextStyle(fontSize: 18),),
                 Text('Total Works', style: TextStyle(fontSize: 14),)
               ],
             ),
@@ -1271,7 +1331,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Icon(Iconsax.money),
-                Text('50.5K', style: TextStyle(fontSize: 18),),
+                Text('${formatEarnings(_totalEarnings)}', style: TextStyle(fontSize: 18),),
                 Text('Total Earning', style: TextStyle(fontSize: 14),)
               ],
             ),
@@ -1298,7 +1358,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                 ),
               ),
               const SizedBox(width: 12),
-              Icon(Iconsax.verify)
+              Icon(_isVerified? Iconsax.verify : null)
             ],
           ),
           if (selectedRole == 'job_seeker')

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:workie/screens/main_screen.dart';
 import 'package:workie/widgets/bottom_navigation.dart';
 import 'package:workie/pofile_setup/verification/worker/mobile_verification.dart';
@@ -156,10 +157,11 @@ class _ProfileSetupState extends State<ProfileSetup> {
         backgroundColor: const Color(0xFF4E6BF5),
         surfaceTintColor: Colors.transparent,
         leading: const Icon(
-          Icons.verified_user_outlined,
-          size: 26,
+          Iconsax.shield_tick_copy,
+          size: 30,
+          color: Colors.white,
         ),
-        title: Text('Create & Verify Your Profile',
+        title: Text('Verify Your Profile',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Colors.white

@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../socket_service.dart';
 import '../../models/media_item_model.dart';
+import 'get_user_data.dart';
 
 class PostDataService {
   static const String baseUrl = 'https://workie-lk-backend.onrender.com/api';
@@ -410,6 +411,8 @@ class PostDataService {
         }
       }
 
+      final userData = await GetUserDataService.getCurrentUserData();
+
       final formattedPost = {
         'id': backendPost['_id'] ?? '',
         'profileImageUrl': profilePicture.isNotEmpty
@@ -420,7 +423,7 @@ class PostDataService {
             : 'Unknown User',
         'userTitle': userTitle,//'Professional Carpenter Specializing in Custom Furniture & Woodcraft',
         'timeAgo': _formatTimestamp(backendPost['createdAt']),
-        'isVerified': true,
+        'isVerified': userData?.isVerified,
         'content': content,
         'mediaUrls': mediaItems,
         'hashtags': hashtags,

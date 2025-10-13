@@ -375,7 +375,7 @@ class _MobileVerificationState extends State<MobileVerification>
             floatingLabelBehavior: FloatingLabelBehavior.always,
             hintText: '7XXXXXXXX',
             hintStyle: const TextStyle(color: Colors.grey),
-            prefixIcon: const Icon(Iconsax.mobile_copy),
+            prefixIcon: const Icon(Iconsax.call_add_copy),
             prefixText: '+94 ',
             prefixStyle: TextStyle(
               color: Theme.of(context).colorScheme.inverseSurface,
@@ -607,6 +607,8 @@ class _MobileVerificationState extends State<MobileVerification>
         '${_countdown}s',
         style: const TextStyle(
           fontSize: 18,
+          color: Colors.white,
+          fontWeight: FontWeight.bold
         ),
       );
     }

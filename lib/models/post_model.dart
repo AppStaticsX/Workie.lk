@@ -421,7 +421,7 @@ class _PostCardModelState extends State<PostCardModel> {
                     const SizedBox(width: 4),
                     if (widget.isVerified)
                       Icon(
-                          Iconsax.verify,
+                          widget.isVerified? Iconsax.verify : null,
                           size: 18
                       ),
                     const SizedBox(width: 4),
