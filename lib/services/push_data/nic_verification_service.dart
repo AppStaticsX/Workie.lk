@@ -2,8 +2,10 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import '../../secrets/app_secrets.dart';
+
 class NicVerificationService {
-  static const String baseUrl = 'https://workie-lk-backend.onrender.com/api'; // Update with your backend URL
+  static const String baseUrl = '${SERVER.serverURL}/api'; // Update with your backend URL
 
   /// Upload NIC verification documents (front and back photos)
   static Future<Map<String, dynamic>> uploadNicDocuments({

@@ -2,9 +2,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/media_item_model.dart';
+import '../../secrets/app_secrets.dart';
 
 class CurrentUserPostsService {
-  static const String baseUrl = 'https://workie-lk-backend.onrender.com/api';
+  static const String baseUrl = '${SERVER.serverURL}/api';
 
   /// Get current user's ID from JWT token
   static Future<String?> getCurrentUserId() async {

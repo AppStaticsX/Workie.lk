@@ -3,8 +3,10 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../secrets/app_secrets.dart';
+
 class OverviewService {
-  static const String baseUrl = 'https://workie-lk-backend.onrender.com';
+  static const String baseUrl = SERVER.serverURL;
 
   // Get existing overview/bio from the profile
   static Future<String?> getOverview() async {

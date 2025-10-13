@@ -2,10 +2,11 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../secrets/app_secrets.dart';
 import 'hive_service.dart';
 
 class WorkCategoryService {
-  static const String _baseUrl = 'https://workie-lk-backend.onrender.com';
+  static const String _baseUrl = SERVER.serverURL;
   static const String _authTokenKey = 'auth_token';
 
   // Get auth token from SharedPreferences

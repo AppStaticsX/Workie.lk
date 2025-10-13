@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../secrets/app_secrets.dart';
+
 class TitleService {
-  static const String baseUrl = 'https://workie-lk-backend.onrender.com/api';
+  static const String baseUrl = '${SERVER.serverURL}/api';
 
   /// Save or update user's work title
   static Future<Map<String, dynamic>> saveTitle({

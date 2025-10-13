@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../secrets/app_secrets.dart';
 import 'background_notification_service.dart';
 import 'post_notification_service.dart';
 import 'socket_service.dart';
@@ -12,7 +13,7 @@ import 'socket_service.dart';
 class AuthService {
   // Replace with your actual base URL
   // static const String baseUrl = 'http://localhost:5000/api/auth'; // Local backend for testing
-  static const String baseUrl = 'https://workie-lk-backend.onrender.com/api/auth'; // Production backend
+  static const String baseUrl = '${SERVER.serverURL}/api/auth'; // Production backend
 
   // Singleton pattern
   static final AuthService _instance = AuthService._internal();

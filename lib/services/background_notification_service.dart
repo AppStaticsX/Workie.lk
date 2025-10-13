@@ -6,6 +6,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
+import '../secrets/app_secrets.dart';
+
 /// Background service for handling notifications when app is in background
 class BackgroundNotificationService {
   static const String _isolateName = 'background_notification_isolate';
@@ -247,7 +249,7 @@ class BackgroundNotificationService {
 
       // Initialize socket connection
       final socket = IO.io(
-        'https://workie-lk-backend.onrender.com',
+        SERVER.serverURL,
         IO.OptionBuilder()
             .setTransports(['websocket'])
             .enableAutoConnect()

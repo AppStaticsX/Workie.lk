@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import '../secrets/app_secrets.dart';
 import 'notification_service.dart';
 import 'socket_service.dart';
 
@@ -175,7 +176,7 @@ class PostNotificationService {
 
       if (token != null) {
         // Make API call to get post details
-        final postDetailsUrl = 'https://workie-lk-backend.onrender.com/api/posts/single/$postId';
+        final postDetailsUrl = '${SERVER.serverURL}/api/posts/single/$postId';
 
         try {
           final response = await http.get(

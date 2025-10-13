@@ -6,8 +6,10 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../secrets/app_secrets.dart';
+
 class ClientPostService {
-  static const String _baseUrl = 'https://workie-lk-backend.onrender.com/api/jobs';
+  static const String _baseUrl = '${SERVER.serverURL}/api/jobs';
   static const String _authTokenKey = 'auth_token';
   static const String _userIdKey = 'USER_ID';
 

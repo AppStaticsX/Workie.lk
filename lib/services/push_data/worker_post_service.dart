@@ -4,8 +4,10 @@ import 'dart:convert';
 import 'package:http_parser/http_parser.dart';
 import 'dart:async';
 
+import '../../secrets/app_secrets.dart';
+
 class WorkerPostService {
-  static const String baseUrl = 'https://workie-lk-backend.onrender.com/api'; // Change to your backend URL
+  static const String baseUrl = '${SERVER.serverURL}/api'; // Change to your backend URL
 
   /// Uploads images/videos to the backend and returns the uploaded file info.
   static Future<List<Map<String, dynamic>>> uploadPostMedia({

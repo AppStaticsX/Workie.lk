@@ -3,8 +3,10 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../secrets/app_secrets.dart';
+
 class GetCurrentUserProfileDataService {
-  static const String _baseUrl = 'https://workie-lk-backend.onrender.com';
+  static const String _baseUrl = SERVER.serverURL;
   static const String _authTokenKey = 'auth_token';
   static const String _userIdKey = 'USER_ID';
 

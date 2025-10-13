@@ -9,6 +9,7 @@ import 'package:workie/pages/components/education_detail_model.dart';
 import 'package:workie/pages/components/experience_detail_model.dart';
 import 'package:workie/pages/components/profile_page_post_helper.dart';
 import 'package:workie/pages/components/profile_pic_bottomsheet.dart';
+import 'package:workie/pages/settings_page.dart';
 
 import '../pofile_setup/collect_info/worker/page_setup.dart';
 import '../services/pull_data/get_user_data.dart';
@@ -386,7 +387,25 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
         actions: [
           IconButton(
             onPressed: () {
-              // Navigate to settings
+              Navigator.push(
+                context,
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) => const SettingsPage(),
+                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                    const begin = Offset(1.0, 0.0); // Start from right
+                    const end = Offset.zero; // End at current position
+                    const curve = Curves.easeInOut;
+
+                    var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                    var offsetAnimation = animation.drive(tween);
+
+                    return SlideTransition(
+                      position: offsetAnimation,
+                      child: child,
+                    );
+                  },
+                ),
+              );
             },
             icon: const Icon(Iconsax.setting_copy, color: Colors.white),
           ),

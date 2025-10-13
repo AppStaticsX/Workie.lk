@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
+import '../secrets/app_secrets.dart';
+
 class SocketService {
   static final SocketService _instance = SocketService._internal();
   factory SocketService() => _instance;
@@ -29,7 +31,7 @@ class SocketService {
 
       // Initialize socket connection
       _socket = IO.io(
-        'https://workie-lk-backend.onrender.com',
+        SERVER.serverURL,
         IO.OptionBuilder()
             .setTransports(['websocket'])
             .enableAutoConnect()

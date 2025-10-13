@@ -795,6 +795,12 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
                             onTap: (){},
                             textColor: Theme.of(context).colorScheme.inverseSurface
                         ),
+                        PopupMenuOption(
+                            title: 'Translate',
+                            icon: Iconsax.translate_copy,
+                            onTap: (){},
+                            textColor: Theme.of(context).colorScheme.inverseSurface
+                        ),
                       ],
                       iconSize: 24,
                       //popupMenuItemIconColor: Theme.of(context).colorScheme.inverseSurface,

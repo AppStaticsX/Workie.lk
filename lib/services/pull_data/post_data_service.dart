@@ -2,12 +2,13 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../secrets/app_secrets.dart';
 import '../socket_service.dart';
 import '../../models/media_item_model.dart';
 import 'get_user_data.dart';
 
 class PostDataService {
-  static const String baseUrl = 'https://workie-lk-backend.onrender.com/api';
+  static const String baseUrl = '${SERVER.serverURL}/api';
 
   /// Get feed posts for home page
   static Future<List<Map<String, dynamic>>> getFeedPosts({

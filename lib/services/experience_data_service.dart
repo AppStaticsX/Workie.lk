@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/work_experience_model.dart';
+import '../secrets/app_secrets.dart';
 import 'company_logo_service.dart';
 
 /// Service class for handling work experience data operations with the backend API
@@ -14,7 +15,7 @@ import 'company_logo_service.dart';
 /// 
 /// Used primarily when the "Add Education" button is clicked in the profile setup flow
 class ExperienceDataService {
-  static const String _baseUrl = 'https://workie-lk-backend.onrender.com/api';
+  static const String _baseUrl = '${SERVER.serverURL}/api';
   static const String _authTokenKey = 'auth_token';
   static const String _userIdKey = 'USER_ID';
 
