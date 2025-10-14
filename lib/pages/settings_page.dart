@@ -4,6 +4,7 @@ import 'package:flutter/material.dart' hide ThemeMode;
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../providers/language_provider.dart';
 import '../screens/terms_privacy_page.dart';
 import '../services/pull_data/get_user_data.dart';
 import '../services/location_service.dart';
@@ -22,7 +23,7 @@ class _SettingsPageState extends State<SettingsPage> with WidgetsBindingObserver
   String _fullName = '';
   String _userEmail = '';
   String _userProfileImage = '';
-  final String _currentVersion = '1.0.0';
+  final String _currentVersion = '1.2.25';
   bool _notificationsEnabled = true;
   bool _locationEnabled = true;
 
@@ -271,6 +272,91 @@ class _SettingsPageState extends State<SettingsPage> with WidgetsBindingObserver
         : null,
       onTap: () {
         themeProvider.setThemeMode(mode);
+        Navigator.of(context).pop();
+      },
+    );
+  }
+
+  void _showLanguageDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Consumer<LanguageProvider>(
+          builder: (context, languageProvider, child) {
+            return AlertDialog(
+              backgroundColor: Theme.of(context).colorScheme.tertiary,
+              title: Text(
+                'Choose Language',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.inversePrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildLanguageOption(
+                    'English',
+                    'en',
+                    languageProvider,
+                  ),
+                  _buildLanguageOption(
+                    'සිංහල',
+                    'si',
+                    languageProvider,
+                  ),
+                  _buildLanguageOption(
+                    'தமிழ்',
+                    'ta',
+                    languageProvider,
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(color: const Color(0xFF4E6BF5)),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildLanguageOption(
+    String displayName,
+    String languageCode,
+    LanguageProvider languageProvider,
+  ) {
+    final isSelected = languageProvider.locale.languageCode == languageCode;
+    
+    return ListTile(
+      leading: Icon(
+        Iconsax.global_copy,
+        color: isSelected 
+          ? const Color(0xFF4E6BF5) 
+          : Theme.of(context).colorScheme.primary,
+      ),
+      title: Text(
+        displayName,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.inversePrimary,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+      trailing: isSelected
+        ? Icon(
+            Iconsax.tick_circle_copy,
+            color: const Color(0xFF4E6BF5),
+          )
+        : null,
+      onTap: () {
+        languageProvider.setLocale(Locale(languageCode));
         Navigator.of(context).pop();
       },
     );
@@ -683,6 +769,35 @@ class _SettingsPageState extends State<SettingsPage> with WidgetsBindingObserver
                       inactiveThumbColor: Colors.grey,
                       inactiveTrackColor: Colors.grey.withValues(alpha: 0.3),
                     )
+                  ),
+                  _buildDivider(),
+                  Consumer<LanguageProvider>(
+                    builder: (context, languageProvider, child) {
+                      return _buildSettingsTile(
+                        icon: Iconsax.global_copy,
+                        title: 'Language',
+                        subtitle: 'Select your preferred language',
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              languageProvider.getLanguageDisplayText(),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Iconsax.arrow_right_3_copy,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ],
+                        ),
+                        onTap: _showLanguageDialog,
+                      );
+                    },
                   ),
                   _buildDivider(),
                   _buildSettingsTile(
