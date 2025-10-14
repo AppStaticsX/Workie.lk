@@ -7,6 +7,7 @@ import '../../services/pull_data/current_user_posts.dart';
 import '../../models/post_model.dart';
 import '../../models/media_item_model.dart';
 import '../../services/pull_data/post_data_service.dart';
+import '../../controllers/post_card_controller.dart';
 
 class ProfilePagePostHelper extends StatefulWidget {
   const ProfilePagePostHelper({super.key});
@@ -313,10 +314,11 @@ class _ProfilePagePostHelperState extends State<ProfilePagePostHelper> {
         itemCount: filteredPosts.length,
         itemBuilder: (context, index) {
           final post = filteredPosts[index];
+          final PostCardController postController = PostCardController();
           return Padding(
             padding: const EdgeInsets.only(bottom: 16.0),
             child: PostCardModel(
-              key: ValueKey('profile_post_${post['id']}'), // Add unique key to prevent widget recycling
+              key: ValueKey('profile_helper_post_${post['id']}'),
               postId: post['id'] ?? '',
               profileImageUrl: post['profileImageUrl'] ?? '',
               userName: post['userName'] ?? '',
@@ -335,6 +337,7 @@ class _ProfilePagePostHelperState extends State<ProfilePagePostHelper> {
               onLike: () => _handlePostLike(post['id']),
               onComment: () => _handlePostComment(post['id']),
               onShare: () => _handlePostShare(post['id']),
+              controller: postController,
               bRadius: 12,
               popupMenuItemIcon: Iconsax.trash_copy,
               popupMenuItemIconColor: Colors.red,
@@ -349,6 +352,12 @@ class _ProfilePagePostHelperState extends State<ProfilePagePostHelper> {
                     title: 'Share',
                     icon: Iconsax.share_copy,
                     onTap: (){},
+                    textColor: Theme.of(context).colorScheme.inverseSurface
+                ),
+                PopupMenuOption(
+                    title: 'Translate',
+                    icon: Iconsax.translate_copy,
+                    onTap: () => postController.translate(),
                     textColor: Theme.of(context).colorScheme.inverseSurface
                 ),
                 PopupMenuOption(

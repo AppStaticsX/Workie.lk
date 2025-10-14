@@ -9,6 +9,8 @@ import 'package:video_player/video_player.dart';
 import 'package:workie/screens/media_gallery_screen.dart';
 import 'package:workie/widgets/comment_bottom_sheet.dart';
 import '../services/socket_service.dart';
+import '../services/google_translate_service.dart';
+import '../controllers/post_card_controller.dart';
 
 import 'media_item_model.dart';
 
@@ -31,6 +33,7 @@ class PostCardModel extends StatefulWidget {
   final VoidCallback? onLike;
   final VoidCallback? onComment;
   final VoidCallback? onShare;
+  final PostCardController? controller;
   final bool isLikedByCurrentUser; // Add this parameter
   final List<Map<String, dynamic>> likes;
   final double bRadius;
@@ -58,6 +61,7 @@ class PostCardModel extends StatefulWidget {
     this.onLike,
     this.onComment,
     this.onShare,
+    this.controller,
     required this.isVerified,
     required this.comments,
     required this.postId,
@@ -85,6 +89,12 @@ class _PostCardModelState extends State<PostCardModel> {
   late int _commentCount;
   String? _currentUserId;
   bool _hasUserCommented = false;
+  
+  // Translation state
+  bool _isTranslated = false;
+  String? _translatedContent;
+  bool _isTranslating = false;
+  String? _detectedLanguage;
 
   @override
   void initState() {
@@ -95,6 +105,9 @@ class _PostCardModelState extends State<PostCardModel> {
     _initializeVideoControllers();
     _getCurrentUserId();
     _setupSocketListeners();
+    
+    // Set up controller callback
+    widget.controller?.setTranslateCallback(translateContent);
   }
 
   void _setupSocketListeners() {
@@ -334,6 +347,9 @@ class _PostCardModelState extends State<PostCardModel> {
       //
     }
     
+    // Clean up controller
+    widget.controller?.dispose();
+    
     super.dispose();
   }
 
@@ -351,17 +367,83 @@ class _PostCardModelState extends State<PostCardModel> {
     });
   }
 
-  // Helper method to get truncated content
-  String get _truncatedContent {
-    if (widget.content.length <= 95) {
-      return widget.content;
+  // Translation methods
+  Future<void> translateContent() async {
+    if (_isTranslating) return;
+    
+    setState(() {
+      _isTranslating = true;
+    });
+
+    try {
+      final userPreferredLanguage = await GoogleTranslateService.getUserPreferredLanguage();
+      
+      if (_isTranslated && _translatedContent != null) {
+        // If already translated, toggle back to original
+        setState(() {
+          _isTranslated = false;
+          _isTranslating = false;
+        });
+        return;
+      }
+
+      final translatedText = await GoogleTranslateService.translatePostContent(
+        content: widget.content,
+        userPreferredLanguage: userPreferredLanguage,
+      );
+
+      setState(() {
+        _isTranslating = false;
+        if (translatedText != null) {
+          _translatedContent = translatedText;
+          _isTranslated = true;
+        } else {
+          // Show message that content is already in user's language or translation failed
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Content is already in your preferred language or translation failed'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _isTranslating = false;
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Translation failed: $e'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
     }
-    return '${widget.content.substring(0, 95)}...';
+  }
+
+  // Get the content to display (original or translated)
+  String get _displayContent {
+    return _isTranslated && _translatedContent != null 
+        ? _translatedContent! 
+        : widget.content;
+  }
+
+  // Helper method to get truncated content (works with both original and translated)
+  String get _truncatedContent {
+    final contentToShow = _displayContent;
+    if (contentToShow.length <= 95) {
+      return contentToShow;
+    }
+    return '${contentToShow.substring(0, 95)}...';
   }
 
   // Helper method to check if content needs truncation
   bool get _needsTruncation {
-    return widget.content.length > 95;
+    return _displayContent.length > 95;
   }
 
   @override
@@ -543,22 +625,71 @@ class _PostCardModelState extends State<PostCardModel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Translation indicator
+          if (_isTranslated || _isTranslating)
+            Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: _isTranslating 
+                    ? Colors.orange.withValues(alpha: 0.1)
+                    : Colors.blue.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _isTranslating ? Colors.orange : Colors.blue,
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_isTranslating)
+                    SizedBox(
+                      width: 12,
+                      height: 12,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+                      ),
+                    )
+                  else
+                    Icon(
+                      Iconsax.translate_copy,
+                      size: 12,
+                      color: Colors.blue,
+                    ),
+                  const SizedBox(width: 4),
+                  Text(
+                    _isTranslating 
+                        ? 'Translating...' 
+                        : 'Translated',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: _isTranslating ? Colors.orange : Colors.blue,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          
+          // Content text
           RichText(
-            ////overflow: TextOverflow.ellipsis,
             text: TextSpan(
               style: TextStyle(
                 fontFamily: 'Google Sans',
                 color: Theme.of(context).colorScheme.inversePrimary,
                 fontSize: 15,
-                //height: 1.4,
               ),
               children: [
                 TextSpan(
-                  text: _isExpanded ? widget.content : _truncatedContent,
+                  text: _isExpanded ? _displayContent : _truncatedContent,
                 ),
               ],
             ),
           ),
+          
+          // Expand/collapse button
           if (_needsTruncation)
             GestureDetector(
               onTap: _toggleExpanded,
@@ -574,6 +705,8 @@ class _PostCardModelState extends State<PostCardModel> {
                 ),
               ),
             ),
+          
+          // Hashtags
           if (widget.hashtags.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 4),

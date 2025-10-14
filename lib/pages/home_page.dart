@@ -5,6 +5,7 @@ import 'package:workie/screens/messages_screen.dart';
 import 'package:workie/widgets/custom_icon_button.dart';
 import 'package:workie/widgets/custom_textfield.dart';
 import 'package:shimmer_ai/shimmer_ai.dart';
+import '../controllers/post_card_controller.dart';
 import '../services/hive_service.dart';
 import '../services/location_service.dart';
 import '../services/notification_service.dart';
@@ -750,8 +751,10 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
                     }
 
                     final post = _posts[index];
+                    final PostCardController postController = PostCardController();
+                    
                     return PostCardModel(
-                      key: ValueKey('post_${post['id']}'), // Add unique key to prevent widget recycling
+                      key: ValueKey('post_${post['id']}'),
                       postId: post['id'],
                       profileImageUrl: post['profileImageUrl'],
                       userName: post['userName'],
@@ -767,6 +770,7 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
                       onLike: () => _handleLike(post['id']),
                       onComment: () => _handleComment(post['id']),
                       onShare: () => _handleShare(post['id']),
+                      controller: postController,
                       comments: post['comments'],
                       isLikedByCurrentUser: post['isLikedByCurrentUser'] ?? false,
                       likes: post['likes'] ?? [],
@@ -797,7 +801,7 @@ class _HomeTabPageState extends State<HomeTabPage> with TickerProviderStateMixin
                         PopupMenuOption(
                             title: 'Translate',
                             icon: Iconsax.translate_copy,
-                            onTap: (){},
+                            onTap: () => postController.translate(),
                             textColor: Theme.of(context).colorScheme.inverseSurface
                         ),
                       ],

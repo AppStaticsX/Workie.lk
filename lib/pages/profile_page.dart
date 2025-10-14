@@ -18,6 +18,7 @@ import '../models/post_model.dart';
 import '../services/pull_data/post_data_service.dart';
 import '../services/education_data_service.dart';
 import '../services/experience_data_service.dart';
+import '../controllers/post_card_controller.dart';
 import '../models/education_model.dart';
 import '../models/work_experience_model.dart';
 import '../services/hive_service.dart';
@@ -1460,64 +1461,83 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
               Text('DEBUG: Rendering PostCardModel for post ID: ${filteredPosts[0]['id']}'),
             Padding(
               padding: const EdgeInsets.only(bottom: 0),
-              child: PostCardModel(
-                postId: filteredPosts[0]['id'] ?? '',
-                profileImageUrl: filteredPosts[0]['profileImageUrl'] ?? '',
-                userName: filteredPosts[0]['userName'] ?? '',
-                userTitle: filteredPosts[0]['userTitle'] ?? '',
-                timeAgo: filteredPosts[0]['timeAgo'] ?? '',
-                content: filteredPosts[0]['content'] ?? '',
-                mediaUrls: List.from(filteredPosts[0]['mediaUrls'] ?? []),
-                hashtags: List<String>.from(filteredPosts[0]['hashtags'] ?? []),
-                initialLikeCount: filteredPosts[0]['initialLikeCount'] ?? 0,
-                commentCount: filteredPosts[0]['commentCount'] ?? 0,
-                shareCount: filteredPosts[0]['shareCount'] ?? 0,
-                isVerified: filteredPosts[0]['isVerified'] ?? false,
-                comments: List<Map<String, dynamic>>.from(filteredPosts[0]['comments'] ?? []),
-                isLikedByCurrentUser: filteredPosts[0]['isLikedByCurrentUser'] ?? false,
-                likes: List<Map<String, dynamic>>.from(filteredPosts[0]['likes'] ?? []),
-                onLike: () => _handlePostLike(filteredPosts[0]['id']),
-                onComment: () => _handlePostComment(filteredPosts[0]['id']),
-                onShare: () => _handlePostShare(filteredPosts[0]['id']),
-                bRadius: 0,
-                popupMenuItemIcon: selectedRole == 'employer' ? Iconsax.bookmark : Iconsax.trash_copy,
-                popupMenuItemIconColor: selectedRole == 'employer' ? Colors.orange : Colors.red,
-                options: selectedRole == 'employer' ? [
-                  PopupMenuOption(
-                      title: 'Unsave',
-                      icon: Iconsax.bookmark,
-                      onTap: () => _handleUnsavePost(filteredPosts[0]['id']),
-                      textColor: Colors.orange
-                  ),
-                  PopupMenuOption(
-                      title: 'Share',
-                      icon: Iconsax.share_copy,
-                      onTap: () => _handlePostShare(filteredPosts[0]['id']),
-                      textColor: Theme.of(context).colorScheme.inverseSurface
-                  ),
-                ] : [
-                  PopupMenuOption(
-                      title: selectedChipIndex == 3 ? 'Unsave' : 'Save',
-                      icon: selectedChipIndex == 3 ? Iconsax.bookmark : Iconsax.save_add_copy,
-                      onTap: () => selectedChipIndex == 3
-                          ? _handleUnsavePost(filteredPosts[0]['id'])
-                          : HiveService.savePostId(filteredPosts[0]['id']),
-                      textColor: selectedChipIndex == 3 ? Colors.orange : Theme.of(context).colorScheme.inverseSurface
-                  ),
-                  PopupMenuOption(
-                      title: 'Share',
-                      icon: Iconsax.share_copy,
-                      onTap: () => _handlePostShare(filteredPosts[0]['id']),
-                      textColor: Theme.of(context).colorScheme.inverseSurface
-                  ),
-                  PopupMenuOption(
-                      title: 'Edit',
-                      icon: Iconsax.edit_2_copy,
-                      onTap: () => _handlePostEdit(filteredPosts[0]),
-                      textColor: Theme.of(context).colorScheme.inverseSurface
-                  ),
-                ],
-                iconSize: 24,
+              child: Builder(
+                builder: (context) {
+                  final PostCardController postController = PostCardController();
+                  return PostCardModel(
+                    key: ValueKey('profile_post_${filteredPosts[0]['id']}'),
+                    postId: filteredPosts[0]['id'] ?? '',
+                    profileImageUrl: filteredPosts[0]['profileImageUrl'] ?? '',
+                    userName: filteredPosts[0]['userName'] ?? '',
+                    userTitle: filteredPosts[0]['userTitle'] ?? '',
+                    timeAgo: filteredPosts[0]['timeAgo'] ?? '',
+                    content: filteredPosts[0]['content'] ?? '',
+                    mediaUrls: List.from(filteredPosts[0]['mediaUrls'] ?? []),
+                    hashtags: List<String>.from(filteredPosts[0]['hashtags'] ?? []),
+                    initialLikeCount: filteredPosts[0]['initialLikeCount'] ?? 0,
+                    commentCount: filteredPosts[0]['commentCount'] ?? 0,
+                    shareCount: filteredPosts[0]['shareCount'] ?? 0,
+                    isVerified: filteredPosts[0]['isVerified'] ?? false,
+                    comments: List<Map<String, dynamic>>.from(filteredPosts[0]['comments'] ?? []),
+                    isLikedByCurrentUser: filteredPosts[0]['isLikedByCurrentUser'] ?? false,
+                    likes: List<Map<String, dynamic>>.from(filteredPosts[0]['likes'] ?? []),
+                    onLike: () => _handlePostLike(filteredPosts[0]['id']),
+                    onComment: () => _handlePostComment(filteredPosts[0]['id']),
+                    onShare: () => _handlePostShare(filteredPosts[0]['id']),
+                    controller: postController,
+                    bRadius: 0,
+                    popupMenuItemIcon: selectedRole == 'employer' ? Iconsax.bookmark : Iconsax.trash_copy,
+                    popupMenuItemIconColor: selectedRole == 'employer' ? Colors.orange : Colors.red,
+                    options: selectedRole == 'employer' ? [
+                      PopupMenuOption(
+                          title: 'Unsave',
+                          icon: Iconsax.bookmark,
+                          onTap: () => _handleUnsavePost(filteredPosts[0]['id']),
+                          textColor: Colors.orange
+                      ),
+                      PopupMenuOption(
+                          title: 'Share',
+                          icon: Iconsax.share_copy,
+                          onTap: () => _handlePostShare(filteredPosts[0]['id']),
+                          textColor: Theme.of(context).colorScheme.inverseSurface
+                      ),
+                      PopupMenuOption(
+                          title: 'Translate',
+                          icon: Iconsax.translate_copy,
+                          onTap: () => postController.translate(),
+                          textColor: Theme.of(context).colorScheme.inverseSurface
+                      ),
+                    ] : [
+                      PopupMenuOption(
+                          title: selectedChipIndex == 3 ? 'Unsave' : 'Save',
+                          icon: selectedChipIndex == 3 ? Iconsax.bookmark : Iconsax.save_add_copy,
+                          onTap: () => selectedChipIndex == 3
+                              ? _handleUnsavePost(filteredPosts[0]['id'])
+                              : HiveService.savePostId(filteredPosts[0]['id']),
+                          textColor: selectedChipIndex == 3 ? Colors.orange : Theme.of(context).colorScheme.inverseSurface
+                      ),
+                      PopupMenuOption(
+                          title: 'Share',
+                          icon: Iconsax.share_copy,
+                          onTap: () => _handlePostShare(filteredPosts[0]['id']),
+                          textColor: Theme.of(context).colorScheme.inverseSurface
+                      ),
+                      PopupMenuOption(
+                          title: 'Translate',
+                          icon: Iconsax.translate_copy,
+                          onTap: () => postController.translate(),
+                          textColor: Theme.of(context).colorScheme.inverseSurface
+                      ),
+                      PopupMenuOption(
+                          title: 'Edit',
+                          icon: Iconsax.edit_2_copy,
+                          onTap: () => _handlePostEdit(filteredPosts[0]),
+                          textColor: Theme.of(context).colorScheme.inverseSurface
+                      ),
+                    ],
+                    iconSize: 24,
+                  );
+                },
               ),
             ),
           ],
