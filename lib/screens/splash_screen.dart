@@ -8,7 +8,6 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:workie/screens/onboarding_screen.dart';
 import 'package:workie/screens/select_role_screen.dart';
-
 import '../secrets/app_secrets.dart';
 
 class SplashScreen extends StatefulWidget {
