@@ -4,9 +4,9 @@ import 'package:flutter/material.dart' hide ThemeMode;
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../screens/terms_privacy_page.dart';
 import '../services/pull_data/get_user_data.dart';
 import '../themes/theme_provider.dart';
-import '../services/work_category_service.dart';
 import 'components/privacy_settings_page.dart';
 import 'components/work_categories_page.dart';
 
@@ -184,22 +184,27 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _showLogoutDialog() {
-    showDialog(
+    showCupertinoDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Theme.of(context).colorScheme.tertiary,
+        return CupertinoAlertDialog(
           title: Text(
             'Logout',
             style: TextStyle(
               color: Theme.of(context).colorScheme.inversePrimary,
               fontWeight: FontWeight.bold,
+              fontSize: 18,
+              fontFamily: 'Montserrat'
             ),
           ),
-          content: Text(
-            'Are you sure you want to logout?',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
+          content: Padding(
+            padding: const EdgeInsets.only(top: 4.0),
+            child: Text(
+              'Are you sure you want to logout?\nAll data will be removed. This can\'t be undone.',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontFamily: 'Montserrat'
+              ),
             ),
           ),
           actions: [
@@ -292,22 +297,27 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _showDeleteAccountDialog() {
-    showDialog(
+    showCupertinoDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Theme.of(context).colorScheme.tertiary,
+        return CupertinoAlertDialog(
           title: Text(
             'Delete Account',
             style: TextStyle(
               color: Colors.red,
               fontWeight: FontWeight.bold,
+                fontSize: 18,
+                fontFamily: 'Montserrat'
             ),
           ),
-          content: Text(
-            'Are you sure you want to permanently delete your account? This action cannot be undone.',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
+          content: Padding(
+            padding: const EdgeInsets.only(top: 4.0),
+            child: Text(
+              'Are you sure you want to permanently delete your account? This action cannot be undone.',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                  fontFamily: 'Montserrat'
+              ),
             ),
           ),
           actions: [
@@ -561,7 +571,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     trailing: Switch.adaptive(
                       value: _notificationsEnabled,
                       onChanged: _saveNotificationSetting,
-                      activeColor: const Color(0xFF4E6BF5),
+                      activeColor: Colors.white,
+                      activeTrackColor: const Color(0xFF4E6BF5),
+                      inactiveThumbColor: Colors.grey,
+                      inactiveTrackColor: Colors.grey.withValues(alpha: 0.3),
                     ),
                   ),
                   _buildDivider(),
@@ -572,8 +585,11 @@ class _SettingsPageState extends State<SettingsPage> {
                     trailing: Switch.adaptive(
                       value: _locationEnabled,
                       onChanged: _saveLocationSetting,
-                      activeColor: const Color(0xFF4E6BF5),
-                    ),
+                      activeColor: Colors.white,
+                      activeTrackColor: const Color(0xFF4E6BF5),
+                      inactiveThumbColor: Colors.grey,
+                      inactiveTrackColor: Colors.grey.withValues(alpha: 0.3),
+                    )
                   ),
                   _buildDivider(),
                   _buildSettingsTile(
@@ -666,6 +682,24 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                     onTap: () {
                       // Navigate to terms
+                      Navigator.of(context).push(
+                        PageRouteBuilder(
+                          pageBuilder: (context, animation, secondaryAnimation) => const TermsAndPrivacyPage(),
+                          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                            const begin = Offset(1.0, 0.0); // Start from bottom
+                            const end = Offset.zero; // End at normal position
+                            const curve = Curves.easeInOut;
+
+                            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                            var offsetAnimation = animation.drive(tween);
+
+                            return SlideTransition(
+                              position: offsetAnimation,
+                              child: child,
+                            );
+                          },
+                        ),
+                      );
                     },
                   ),
                 ],

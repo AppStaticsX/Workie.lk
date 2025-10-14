@@ -301,7 +301,10 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
       trailing: Switch.adaptive(
         value: value,
         onChanged: onChanged,
-        activeColor: const Color(0xFF4E6BF5),
+        activeColor: Colors.white,
+        activeTrackColor: const Color(0xFF4E6BF5),
+        inactiveThumbColor: Colors.grey,
+        inactiveTrackColor: Colors.grey.withValues(alpha: 0.3),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     );
