@@ -4,7 +4,6 @@ import 'package:workie/pages/explore_page.dart';
 import 'package:workie/pages/home_page.dart';
 import 'package:workie/pages/post_page.dart';
 import 'package:workie/screens/booking_detaills_screen.dart';
-import '../pages/activity_page.dart';
 import '../pages/profile_page.dart';
 
 class MainScreen extends StatefulWidget {
@@ -64,7 +63,7 @@ class _MainScreenState extends State<MainScreen> {
               buildAnimatedNavIcon(Iconsax.briefcase_copy, Iconsax.briefcase, 1, 'Jobs'),
               //buildPlusNavIcon('assets/icon/menu_button.png', 'assets/icon/menu_button.png', 2, 'Post'),
               buildAnimatedNavIcon(Iconsax.element_2_copy, Iconsax.element_2, 2, 'Post'),
-              buildAnimatedNavIcon(Iconsax.activity_copy, Iconsax.activity, 3, 'Activity'),
+              buildAnimatedNavIcon(Iconsax.activity_copy, Iconsax.activity, 3, 'Status'),
               buildAnimatedNavIcon(Iconsax.user_copy, Iconsax.user, 4, 'Profile'),
             ],
           ),

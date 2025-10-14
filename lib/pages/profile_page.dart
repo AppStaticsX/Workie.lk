@@ -23,6 +23,9 @@ import '../models/work_experience_model.dart';
 import '../services/hive_service.dart';
 import '../services/get_user_skills.dart';
 import '../services/get_current_user_profile_data.dart';
+import '../services/get_jobs_service.dart';
+import '../models/job_model.dart';
+import '../screens/client_post_screen.dart';
 
 class ProfileTabPage extends StatefulWidget {
 
@@ -51,7 +54,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
 
   // Add this variable to track selected chip
   int selectedChipIndex = 0;
-  final List<String> chipLabels = ['Posts', 'Videos', 'Photos', 'Saved'];
+  List<String> chipLabels = ['Posts', 'Videos', 'Photos', 'Saved'];
 
   // Add these variables for posts
   List<Map<String, dynamic>> _userPosts = [];
@@ -83,9 +86,26 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
   double _totalEarnings = 0.0;
   bool _isLoadingStats = false;
 
+  // Add these variables for published jobs (for employers)
+  List<Map<String, dynamic>> _publishedJobs = [];
+  bool _isLoadingPublishedJobs = false;
+  int _totalJobsCount = 0;
+
   @override
   void initState() {
-    _loadUserRole();
+    super.initState();
+    _loadUserRole().then((_) {
+      // Set chip labels based on user role
+      if (selectedRole == 'employer') {
+        chipLabels = ['Posts', 'Videos', 'Photos', 'Saved'];
+        _selectedChipLable = 'Posts';
+        selectedChipIndex = 0;
+      } else {
+        chipLabels = ['Posts', 'Videos', 'Photos', 'Saved'];
+        _selectedChipLable = 'Posts';
+        selectedChipIndex = 0;
+      }
+    });
     _getUserData();
     _loadUserPosts();
     _loadEducationData();
@@ -93,7 +113,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     _loadSavedPosts();
     _loadUserSkills();
     _loadProfileStats();
-    super.initState();
+    _loadPublishedJobs();
   }
 
   Future<void> _loadUserPosts() async {
@@ -357,6 +377,42 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     }
   }
 
+  Future<void> _loadPublishedJobs() async {
+    setState(() {
+      _isLoadingPublishedJobs = true;
+    });
+
+    try {
+      final result = await GetJobsService.getMyJobs(
+        page: 1,
+        limit: 1, // Only load the latest job
+      );
+
+      if (result['success'] == true) {
+        final jobs = List<Map<String, dynamic>>.from(result['jobs'] ?? []);
+        final pagination = result['pagination'] as Map<String, dynamic>?;
+
+        setState(() {
+          _publishedJobs = jobs;
+          _totalJobsCount = pagination?['total'] ?? 0;
+          _isLoadingPublishedJobs = false;
+        });
+      } else {
+        setState(() {
+          _publishedJobs = [];
+          _totalJobsCount = 0;
+          _isLoadingPublishedJobs = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isLoadingPublishedJobs = false;
+        _publishedJobs = [];
+        _totalJobsCount = 0;
+      });
+    }
+  }
+
   Future<void> _refreshData() async {
     await _loadUserRole();
     await _getUserData();
@@ -366,6 +422,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     await _loadSavedPosts();
     await _loadUserSkills();
     await _loadProfileStats();
+    await _loadPublishedJobs();
   }
 
   @override
@@ -470,6 +527,23 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                   height: 12,
                 ),
                 _skillsSection(context),
+              ],
+
+              if (selectedRole == 'employer') ...[
+                const SizedBox(height: 12),
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  color: Theme.of(context).colorScheme.secondary,
+                  height: 12,
+                ),
+                _myMediaContents(context),
+                const SizedBox(height: 12),
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  color: Theme.of(context).colorScheme.secondary,
+                  height: 12,
+                ),
+                _publishedJobsSection(context),
               ],
             ],
           ),
@@ -880,6 +954,229 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     );
   }
 
+  Widget _publishedJobsSection(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                      'Published Jobs',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.5
+                      )
+                  ),
+                  Text(
+                    '$_totalJobsCount jobs published. 🎉',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                        height: 1
+                    ),
+                  )
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: OutlinedButton(
+                  onPressed: () {
+                    // Navigate to client post screen
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) => ClientPostScreen(),
+                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                          const begin = Offset(0.0, 1.0);
+                          const end = Offset.zero;
+                          const curve = Curves.easeInOut;
+
+                          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                          var offsetAnimation = animation.drive(tween);
+
+                          return SlideTransition(
+                            position: offsetAnimation,
+                            child: child,
+                          );
+                        },
+                      ),
+                    );
+                  },
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(
+                      width: 2,
+                      color: Theme.of(context).colorScheme.inverseSurface,
+                    ),
+                  ),
+                  child: Text(
+                    'Post-Job',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5
+                    ),
+                  )
+              ),
+            )
+          ],
+        ),
+        const SizedBox(height: 16),
+        // Published jobs content
+        _buildPublishedJobsContent(),
+
+        // Show all jobs button (only if there are jobs)
+        if (!_isLoadingPublishedJobs && _publishedJobs.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Container(
+              decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.tertiary,
+                  borderRadius: const BorderRadius.only(
+                      bottomRight: Radius.circular(12),
+                      bottomLeft: Radius.circular(12)
+                  )
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                      onPressed: () {
+                        // Navigate to published jobs list
+                        _navigateToAllPublishedJobs();
+                      },
+                      child: Row(
+                        children: [
+                          Text(
+                              'Show All Published Jobs',
+                              style: Theme.of(context).textTheme.titleSmall
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(CupertinoIcons.arrow_right)
+                        ],
+                      )
+                  )
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildPublishedJobsContent() {
+    if (_isLoadingPublishedJobs) {
+      return const Padding(
+        padding: EdgeInsets.all(32.0),
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_publishedJobs.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(
+                Iconsax.briefcase_copy,
+                size: 48,
+                color: Colors.grey.shade400,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No jobs published yet',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Start by posting your first job to find skilled workers!',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey.shade500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Show only the first (latest) published job
+    final latestJob = _publishedJobs[0];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Column(
+        children: [
+          JobCard(
+            jobTitle: latestJob['title'] ?? 'No Title',
+            companyName: _fullName, // Use user's name as company name
+            location: latestJob['location']?['address'] ?? 'No Location',
+            salary: latestJob['budget']?['amount']?.toString() ?? 'Negotiable',
+            jobType: latestJob['jobType'] ?? 'Full Time',
+            postedBy: _fullName,
+            publishedDate: _formatDate(latestJob['createdAt']),
+            description: latestJob['description'] ?? 'No description',
+            tags: List<String>.from(latestJob['skills'] ?? []),
+            postedTime: _getTimeAgo(latestJob['createdAt']),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(String? dateString) {
+    if (dateString == null) return 'Unknown';
+    try {
+      final date = DateTime.parse(dateString);
+      return '${date.day}/${date.month}/${date.year}';
+    } catch (e) {
+      return 'Unknown';
+    }
+  }
+
+  String _getTimeAgo(String? dateString) {
+    if (dateString == null) return 'Unknown';
+    try {
+      final date = DateTime.parse(dateString);
+      final now = DateTime.now();
+      final difference = now.difference(date);
+
+      if (difference.inDays > 0) {
+        return '${difference.inDays} day${difference.inDays > 1 ? 's' : ''} ago';
+      } else if (difference.inHours > 0) {
+        return '${difference.inHours} hour${difference.inHours > 1 ? 's' : ''} ago';
+      } else if (difference.inMinutes > 0) {
+        return '${difference.inMinutes} minute${difference.inMinutes > 1 ? 's' : ''} ago';
+      } else {
+        return 'Just now';
+      }
+    } catch (e) {
+      return 'Unknown';
+    }
+  }
+
+  void _navigateToAllPublishedJobs() {
+    // TODO: Navigate to a dedicated page showing all published jobs
+    // For now, we can show a simple message or navigate to explore page
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Coming soon: View all published jobs'),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+      ),
+    );
+  }
+
 
 
 
@@ -895,42 +1192,53 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                      'My Posts',
+                      selectedRole == 'employer' ? 'Saved Content' : 'My Posts',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w900,
                           letterSpacing: 0.5
                       )
                   ),
-                  Text(
-                    '$_totalPostsCount posts found. 🎉',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
-                        height: 1
+                  if (selectedRole == 'job_seeker')
+                    Text(
+                      '$_totalPostsCount posts found. 🎉',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                          height: 1
+                      ),
                     ),
-                  )
+                  if (selectedRole == 'employer')
+                    Text(
+                      '${_savedPosts.length} items saved. Filter by type above! 📌',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                          height: 1
+                      ),
+                    )
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: OutlinedButton(
-                  onPressed: widget.onCreatePost,
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(
-                      width: 2,
-                      color: Theme.of(context).colorScheme.inverseSurface,
+            if (selectedRole == 'job_seeker')
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: OutlinedButton(
+                    onPressed: widget.onCreatePost,
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(
+                        width: 2,
+                        color: Theme.of(context).colorScheme.inverseSurface,
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    'Create-Post',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5
-                    ),
-                  )
-              ),
-            )
+                    child: Text(
+                      'Create-Post',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5
+                      ),
+                    )
+                ),
+              )
           ],
         ),
         const SizedBox(height: 12),
@@ -976,8 +1284,8 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
         // Posts content based on selected chip
         _buildPostsContent(),
 
-        // Option 1: Using conditional rendering with if statement
-        if (!_isLoadingPosts && _filterPostsByChip().isNotEmpty)
+        // Show All button
+        if (_shouldShowAllButton())
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Container(
@@ -1018,7 +1326,9 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                       child: Row(
                         children: [
                           Text(
-                              'Show All $_selectedChipLable', // Using null-aware operator with fallback
+                              selectedRole == 'employer'
+                                  ? 'Show All Saved ${chipLabels[selectedChipIndex]}'
+                                  : 'Show All $_selectedChipLable',
                               style: Theme.of(context).textTheme.titleSmall
                           ),
                           const SizedBox(width: 8),
@@ -1035,9 +1345,14 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
   }
 
   Widget _buildPostsContent() {
-
     // Show loading indicator for the selected chip
-    bool isLoading = selectedChipIndex == 3 ? _isLoadingSavedPosts : _isLoadingPosts;
+    bool isLoading;
+    if (selectedRole == 'employer') {
+      // For employers, only saved posts are available, but we still use chips for filtering
+      isLoading = _isLoadingSavedPosts;
+    } else {
+      isLoading = selectedChipIndex == 3 ? _isLoadingSavedPosts : _isLoadingPosts;
+    }
 
     if (isLoading) {
       return const Padding(
@@ -1049,7 +1364,13 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     }
 
     // Check if the relevant data source is empty
-    bool isEmpty = selectedChipIndex == 3 ? _savedPosts.isEmpty : _userPosts.isEmpty;
+    bool isEmpty;
+    if (selectedRole == 'employer') {
+      // For employers, we only show saved posts, so all chips filter from saved posts
+      isEmpty = _savedPosts.isEmpty;
+    } else {
+      isEmpty = selectedChipIndex == 3 ? _savedPosts.isEmpty : _userPosts.isEmpty;
+    }
 
     if (isEmpty) {
       return Padding(
@@ -1070,7 +1391,9 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
               ),
               const SizedBox(height: 16),
               Text(
-                selectedChipIndex == 0
+                selectedRole == 'employer'
+                    ? 'No saved ${chipLabels[selectedChipIndex].toLowerCase()} yet'
+                    : selectedChipIndex == 0
                     ? 'No posts yet'
                     : selectedChipIndex == 1
                     ? 'No videos yet'
@@ -1084,7 +1407,9 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                selectedChipIndex == 3
+                selectedRole == 'employer'
+                    ? 'Save ${chipLabels[selectedChipIndex].toLowerCase()} from the feed to view them here!'
+                    : selectedChipIndex == 3
                     ? 'Save posts to view them here!'
                     : 'Share your first ${chipLabels[selectedChipIndex].toLowerCase()} to get started!',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -1155,14 +1480,29 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                 onComment: () => _handlePostComment(filteredPosts[0]['id']),
                 onShare: () => _handlePostShare(filteredPosts[0]['id']),
                 bRadius: 0,
-                popupMenuItemIcon: Iconsax.trash_copy,
-                popupMenuItemIconColor: Colors.red,
-                options: [
+                popupMenuItemIcon: selectedRole == 'employer' ? Iconsax.bookmark : Iconsax.trash_copy,
+                popupMenuItemIconColor: selectedRole == 'employer' ? Colors.orange : Colors.red,
+                options: selectedRole == 'employer' ? [
                   PopupMenuOption(
-                      title: 'Save',
-                      icon: Iconsax.save_add_copy,
-                      onTap: () => HiveService.savePostId(filteredPosts[0]['id']),
+                      title: 'Unsave',
+                      icon: Iconsax.bookmark,
+                      onTap: () => _handleUnsavePost(filteredPosts[0]['id']),
+                      textColor: Colors.orange
+                  ),
+                  PopupMenuOption(
+                      title: 'Share',
+                      icon: Iconsax.share_copy,
+                      onTap: () => _handlePostShare(filteredPosts[0]['id']),
                       textColor: Theme.of(context).colorScheme.inverseSurface
+                  ),
+                ] : [
+                  PopupMenuOption(
+                      title: selectedChipIndex == 3 ? 'Unsave' : 'Save',
+                      icon: selectedChipIndex == 3 ? Iconsax.bookmark : Iconsax.save_add_copy,
+                      onTap: () => selectedChipIndex == 3
+                          ? _handleUnsavePost(filteredPosts[0]['id'])
+                          : HiveService.savePostId(filteredPosts[0]['id']),
+                      textColor: selectedChipIndex == 3 ? Colors.orange : Theme.of(context).colorScheme.inverseSurface
                   ),
                   PopupMenuOption(
                       title: 'Share',
@@ -1186,31 +1526,61 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     );
   }
 
-  List<Map<String, dynamic>> _filterPostsByChip() {
 
+
+  List<Map<String, dynamic>> _filterPostsByChip() {
     List<Map<String, dynamic>> result;
-    switch (selectedChipIndex) {
-      case 0: // Posts - show all posts
-        result = _userPosts;
-        break;
-      case 1: // Videos - show only posts with videos
-        result = _userPosts.where((post) {
-          final mediaUrls = post['mediaUrls'] as List?;
-          return mediaUrls?.any((media) => media.type?.toString() == 'MediaType.video') ?? false;
-        }).toList();
-        break;
-      case 2: // Photos - show only posts with images
-        result = _userPosts.where((post) {
-          final mediaUrls = post['mediaUrls'] as List?;
-          return mediaUrls?.any((media) => media.type?.toString() == 'MediaType.image') ?? false;
-        }).toList();
-        break;
-      case 3: // Saved - show saved posts
-        result = _savedPosts;
-        break;
-      default:
-        result = _userPosts;
-        break;
+
+    if (selectedRole == 'employer') {
+      // For employers, all chips filter from saved posts
+      switch (selectedChipIndex) {
+        case 0: // Posts - show all saved posts
+          result = _savedPosts;
+          break;
+        case 1: // Videos - show only saved posts with videos
+          result = _savedPosts.where((post) {
+            final mediaUrls = post['mediaUrls'] as List?;
+            return mediaUrls?.any((media) => media.type?.toString() == 'MediaType.video') ?? false;
+          }).toList();
+          break;
+        case 2: // Photos - show only saved posts with images
+          result = _savedPosts.where((post) {
+            final mediaUrls = post['mediaUrls'] as List?;
+            return mediaUrls?.any((media) => media.type?.toString() == 'MediaType.image') ?? false;
+          }).toList();
+          break;
+        case 3: // Saved - show all saved posts
+          result = _savedPosts;
+          break;
+        default:
+          result = _savedPosts;
+          break;
+      }
+    } else {
+      // For job seekers, use regular filtering
+      switch (selectedChipIndex) {
+        case 0: // Posts - show all posts
+          result = _userPosts;
+          break;
+        case 1: // Videos - show only posts with videos
+          result = _userPosts.where((post) {
+            final mediaUrls = post['mediaUrls'] as List?;
+            return mediaUrls?.any((media) => media.type?.toString() == 'MediaType.video') ?? false;
+          }).toList();
+          break;
+        case 2: // Photos - show only posts with images
+          result = _userPosts.where((post) {
+            final mediaUrls = post['mediaUrls'] as List?;
+            return mediaUrls?.any((media) => media.type?.toString() == 'MediaType.image') ?? false;
+          }).toList();
+          break;
+        case 3: // Saved - show saved posts
+          result = _savedPosts;
+          break;
+        default:
+          result = _userPosts;
+          break;
+      }
     }
 
     return result;
@@ -1247,6 +1617,24 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
       scrollControlDisabledMaxHeightRatio: 1,
       showDragHandle: true
     );
+  }
+
+  void _handleUnsavePost(String postId) async {
+    try {
+      await HiveService.removePostId(postId);
+      // Refresh saved posts after unsaving
+      _loadSavedPosts();
+    } catch (e) {
+      //
+    }
+  }
+
+  bool _shouldShowAllButton() {
+    if (selectedRole == 'employer') {
+      return !_isLoadingSavedPosts && _filterPostsByChip().isNotEmpty;
+    } else {
+      return !_isLoadingPosts && _filterPostsByChip().isNotEmpty;
+    }
   }
 
   void _navigateToEducationEdit() {
