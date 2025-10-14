@@ -173,4 +173,52 @@ class LocationService {
       return 'Error: ${e.toString()}';
     }
   }
+
+  // Check if location permission is granted
+  static Future<bool> isLocationPermissionGranted() async {
+    try {
+      // First check if location services are enabled
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        return false;
+      }
+
+      // Check permission status
+      LocationPermission permission = await Geolocator.checkPermission();
+      return permission == LocationPermission.whileInUse || 
+             permission == LocationPermission.always;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Request location permission
+  static Future<bool> requestLocationPermission() async {
+    try {
+      // Check if location services are enabled
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        // Prompt user to enable location services
+        await Geolocator.openLocationSettings();
+        return false;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        // Prompt user to open app settings
+        await Geolocator.openAppSettings();
+        return false;
+      }
+
+      return permission == LocationPermission.whileInUse || 
+             permission == LocationPermission.always;
+    } catch (e) {
+      return false;
+    }
+  }
 }

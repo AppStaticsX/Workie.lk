@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../screens/terms_privacy_page.dart';
 import '../services/pull_data/get_user_data.dart';
+import '../services/location_service.dart';
 import '../themes/theme_provider.dart';
 import 'components/privacy_settings_page.dart';
 import 'components/work_categories_page.dart';
@@ -17,7 +18,7 @@ class SettingsPage extends StatefulWidget {
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
+class _SettingsPageState extends State<SettingsPage> with WidgetsBindingObserver {
   String _fullName = '';
   String _userEmail = '';
   String _userProfileImage = '';
@@ -28,8 +29,25 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadUserData();
     _loadSettings();
+    _checkLocationPermission();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // App has regained focus, check location permission again
+      // in case user changed it in device settings
+      _checkLocationPermission();
+    }
   }
 
   Future<void> _loadUserData() async {
@@ -63,10 +81,25 @@ class _SettingsPageState extends State<SettingsPage> {
       final prefs = await SharedPreferences.getInstance();
       setState(() {
         _notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
-        _locationEnabled = prefs.getBool('location_enabled') ?? true;
+        // Location enabled state is now managed by actual device permission
+        // _locationEnabled will be set by _checkLocationPermission()
       });
     } catch (e) {
       // Handle error
+    }
+  }
+
+  Future<void> _checkLocationPermission() async {
+    try {
+      bool permissionGranted = await LocationService.isLocationPermissionGranted();
+      setState(() {
+        _locationEnabled = permissionGranted;
+      });
+    } catch (e) {
+      // Handle error
+      setState(() {
+        _locationEnabled = false;
+      });
     }
   }
 
@@ -83,15 +116,75 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _saveLocationSetting(bool value) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('location_enabled', value);
+    if (value) {
+      // User wants to enable location - request permission
+      bool permissionGranted = await LocationService.requestLocationPermission();
       setState(() {
-        _locationEnabled = value;
+        _locationEnabled = permissionGranted;
       });
-    } catch (e) {
-      // Handle error
+
+      if (!permissionGranted) {
+        // Show error message if permission was not granted
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Location permission is required to enable location services'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } else {
+      // User wants to disable location - show dialog to explain they need to do it in settings
+      _showLocationDisableDialog();
     }
+  }
+
+  void _showLocationDisableDialog() {
+    showCupertinoDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return CupertinoAlertDialog(
+          title: Text(
+            'Disable Location Services',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.inversePrimary,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              fontFamily: 'Montserrat'
+            ),
+          ),
+          content: Padding(
+            padding: const EdgeInsets.only(top: 4.0),
+            child: Text(
+              'To disable location services, please go to your device settings and revoke location permissions for this app.',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontFamily: 'Montserrat'
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Theme.of(context).colorScheme.primary),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Open app settings so user can disable permissions
+                LocationService.requestLocationPermission();
+              },
+              child: Text(
+                'Open Settings',
+                style: TextStyle(color: const Color(0xFF4E6BF5), fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _showThemeDialog() {
