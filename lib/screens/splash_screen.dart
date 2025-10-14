@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flame_lottie/flame_lottie.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workie/screens/main_screen.dart';
 import 'dart:convert';
 import 'dart:async';
 import 'package:workie/screens/onboarding_screen.dart';
@@ -36,10 +37,20 @@ class _SplashScreenState extends State<SplashScreen> {
       final bool isAuthenticated = await _checkAuthStatus();
 
       if (mounted) {
-        if (isAuthenticated) {
-          _navigateToMainApp();
-        } else {
+        if (!isAuthenticated) {
+          // User is not authenticated, go to onboarding
           _navigateToOnboarding();
+        } else {
+          // User is authenticated, check profile completion
+          final bool isProfileCompleted = await _checkProfileCompleteStatus();
+
+          if (isProfileCompleted) {
+            // Authenticated and profile complete, go to home
+            _navigateToHomeScreen();
+          } else {
+            // Authenticated but profile incomplete, go to role selection
+            _navigateToRoleSelection();
+          }
         }
       }
     } catch (e) {
@@ -48,6 +59,11 @@ class _SplashScreenState extends State<SplashScreen> {
         _navigateToOnboarding();
       }
     }
+  }
+
+  Future<bool> _checkProfileCompleteStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('isProfileCompleted') ?? false;
   }
 
   Future<bool> _checkAuthStatus() async {
@@ -101,7 +117,31 @@ class _SplashScreenState extends State<SplashScreen> {
     await prefs.remove('USER_ID');
   }
 
-  void _navigateToMainApp() {
+  void _navigateToHomeScreen() {
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+        // Replace with your actual main/home screen
+        const MainScreen(), // You need to create this or import your existing one
+        transitionDuration: const Duration(milliseconds: 1500),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: Tween<double>(
+              begin: 0.0,
+              end: 1.0,
+            ).animate(CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeInOut,
+            )),
+            child: child,
+          );
+        },
+      ),
+    );
+  }
+
+  void _navigateToRoleSelection() {
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(

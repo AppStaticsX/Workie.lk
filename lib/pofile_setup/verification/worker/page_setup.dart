@@ -38,6 +38,11 @@ class _ProfileSetupState extends State<ProfileSetup> {
     });
   }
 
+  Future<void> _saveProfileCompleteStatus(bool isProfileCompleted) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isProfileCompleted', isProfileCompleted);
+  }
+
   Future<void> _handleNextStep() async {
     // Check validation based on current step
     if (_selectedIndex == 0 && !_isNicSelected) {
@@ -207,7 +212,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
             isProfileEditing: false,
             isSaving: _isSaving,
             actionName: _isSaving ? 'Verifying...' : 'Complete Verification',
-            onTapAction: () {
+            onTapAction: () async {
               if (!_isMobileVerified) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -229,6 +234,8 @@ class _ProfileSetupState extends State<ProfileSetup> {
                       builder: (context) => MainScreen()
                   )
               );
+
+              await _saveProfileCompleteStatus(true);
             },
             onBackAction: () {
               setState(() {

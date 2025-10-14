@@ -189,7 +189,6 @@ class _ProfileSetupState extends State<ProfileSetup> {
       if (result?['success'] == true) {
         // Show success message
         final replacedCount = result?['replaced'] ?? 0;
-        _showSnackBar('Successfully saved $replacedCount skills to your profile');
 
         widget.onSuccessRedirect?.call();  // ✅ This calls the function
         
