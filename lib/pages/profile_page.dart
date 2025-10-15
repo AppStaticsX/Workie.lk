@@ -26,7 +26,6 @@ import '../services/get_user_skills.dart';
 import '../services/get_current_user_profile_data.dart';
 import '../services/get_jobs_service.dart';
 import '../models/job_model.dart';
-import '../screens/client_post_screen.dart';
 
 class ProfileTabPage extends StatefulWidget {
 
@@ -987,28 +986,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: OutlinedButton(
-                  onPressed: () {
-                    // Navigate to client post screen
-                    Navigator.push(
-                      context,
-                      PageRouteBuilder(
-                        pageBuilder: (context, animation, secondaryAnimation) => ClientPostScreen(),
-                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                          const begin = Offset(0.0, 1.0);
-                          const end = Offset.zero;
-                          const curve = Curves.easeInOut;
-
-                          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                          var offsetAnimation = animation.drive(tween);
-
-                          return SlideTransition(
-                            position: offsetAnimation,
-                            child: child,
-                          );
-                        },
-                      ),
-                    );
-                  },
+                  onPressed: widget.onCreatePost,
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(
                       width: 2,
@@ -1509,12 +1487,13 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                       ),
                     ] : [
                       PopupMenuOption(
-                          title: selectedChipIndex == 3 ? 'Unsave' : 'Save',
-                          icon: selectedChipIndex == 3 ? Iconsax.bookmark : Iconsax.save_add_copy,
+                          title: selectedChipIndex == 3 ? 'Remove' : 'Save',
+                          icon: selectedChipIndex == 3 ? Iconsax.trash_copy : Iconsax.bookmark_copy,
+                          iconColor: selectedChipIndex == 3 ? Colors.red : null,
                           onTap: () => selectedChipIndex == 3
                               ? _handleUnsavePost(filteredPosts[0]['id'])
                               : HiveService.savePostId(filteredPosts[0]['id']),
-                          textColor: selectedChipIndex == 3 ? Colors.orange : Theme.of(context).colorScheme.inverseSurface
+                          textColor: selectedChipIndex == 3 ? Colors.red : Theme.of(context).colorScheme.inverseSurface
                       ),
                       PopupMenuOption(
                           title: 'Share',
@@ -1526,12 +1505,6 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                           title: 'Translate',
                           icon: Iconsax.translate_copy,
                           onTap: () => postController.translate(),
-                          textColor: Theme.of(context).colorScheme.inverseSurface
-                      ),
-                      PopupMenuOption(
-                          title: 'Edit',
-                          icon: Iconsax.edit_2_copy,
-                          onTap: () => _handlePostEdit(filteredPosts[0]),
                           textColor: Theme.of(context).colorScheme.inverseSurface
                       ),
                     ],

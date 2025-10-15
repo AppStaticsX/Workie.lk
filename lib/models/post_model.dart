@@ -564,7 +564,7 @@ class _PostCardModelState extends State<PostCardModel> {
                       Iconsax.global_edit,
                       size: 12,
                       color: Theme.of(context).colorScheme.inverseSurface
-                    )
+                    ),
                   ],
                 ),
               ],

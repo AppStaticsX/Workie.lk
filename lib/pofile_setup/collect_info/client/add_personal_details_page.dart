@@ -1,13 +1,17 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:pinput/pinput.dart';
 import 'package:workie/screens/main_screen.dart';
 import 'package:workie/values/color.dart';
 import 'components/profile_pic_bottomsheet.dart';
+import '../../../services/google_places_service.dart';
+import '../../../services/profile_service.dart';
 
 class AddPersonalDetailsPage extends StatefulWidget {
   const AddPersonalDetailsPage({super.key});
@@ -20,6 +24,20 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
   File? _profileImage;
   Uint8List? _profileImageBytes;
 
+  String? selectedProvince;
+
+  final List<String> provinces = [
+    'Western',
+    'Central',
+    'Southern',
+    'Northern',
+    'Eastern',
+    'North Western',
+    'North Central',
+    'Uva',
+    'Sabaragamuwa'
+  ];
+
   bool _isBirthDayEmpty = false;
   bool _isStreetAddressEmpty = false;
   bool _isCityEmpty = false;
@@ -29,6 +47,17 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
   bool _isNICEmpty = false;
   bool _isApartmentOrSuiteEmpty = false;
   bool _isProfileImage = false;
+  bool _isPhoneNumberInvalid = false;
+  bool _isCompletingProfile = false;
+  bool _isSaving = false;
+
+  // City autocomplete variables
+  List<PlaceAutocomplete> _citySuggestions = [];
+  bool _showCitySuggestions = false;
+  Timer? _cityDebounce;
+  final GooglePlacesService _placesService = GooglePlacesService();
+  OverlayEntry? _citySuggestionsOverlay;
+  final LayerLink _cityLayerLink = LayerLink();
 
   TextEditingController birthDayController = TextEditingController();
   TextEditingController streetAddressController = TextEditingController();
@@ -48,7 +77,33 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
   FocusNode nicFocusNode = FocusNode();
   FocusNode apartmentOrSuiteFocusNode = FocusNode();
 
-  void _validateInputs() {
+  @override
+  void initState() {
+    super.initState();
+    // Add focus listener to hide suggestions when focus is lost
+    cityFocusNode.addListener(() {
+      if (!cityFocusNode.hasFocus) {
+        _hideCitySuggestionsOverlay();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _cityDebounce?.cancel();
+    _hideCitySuggestionsOverlay();
+    birthDayFocusNode.dispose();
+    streetAddressFocusNode.dispose();
+    cityFocusNode.dispose();
+    stateOrProvinceFocusNode.dispose();
+    postalCodeFocusNode.dispose();
+    phoneNumberFocusNode.dispose();
+    nicFocusNode.dispose();
+    apartmentOrSuiteFocusNode.dispose();
+    super.dispose();
+  }
+
+  bool _validateInputs() {
     setState(() {
       _isBirthDayEmpty = birthDayController.text.isEmpty;
       _isStreetAddressEmpty = streetAddressController.text.isEmpty;
@@ -56,30 +111,259 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
       _isStateOrProvinceEmpty = stateOrProvinceController.text.isEmpty;
       _isPostalCodeEmpty = postalCodeController.text.isEmpty;
       _isPhoneNumberEmpty = phoneNumberController.text.isEmpty;
+      _isPhoneNumberInvalid = phoneNumberController.text.isNotEmpty && phoneNumberController.text.length != 9;
       _isNICEmpty = nicController.text.isEmpty;
-      setState(() {
-        _isProfileImage = _profileImage == null || _profileImageBytes == null;
-      });
+      _isProfileImage = _profileImage == null && _profileImageBytes == null;
+    });
 
-      // Apartment/Suite is optional, so we don't validate it
+    // Apartment/Suite is optional, so we don't validate it
+    // NIC is validated in frontend but not saved to backend
 
-      if (_isBirthDayEmpty ||
-          _isStreetAddressEmpty ||
-          _isCityEmpty ||
-          _isStateOrProvinceEmpty ||
-          _isPostalCodeEmpty ||
-          _isPhoneNumberEmpty ||
-          _isNICEmpty ||
-          _isProfileImage) {
+    return !(_isBirthDayEmpty ||
+        _isStreetAddressEmpty ||
+        _isCityEmpty ||
+        _isStateOrProvinceEmpty ||
+        _isPostalCodeEmpty ||
+        _isPhoneNumberEmpty ||
+        _isNICEmpty ||
+        _isPhoneNumberInvalid ||
+        _isProfileImage);
+  }
+
+  // Show snackbar message to user
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: TextStyle(color: Theme.of(context).colorScheme.inverseSurface),),
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.fixed,
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+      ),
+    );
+  }
+
+  // Complete profile setup and navigate to main screen
+  Future<void> _handleProfileCompletion() async {
+    if (_isCompletingProfile || _isSaving) return; // Prevent multiple calls
+
+    // Validate the form first
+    if (!_validateInputs()) {
+      _showSnackBar('Please fill all required fields and add a profile picture.');
+      return;
+    }
+
+    setState(() {
+      _isCompletingProfile = true;
+      _isSaving = true;
+    });
+
+    try {
+      // Check if user is authenticated
+      final isAuthenticated = await ProfileService.isAuthenticated();
+      if (!isAuthenticated) {
+        _showSnackBar('Error: Please log in again.');
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed('/login');
+        }
+        return;
+      }
+
+      // Get current user ID
+      final userId = await ProfileService.getCurrentUserId();
+      if (userId == null) {
+        _showSnackBar('Error: User not found. Please log in again.');
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed('/login');
+        }
+        return;
+      }
+
+      // Validate the form data (excluding NIC which is frontend-only)
+      final isValid = ProfileService.validateProfileData(
+        dateOfBirth: birthDayController.text,
+        streetAddress: streetAddressController.text,
+        city: cityController.text,
+        stateOrProvince: stateOrProvinceController.text,
+        postalCode: postalCodeController.text,
+        phoneNumber: phoneNumberController.text,
+        profileImage: _profileImage,
+        profileImageBytes: _profileImageBytes,
+      );
+
+      if (!isValid) {
+        _showSnackBar('Please fill all required fields and add a profile picture.');
+        return;
+      }
+
+      // Parse date of birth
+      DateTime? dob;
+      try {
+        dob = DateTime.parse(birthDayController.text);
+      } catch (_) {
+        dob = null;
+      }
+      if (dob == null) {
+        _showSnackBar('Invalid date of birth format.');
+        return;
+      }
+
+      // Save personal details to profile (excluding NIC)
+      final profileResult = await ProfileService.savePersonalDetailsToProfile(
+        userId: userId,
+        dateOfBirth: dob,
+        streetAddress: streetAddressController.text,
+        city: cityController.text,
+        province: stateOrProvinceController.text,
+        postalCode: postalCodeController.text,
+        phoneNumber: phoneNumberController.text,
+        apartmentOrSuite: apartmentOrSuiteController.text.isNotEmpty
+            ? apartmentOrSuiteController.text
+            : null,
+        profileImage: _profileImage,
+        profileImageBytes: _profileImageBytes,
+      );
+
+      if (profileResult != null) {
+        // Navigate to main screen
+        if (mounted) {
+          Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const MainScreen()
+              )
+          );
+        }
       } else {
-        Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-                builder: (context) => const MainScreen()
-            )
-        );
+        _showSnackBar('Failed to complete profile. Please try again.');
+      }
+    } catch (e) {
+      _showSnackBar('An error occurred while completing your profile.');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCompletingProfile = false;
+          _isSaving = false;
+        });
+      }
+    }
+  }
+
+  // City autocomplete methods
+  void _onCityQueryChanged(String query) {
+    if (_cityDebounce?.isActive ?? false) _cityDebounce!.cancel();
+    _cityDebounce = Timer(const Duration(milliseconds: 500), () {
+      if (query.isNotEmpty) {
+        _searchCities(query);
+      } else {
+        _hideCitySuggestionsOverlay();
       }
     });
+  }
+
+  Future<void> _searchCities(String query) async {
+    try {
+      final suggestions = await _placesService.getCitySuggestions(query);
+      setState(() {
+        _citySuggestions = suggestions;
+        _showCitySuggestions = suggestions.isNotEmpty;
+      });
+      
+      if (_showCitySuggestions) {
+        _showCitySuggestionsOverlay();
+      } else {
+        _hideCitySuggestionsOverlay();
+      }
+    } catch (e) {
+      _hideCitySuggestionsOverlay();
+    }
+  }
+
+  void _showCitySuggestionsOverlay() {
+    _hideCitySuggestionsOverlay(); // Remove existing overlay
+    
+    _citySuggestionsOverlay = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          // Invisible barrier to detect taps outside
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: _hideCitySuggestionsOverlay,
+              child: Container(
+                color: Colors.transparent,
+              ),
+            ),
+          ),
+          // The actual suggestions dropdown
+          Positioned(
+            width: MediaQuery.of(context).size.width - 48, // Account for padding
+            child: CompositedTransformFollower(
+              link: _cityLayerLink,
+              showWhenUnlinked: false,
+              offset: const Offset(0, 50), // Position below the text field
+              child: Material(
+                elevation: 4,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  constraints: const BoxConstraints(maxHeight: 200),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                    ),
+                  ),
+                  child: ListView.builder(
+                    padding: EdgeInsets.zero,
+                    shrinkWrap: true,
+                    itemCount: _citySuggestions.length,
+                    itemBuilder: (context, index) {
+                      final suggestion = _citySuggestions[index];
+                      return ListTile(
+                        dense: true,
+                        title: Text(
+                          suggestion.mainText,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                        subtitle: suggestion.secondaryText.isNotEmpty
+                            ? Text(
+                                suggestion.secondaryText,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                ),
+                              )
+                            : null,
+                        onTap: () => _onCitySuggestionSelected(suggestion),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    
+    Overlay.of(context).insert(_citySuggestionsOverlay!);
+  }
+
+  void _hideCitySuggestionsOverlay() {
+    _citySuggestionsOverlay?.remove();
+    _citySuggestionsOverlay = null;
+    setState(() {
+      _showCitySuggestions = false;
+    });
+  }
+
+  void _onCitySuggestionSelected(PlaceAutocomplete suggestion) {
+    cityController.text = suggestion.mainText;
+    _hideCitySuggestionsOverlay();
+    
+    // Clear validation errors
+    if (_isCityEmpty) setState(() => _isCityEmpty = false);
+    
+    FocusManager.instance.primaryFocus?.unfocus();
   }
 
   @override
@@ -156,15 +440,7 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
         width: double.infinity,
         height: 50,
         child: ElevatedButton(
-          onPressed: () {
-            _validateInputs();
-            Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const MainScreen()
-                )
-            );
-          },
+          onPressed: _isSaving ? null : _handleProfileCompletion,
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF4E6BF5),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -172,8 +448,22 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              if (_isSaving) ...[
+                Transform.scale(
+                  scale: 0.45, // Makes it half the size
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 4.0),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 9,
+                      color: Colors.white,
+                      strokeCap: StrokeCap.square,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
               Text(
-                'Save Profile',
+                _isSaving ? 'Saving...' : 'Save Profile',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
@@ -330,6 +620,7 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                       : 'Add Photo',
                   style: TextStyle(
                       fontSize: 14,
+                      fontWeight: FontWeight.bold,
                       color: Theme.of(context).colorScheme.inverseSurface
                   ),
                 )
@@ -349,7 +640,7 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
           children: [
             const Text(
               'NIC Number *',
-              style: TextStyle(fontSize: 16),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,),
             ),
             if (_isNICEmpty)
               const Text(
@@ -408,7 +699,7 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
           children: [
             const Text(
               'Date of Birth *',
-              style: TextStyle(fontSize: 16),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,),
             ),
             if (_isBirthDayEmpty)
               const Text(
@@ -525,7 +816,7 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
           children: [
             const Text(
               'Street Address *',
-              style: TextStyle(fontSize: 16),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,),
             ),
             if (_isStreetAddressEmpty)
               const Text(
@@ -584,7 +875,7 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
           children: [
             const Text(
               'Apartment / Suite',
-              style: TextStyle(fontSize: 16),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,),
             ),
             if (_isApartmentOrSuiteEmpty || !_isApartmentOrSuiteEmpty)
               Text(
@@ -646,7 +937,7 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                 children: [
                   const Text(
                     'City / Town *',
-                    style: TextStyle(fontSize: 16),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,),
                   ),
                   if (_isCityEmpty)
                     const Text(
@@ -663,7 +954,7 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                 children: [
                   const Text(
                     'Province *',
-                    style: TextStyle(fontSize: 16),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,),
                   ),
                   if (_isStateOrProvinceEmpty)
                     const Text(
@@ -679,39 +970,46 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
         Row(
           children: [
             Expanded(
-              child: TextFormField(
-                controller: cityController,
-                focusNode: cityFocusNode,
-                onChanged: (value) {
-                  if (_isCityEmpty && value.isNotEmpty) {
-                    setState(() => _isCityEmpty = false);
-                  }
-                },
-                decoration: InputDecoration(
-                  hintText: 'Ex: New York', // Also fix the hint text
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  filled: true,
-                  fillColor: Theme.of(context).colorScheme.tertiary,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.outline,
-                      width: 1.5,
+              child: CompositedTransformTarget(
+                link: _cityLayerLink,
+                child: TextFormField(
+                  controller: cityController,
+                  focusNode: cityFocusNode,
+                  onChanged: (value) {
+                    if (_isCityEmpty && value.isNotEmpty) {
+                      setState(() => _isCityEmpty = false);
+                    }
+                    _onCityQueryChanged(value);
+                  },
+                  onTap: () {
+                    // You can add any additional logic here if needed
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Ex: New York', // Also fix the hint text
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    filled: true,
+                    fillColor: Theme.of(context).colorScheme.tertiary,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.outline,
+                        width: 1.5,
+                      ),
                     ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: _isCityEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-                      width: 1.5,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: _isCityEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                        width: 1.5,
+                      ),
                     ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: _isCityEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
-                      width: 2,
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: _isCityEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
+                        width: 2,
+                      ),
                     ),
                   ),
                 ),
@@ -719,20 +1017,15 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
             ),
             const SizedBox(width: 24), // Add spacing between fields
             Expanded(
-              child: TextFormField(
-                controller: stateOrProvinceController,
-                focusNode: stateOrProvinceFocusNode,
-                onChanged: (value) {
-                  if (_isStateOrProvinceEmpty && value.isNotEmpty) {
-                    setState(() => _isStateOrProvinceEmpty = false);
-                  }
-                },
+              child: DropdownButtonFormField<String>(
+                value: selectedProvince,
+                icon: const SizedBox.shrink(), // This removes the arrow icon
                 decoration: InputDecoration(
-                  hintText: 'Ex: California',
+                  hintText: 'Province',
                   hintStyle: const TextStyle(color: Colors.grey),
                   filled: true,
                   fillColor: Theme.of(context).colorScheme.tertiary,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  contentPadding: const EdgeInsets.only(left: 16, right: 16, top: 12, bottom: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
@@ -755,6 +1048,21 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                     ),
                   ),
                 ),
+                items: provinces.map((String province) {
+                  return DropdownMenuItem<String>(
+                    value: province,
+                    child: Text(province, style: TextStyle(fontWeight: FontWeight.normal)),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    selectedProvince = newValue;
+                    stateOrProvinceController.text = newValue ?? '';
+                    if (_isStateOrProvinceEmpty && newValue != null) {
+                      _isStateOrProvinceEmpty = false;
+                    }
+                  });
+                },
               ),
             ),
           ],
@@ -771,7 +1079,7 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
           children: [
             const Text(
               'ZIP / Postal Code *',
-              style: TextStyle(fontSize: 16),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,),
             ),
             if (_isPostalCodeEmpty)
               const Text(
@@ -796,7 +1104,7 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
             textStyle: TextStyle(
               fontSize: 20,
               color: Theme.of(context).colorScheme.inverseSurface,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.normal,
             ),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.tertiary,
@@ -871,11 +1179,16 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
           children: [
             const Text(
               'Phone *',
-              style: TextStyle(fontSize: 16),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,),
             ),
             if (_isPhoneNumberEmpty)
               const Text(
                 '  (Required)',
+                style: TextStyle(fontSize: 12, color: Colors.red),
+              ),
+            if (_isPhoneNumberInvalid)
+              const Text(
+                '  (Must be 9 digits)',
                 style: TextStyle(fontSize: 12, color: Colors.red),
               ),
           ],
@@ -906,14 +1219,25 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
               child: TextFormField(
                 controller: phoneNumberController,
                 focusNode: phoneNumberFocusNode,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(9),
+                ],
                 onChanged: (value) {
-                  if (_isPhoneNumberEmpty && value.isNotEmpty) {
-                    setState(() => _isPhoneNumberEmpty = false);
-                  }
+                  setState(() {
+                    if (_isPhoneNumberEmpty && value.isNotEmpty) {
+                      _isPhoneNumberEmpty = false;
+                    }
+                    _isPhoneNumberInvalid = value.isNotEmpty && value.length != 9;
+                  });
                 },
                 decoration: InputDecoration(
-                  hintText: 'Ex: 712211251',
+                  floatingLabelBehavior: FloatingLabelBehavior.always,
+                  hintText: '712211251',
                   hintStyle: const TextStyle(color: Colors.grey),
+                  prefixText: '+94 ',
+                  prefixStyle: TextStyle(color: Theme.of(context).colorScheme.inverseSurface, fontSize: 16),
                   filled: true,
                   fillColor: Theme.of(context).colorScheme.tertiary,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -927,14 +1251,18 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: _isPhoneNumberEmpty ? Colors.red : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                      color: (_isPhoneNumberEmpty || _isPhoneNumberInvalid)
+                          ? Colors.red
+                          : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
                       width: 1.5,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: _isPhoneNumberEmpty ? Colors.red : Theme.of(context).colorScheme.inverseSurface,
+                      color: (_isPhoneNumberEmpty || _isPhoneNumberInvalid)
+                          ? Colors.red
+                          : Theme.of(context).colorScheme.inverseSurface,
                       width: 2,
                     ),
                   ),
