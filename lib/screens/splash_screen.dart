@@ -193,8 +193,8 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SvgPicture.asset(
-              'assets/icon/briefcase-svgrepo.svg',
+            Image.asset(
+              'assets/icon/logo.png',
               height: 150,
               width: 150,
             ),

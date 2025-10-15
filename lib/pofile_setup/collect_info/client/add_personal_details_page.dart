@@ -374,9 +374,9 @@ class _AddPersonalDetailsPageState extends State<AddPersonalDetailsPage> {
         backgroundColor: const Color(0xFF4E6BF5),
         surfaceTintColor: Colors.transparent,
         leading: const Icon(
-          CupertinoIcons.person_crop_circle_fill_badge_plus,
+          Iconsax.user_copy,
           color: Colors.white,
-          size: 36,
+          size: 28,
         ),
         title: Text('Create Your Profile',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(

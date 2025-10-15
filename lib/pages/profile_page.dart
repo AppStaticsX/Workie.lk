@@ -91,6 +91,9 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
   bool _isLoadingPublishedJobs = false;
   int _totalJobsCount = 0;
 
+  // Add profile completion percentage
+  int _profileCompletionPercentage = 0;
+
   @override
   void initState() {
     super.initState();
@@ -114,6 +117,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     _loadUserSkills();
     _loadProfileStats();
     _loadPublishedJobs();
+    _calculateProfileCompletion();
   }
 
   Future<void> _loadUserPosts() async {
@@ -133,6 +137,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
         _totalPostsCount = postsCount;
         _isLoadingPosts = false;
       });
+      _calculateProfileCompletion();
     } catch (e) {
       setState(() {
         _isLoadingPosts = false;
@@ -150,6 +155,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
         _userTitle = userData.profile!.title!;
         _isVerified = userData.isVerified;
       });
+      _calculateProfileCompletion();
     }
 
     final userPhotos = await GetUserDataService.getCurrentUserPhotos();
@@ -158,6 +164,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
         _userAvatarUrl = userPhotos['profilePicture']!;
         _userCoverImageUrl = userPhotos['coverPhoto']!;
       });
+      _calculateProfileCompletion();
     }
   }
 
@@ -183,12 +190,14 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
         _schoolLogos = logos;
         _isLoadingEducation = false;
       });
+      _calculateProfileCompletion();
     } catch (e) {
       setState(() {
         _isLoadingEducation = false;
         _userEducation = [];
         _schoolLogos = {};
       });
+      _calculateProfileCompletion();
     }
   }
 
@@ -207,12 +216,14 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
         _companyLogos = logos;
         _isLoadingExperience = false;
       });
+      _calculateProfileCompletion();
     } catch (e) {
       setState(() {
         _isLoadingExperience = false;
         _userExperience = [];
         _companyLogos = {};
       });
+      _calculateProfileCompletion();
     }
   }
 
@@ -228,11 +239,13 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
           _userSkills = List<Map<String, dynamic>>.from(result['skills']);
           _isLoadingSkills = false;
         });
+        _calculateProfileCompletion();
       } else {
         setState(() {
           _userSkills = [];
           _isLoadingSkills = false;
         });
+        _calculateProfileCompletion();
       }
     } catch (e) {
       if (kDebugMode) print('Error loading user skills: $e');
@@ -240,6 +253,7 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
         _isLoadingSkills = false;
         _userSkills = [];
       });
+      _calculateProfileCompletion();
     }
   }
 
@@ -423,6 +437,53 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
     await _loadUserSkills();
     await _loadProfileStats();
     await _loadPublishedJobs();
+    _calculateProfileCompletion();
+  }
+
+  void _calculateProfileCompletion() {
+    if (selectedRole != 'job_seeker') return;
+    
+    int completedCriteria = 0;
+    const int totalCriteria = 7;
+
+    // 1. Cover photo exists
+    if (_userCoverImageUrl.isNotEmpty && _userCoverImageUrl != '') {
+      completedCriteria++;
+    }
+
+    // 2. At least one published post
+    if (_totalPostsCount > 0) {
+      completedCriteria++;
+    }
+
+    // 3. Has education
+    if (_userEducation.isNotEmpty) {
+      completedCriteria++;
+    }
+
+    // 4. Has experience
+    if (_userExperience.isNotEmpty) {
+      completedCriteria++;
+    }
+
+    // 5. Has skills
+    if (_userSkills.isNotEmpty) {
+      completedCriteria++;
+    }
+
+    // 6. Has profile picture
+    if (_userAvatarUrl.isNotEmpty && _userAvatarUrl != '') {
+      completedCriteria++;
+    }
+
+    // 7. Has title
+    if (_userTitle.isNotEmpty && _userTitle != '') {
+      completedCriteria++;
+    }
+    
+    setState(() {
+      _profileCompletionPercentage = ((completedCriteria / totalCriteria) * 100).round();
+    });
   }
 
   @override
@@ -487,8 +548,10 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
                     // Profile picture
                     _profileImage(context),
 
-                    _editProfileButton(),
-                    _profileCompletion(),
+                    if (selectedRole == 'job_seeker')... [
+                      _editProfileButton(),
+                      _profileCompletion(),
+                    ],
                     // Edit button for profile picture
                     _profileImagePicker(context),
                   ],
@@ -1841,13 +1904,22 @@ class _ProfileTabPageState extends State<ProfileTabPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Profile Completion'
+              'Profile Completion',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.white,
+                fontWeight: FontWeight.w500
+              ),
             ),
             Text(
-              '42%',
+              '$_profileCompletionPercentage%',
               style: TextStyle(
                 fontSize: 24,
-                color: const Color(0xFF36C897),
+                color: _profileCompletionPercentage == 100 
+                    ? const Color(0xFF36C897) 
+                    : _profileCompletionPercentage >= 50 
+                        ? Colors.orange 
+                        : Colors.red,
                 fontWeight: FontWeight.bold
               ),
             )

@@ -2,12 +2,14 @@ import 'package:flame_lottie/flame_lottie.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' hide ThemeMode;
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/language_provider.dart';
 import '../screens/terms_privacy_page.dart';
 import '../services/pull_data/get_user_data.dart';
 import '../services/location_service.dart';
+import '../services/notification_service.dart';
 import '../themes/theme_provider.dart';
 import 'components/privacy_settings_page.dart';
 import 'components/work_categories_page.dart';
@@ -26,6 +28,8 @@ class _SettingsPageState extends State<SettingsPage> with WidgetsBindingObserver
   final String _currentVersion = '1.2.25';
   bool _notificationsEnabled = true;
   bool _locationEnabled = true;
+  String _currentRole = 'job_seeker';
+  DateTime _memberSince = DateTime(2024, 1, 15);
 
   @override
   void initState() {
@@ -34,6 +38,7 @@ class _SettingsPageState extends State<SettingsPage> with WidgetsBindingObserver
     _loadUserData();
     _loadSettings();
     _checkLocationPermission();
+    _loadCurrentRole();
   }
 
   @override
@@ -61,6 +66,7 @@ class _SettingsPageState extends State<SettingsPage> with WidgetsBindingObserver
           _fullName = userData.fullName;
           _userEmail = userData.email;
           _userProfileImage = userData.profilePicture!;
+          _memberSince = userData.createdAt;
         });
       }
     } catch (e) {
@@ -84,6 +90,17 @@ class _SettingsPageState extends State<SettingsPage> with WidgetsBindingObserver
         _notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
         // Location enabled state is now managed by actual device permission
         // _locationEnabled will be set by _checkLocationPermission()
+      });
+    } catch (e) {
+      // Handle error
+    }
+  }
+
+  Future<void> _loadCurrentRole() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      setState(() {
+        _currentRole = prefs.getString('USER_ROLE') ?? 'job_seeker';
       });
     } catch (e) {
       // Handle error
@@ -328,6 +345,63 @@ class _SettingsPageState extends State<SettingsPage> with WidgetsBindingObserver
     );
   }
 
+  void _showRoleSwitchDialog() {
+    showCupertinoDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return CupertinoAlertDialog(
+          title: Text(
+            'Switch Role',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.inversePrimary,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              fontFamily: 'Montserrat'
+            ),
+          ),
+          content: Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Choose your role on the platform:',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontFamily: 'Montserrat'
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildRoleOption(
+                  'Worker',
+                  'job_seeker',
+                  'Find and apply for jobs',
+                  Iconsax.user_octagon_copy,
+                ),
+                const SizedBox(height: 12),
+                _buildRoleOption(
+                  'Client',
+                  'employer',
+                  'Post jobs and hire workers',
+                  Iconsax.briefcase_copy,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Theme.of(context).colorScheme.primary),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildLanguageOption(
     String displayName,
     String languageCode,
@@ -360,6 +434,127 @@ class _SettingsPageState extends State<SettingsPage> with WidgetsBindingObserver
         Navigator.of(context).pop();
       },
     );
+  }
+
+  Widget _buildRoleOption(
+    String title,
+    String roleValue,
+    String description,
+    IconData icon,
+  ) {
+    final isSelected = _currentRole == roleValue;
+    
+    return GestureDetector(
+      onTap: () => _switchRole(roleValue),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: isSelected 
+              ? const Color(0xFF4E6BF5) 
+              : Theme.of(context).colorScheme.primary.withOpacity(0.3),
+            width: isSelected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(8),
+          color: isSelected 
+            ? const Color(0xFF4E6BF5).withOpacity(0.1)
+            : Colors.transparent,
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: (isSelected ? const Color(0xFF4E6BF5) : Theme.of(context).colorScheme.primary).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(
+                icon,
+                color: isSelected ? const Color(0xFF4E6BF5) : Theme.of(context).colorScheme.primary,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.inversePrimary,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Montserrat',
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    textAlign: TextAlign.start,
+                    description,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontSize: 12,
+                      fontFamily: 'Montserrat',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              Icon(
+                Iconsax.tick_circle_copy,
+                color: const Color(0xFF4E6BF5),
+                size: 20,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _switchRole(String newRole) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('USER_ROLE', newRole);
+      
+      setState(() {
+        _currentRole = newRole;
+      });
+
+      Navigator.of(context).pop(); // Close dialog
+
+      // Send notification about role switch
+      final roleDisplayName = newRole == 'job_seeker' ? 'Worker' : 'Client';
+      final roleEmoji = newRole == 'job_seeker' ? '👷' : '💼';
+      
+      await NotificationService.showNotification(
+        title: '$roleEmoji Role Switch Complete',
+        body: 'You are now using Workie as a $roleDisplayName. Explore your new features!',
+        payload: 'role_switch:$newRole',
+      );
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Successfully switched to $roleDisplayName role',
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // You might want to refresh the app or navigate to appropriate screen
+      // For now, we'll just show the success message
+      
+    } catch (e) {
+      Navigator.of(context).pop(); // Close dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error switching role: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _showLogoutDialog() {
@@ -713,6 +908,13 @@ class _SettingsPageState extends State<SettingsPage> with WidgetsBindingObserver
                             color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
+                        Text(
+                            "Member Since: ${DateFormat('yyyy-MM-dd').format(_memberSince)}",
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -860,6 +1062,31 @@ class _SettingsPageState extends State<SettingsPage> with WidgetsBindingObserver
                         ),
                       );
                     },
+                  ),
+                  _buildDivider(),
+                  _buildSettingsTile(
+                    icon: Iconsax.profile_2user_copy,
+                    title: 'Switch Role',
+                    subtitle: 'Currently: ${_currentRole == 'job_seeker' ? 'Worker' : 'Client'}',
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _currentRole == 'job_seeker' ? 'Worker' : 'Client',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Iconsax.arrow_right_3_copy,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ],
+                    ),
+                    onTap: _showRoleSwitchDialog,
                   ),
                   _buildDivider(),
                   _buildSettingsTile(

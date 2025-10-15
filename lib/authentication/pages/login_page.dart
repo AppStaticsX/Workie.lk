@@ -364,7 +364,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        SvgPicture.asset('assets/icon/briefcase-svgrepo.svg', height: 60),
+        Image.asset('assets/icon/logo.png', height: 80),
         const SizedBox(width: 8),
         Column(
           children: [

@@ -385,6 +385,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
             _selectedIndex++;
           });
         }
+        widget.onSuccessRedirect?.call();
       } else {
         _showSnackBar(result?['message'] ?? 'Failed to save work experience');
       }
